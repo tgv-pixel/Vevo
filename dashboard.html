@@ -5,8 +5,145 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>VEVOBet - Dashboard</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Dashboard Additional Styles */
+        .welcome-section {
+            background: linear-gradient(135deg, rgba(255,215,0,0.2), rgba(255,140,0,0.1));
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255,215,0,0.3);
+        }
+
+        .welcome-section h2 {
+            color: white;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .welcome-section p {
+            color: rgba(255,255,255,0.8);
+        }
+
+        .featured-game {
+            background: linear-gradient(135deg, #ffd700, #ff8c00);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .featured-game-content h3 {
+            font-size: 24px;
+            color: #1a1a2e;
+            margin-bottom: 10px;
+        }
+
+        .featured-game-content p {
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+
+        .play-now-btn {
+            background: #1a1a2e;
+            color: #ffd700;
+            padding: 12px 30px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: all 0.3s;
+            display: inline-block;
+        }
+
+        .play-now-btn:hover {
+            transform: scale(1.05);
+            background: #2c3e50;
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .action-card {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .action-card:hover {
+            transform: translateY(-5px);
+            background: rgba(255,255,255,0.2);
+        }
+
+        .action-card i {
+            font-size: 32px;
+            color: #ffd700;
+            margin-bottom: 10px;
+        }
+
+        .action-card h4 {
+            color: white;
+            margin-bottom: 5px;
+        }
+
+        .action-card p {
+            color: rgba(255,255,255,0.7);
+            font-size: 12px;
+        }
+
+        .referral-banner {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .referral-banner-content {
+            flex: 1;
+        }
+
+        .referral-banner h4 {
+            color: white;
+            margin-bottom: 5px;
+        }
+
+        .referral-banner p {
+            color: rgba(255,255,255,0.8);
+            font-size: 14px;
+        }
+
+        .invite-btn {
+            background: #ffd700;
+            color: #1a1a2e;
+            padding: 10px 25px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .invite-btn:hover {
+            transform: scale(1.05);
+            background: #ffed4e;
+        }
+    </style>
 </head>
 <body>
     <div class="app-container">
@@ -29,8 +166,8 @@
                 <a href="#" class="nav-item" data-page="withdraw">
                     <i class="fas fa-hand-holding-usd"></i> Withdraw
                 </a>
-                <a href="#" class="nav-item" data-page="invite">
-                    <i class="fas fa-user-plus"></i> Invite Friends
+                <a href="refferal.html" class="nav-item">
+                    <i class="fas fa-users"></i> Referral
                 </a>
                 <a href="#" class="nav-item" data-page="settings">
                     <i class="fas fa-cog"></i> Settings
@@ -48,7 +185,7 @@
 
         <!-- Main Content -->
         <main class="main-content">
-            <!-- Header with user profile (right side) -->
+            <!-- Header with user profile -->
             <header class="dashboard-header">
                 <div class="header-title">
                     <h1>Welcome to VEVOBet</h1>
@@ -66,13 +203,11 @@
             </header>
 
             <!-- Dynamic page content -->
-            <div id="pageContent" class="page-content">
-                <!-- Dashboard content loaded dynamically -->
-            </div>
+            <div id="pageContent" class="page-content"></div>
         </main>
     </div>
 
-    <!-- Modals -->
+    <!-- Login Modal -->
     <div id="loginModal" class="modal">
         <div class="modal-content">
             <span class="close-modal">&times;</span>
@@ -87,7 +222,7 @@
         </div>
     </div>
 
-    <!-- Deposit Screenshot Modal -->
+    <!-- Deposit Modal -->
     <div id="depositModal" class="modal">
         <div class="modal-content">
             <span class="close-modal">&times;</span>
@@ -101,7 +236,7 @@
                 <div><strong>TRC20:</strong> TWym3qg8TUNTyutMxvPpnatjeWs8C7jsLY</div>
                 <div><strong>Rate:</strong> 1 Birr = 1 VEVO Token | 1 USDT = 157 VEVO</div>
             </div>
-            <input type="number" id="depositAmount" placeholder="Amount in Birr or USDT (specify currency)">
+            <input type="number" id="depositAmount" placeholder="Amount">
             <select id="depositCurrency">
                 <option value="BIRR">Birr (ETB)</option>
                 <option value="USDT">USDT</option>
@@ -111,33 +246,20 @@
         </div>
     </div>
 
-    <!-- Withdraw Modal (requires 4-digit code) -->
+    <!-- Withdraw Modal -->
     <div id="withdrawModal" class="modal">
         <div class="modal-content">
             <span class="close-modal">&times;</span>
             <h3>Withdraw Funds</h3>
-            <p>Enter 4-digit withdrawal code and details.</p>
             <input type="password" id="withdrawCode" placeholder="4-digit Security Code" maxlength="4">
             <select id="withdrawMethod">
                 <option value="TeleBirr">TeleBirr</option>
                 <option value="M-Pesa">M-Pesa</option>
                 <option value="CBE">CBE Bank</option>
             </select>
-            <input type="text" id="withdrawAccount" placeholder="Account Number / Phone">
-            <input type="number" id="withdrawAmount" placeholder="Amount (VEVO Tokens)">
+            <input type="text" id="withdrawAccount" placeholder="Account Number">
+            <input type="number" id="withdrawAmount" placeholder="Amount (VEVO)">
             <button id="submitWithdrawBtn">Request Withdrawal</button>
-            <p class="note">*Withdrawal code is set during registration; if forgotten, contact admin.</p>
-        </div>
-    </div>
-
-    <!-- Invite Modal -->
-    <div id="inviteModal" class="modal">
-        <div class="modal-content">
-            <span class="close-modal">&times;</span>
-            <h3>Invite Friends</h3>
-            <p>Share your promo code: <strong id="userPromoCode">loading...</strong></p>
-            <p>For every 5 invited friends you get 10 VEVO Tokens reward!</p>
-            <button id="copyPromoBtn">Copy Code</button>
         </div>
     </div>
 
@@ -148,16 +270,15 @@
             <h3>Account Settings</h3>
             <div class="settings-section">
                 <h4>Withdrawal Security Code</h4>
-                <p>Set or change your 4-digit withdrawal code (required for withdrawals)</p>
-                <input type="password" id="settingsWithdrawCode" placeholder="New 4-digit code" maxlength="4">
-                <button id="saveWithdrawCodeBtn">Save Withdrawal Code</button>
+                <input type="password" id="settingsWithdrawCode" placeholder="4-digit code" maxlength="4">
+                <button id="saveWithdrawCodeBtn">Save Code</button>
             </div>
             <div class="settings-section">
-                <h4>Account Information</h4>
+                <h4>Account Info</h4>
                 <p><strong>Name:</strong> <span id="settingsName"></span></p>
                 <p><strong>Email:</strong> <span id="settingsEmail"></span></p>
-                <p><strong>Total Invited:</strong> <span id="settingsInviteCount">0</span></p>
-                <p><strong>Rewards Earned:</strong> <span id="settingsRewards">0</span> VEVO</p>
+                <p><strong>Invites:</strong> <span id="settingsInviteCount">0</span></p>
+                <p><strong>Rewards:</strong> <span id="settingsRewards">0</span> VEVO</p>
             </div>
         </div>
     </div>
@@ -165,6 +286,368 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    <script src="script.js"></script>
+    <script>
+        // Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyCAfsKcVP7OUo870TKkBnk4BfDEq9LnAK8",
+            authDomain: "newporoject-c6f66.firebaseapp.com",
+            databaseURL: "https://newporoject-c6f66-default-rtdb.firebaseio.com",
+            projectId: "newporoject-c6f66",
+            storageBucket: "newporoject-c6f66.appspot.com",
+            messagingSenderId: "733557611631",
+            appId: "1:733557611631:web:02c9377f56d614ff3b019a"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.database();
+        
+        let currentUser = null;
+        let userData = null;
+        let currentPage = 'dashboard';
+        
+        // Helper Functions
+        function showNotification(msg, type) {
+            const notif = document.createElement('div');
+            notif.className = `notification notification-${type}`;
+            notif.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i> ${msg}`;
+            notif.style.cssText = `position:fixed;top:20px;right:20px;background:${type === 'success' ? '#48bb78' : '#ff4757'};color:white;padding:12px 20px;border-radius:10px;z-index:2000;animation:slideIn 0.3s ease;`;
+            document.body.appendChild(notif);
+            setTimeout(() => notif.remove(), 3000);
+        }
+        
+        function updateUserUI() {
+            if (currentUser && userData) {
+                document.getElementById('headerUserName').textContent = userData.name || currentUser.email.split('@')[0];
+                document.getElementById('headerUserEmail').textContent = currentUser.email;
+                document.getElementById('sidebarUserName').textContent = userData.name || currentUser.email.split('@')[0];
+                document.getElementById('sidebarUserEmail').textContent = currentUser.email;
+                document.getElementById('userBalance').textContent = userData.balance || 0;
+            }
+        }
+        
+        async function loadUserData() {
+            if (!currentUser) return;
+            const snapshot = await db.ref(`users/${currentUser.uid}`).once('value');
+            if (snapshot.exists()) {
+                userData = snapshot.val();
+            } else {
+                userData = { email: currentUser.email, name: currentUser.displayName || currentUser.email.split('@')[0], balance: 100, inviteCount: 0, inviteRewards: 0, invitees: [] };
+                await db.ref(`users/${currentUser.uid}`).set(userData);
+            }
+            updateUserUI();
+            return userData;
+        }
+        
+        async function updateBalance(newBalance) {
+            if (!currentUser) return;
+            await db.ref(`users/${currentUser.uid}`).update({ balance: newBalance });
+            userData.balance = newBalance;
+            updateUserUI();
+        }
+        
+        // Dashboard Render
+        function renderDashboard() {
+            return `
+                <div class="welcome-section">
+                    <h2>Welcome back, ${userData?.name || 'Player'}! 🎮</h2>
+                    <p>Ready to play and win? Check out our exciting games below!</p>
+                </div>
+                
+                <div class="featured-game">
+                    <div class="featured-game-content">
+                        <h3>🔥 Featured: Slot Mania</h3>
+                        <p>Win up to 50x your bet and hit the JACKPOT! 3 Sevens = MEGA WIN!</p>
+                        <a href="solt-main.html" class="play-now-btn">Play Now →</a>
+                    </div>
+                    <i class="fas fa-slot-machine" style="font-size: 80px; color: #1a1a2e;"></i>
+                </div>
+                
+                <div class="quick-actions">
+                    <div class="action-card" onclick="loadPage('deposit')">
+                        <i class="fas fa-money-bill-wave"></i>
+                        <h4>Deposit</h4>
+                        <p>Add funds to your account</p>
+                    </div>
+                    <div class="action-card" onclick="loadPage('withdraw')">
+                        <i class="fas fa-hand-holding-usd"></i>
+                        <h4>Withdraw</h4>
+                        <p>Cash out your winnings</p>
+                    </div>
+                    <div class="action-card" onclick="window.location.href='refferal.html'">
+                        <i class="fas fa-users"></i>
+                        <h4>Invite Friends</h4>
+                        <p>Earn 10 VEVO per 5 invites</p>
+                    </div>
+                    <div class="action-card" onclick="loadPage('games')">
+                        <i class="fas fa-gamepad"></i>
+                        <h4>All Games</h4>
+                        <p>7 exciting games to play</p>
+                    </div>
+                </div>
+                
+                <h2 style="color: white; margin: 20px 0;"><i class="fas fa-gamepad"></i> Popular Games</h2>
+                <div class="games-grid">
+                    <a href="game1.html" class="game-card">
+                        <div class="game-card-image"><i class="fas fa-sync-alt"></i></div>
+                        <div class="game-card-info">
+                            <h3>Lucky Spin</h3>
+                            <p>Spin the wheel, win up to 10x!</p>
+                            <button class="play-btn">Play</button>
+                        </div>
+                    </a>
+                    <a href="Dice-dual.html" class="game-card">
+                        <div class="game-card-image"><i class="fas fa-dice"></i></div>
+                        <div class="game-card-info">
+                            <h3>Dice Duel</h3>
+                            <p>Over/Under 50 - 1.95x payout</p>
+                            <button class="play-btn">Play</button>
+                        </div>
+                    </a>
+                    <a href="Coin-clash.html" class="game-card">
+                        <div class="game-card-image"><i class="fas fa-coins"></i></div>
+                        <div class="game-card-info">
+                            <h3>Coin Clash</h3>
+                            <p>Heads or Tails with streak bonus</p>
+                            <button class="play-btn">Play</button>
+                        </div>
+                    </a>
+                    <a href="Number-ninja.html" class="game-card">
+                        <div class="game-card-image"><i class="fas fa-calculator"></i></div>
+                        <div class="game-card-info">
+                            <h3>Number Ninja</h3>
+                            <p>Guess the number, up to 10x!</p>
+                            <button class="play-btn">Play</button>
+                        </div>
+                    </a>
+                    <a href="Card-clash.html" class="game-card">
+                        <div class="game-card-image"><i class="fas fa-club"></i></div>
+                        <div class="game-card-info">
+                            <h3>Card Clash</h3>
+                            <p>Blackjack-style card game</p>
+                            <button class="play-btn">Play</button>
+                        </div>
+                    </a>
+                    <a href="Royal.html" class="game-card">
+                        <div class="game-card-image"><i class="fas fa-circle"></i></div>
+                        <div class="game-card-info">
+                            <h3>Roulette Royale</h3>
+                            <p>European roulette, multiple bets</p>
+                            <button class="play-btn">Play</button>
+                        </div>
+                    </a>
+                    <a href="solt-main.html" class="game-card">
+                        <div class="game-card-image"><i class="fas fa-slot-machine"></i></div>
+                        <div class="game-card-info">
+                            <h3>Slot Mania</h3>
+                            <p>3-reel slots + progressive jackpot!</p>
+                            <button class="play-btn">Play</button>
+                        </div>
+                    </a>
+                </div>
+                
+                <div class="referral-banner">
+                    <div class="referral-banner-content">
+                        <h4><i class="fas fa-gift"></i> Invite Friends & Earn!</h4>
+                        <p>Share your referral link - get 10 VEVO for every 5 friends who join!</p>
+                    </div>
+                    <a href="refferal.html" class="invite-btn">Invite Now →</a>
+                </div>
+            `;
+        }
+        
+        function renderGamesPage() {
+            return `
+                <h2 style="color: white; margin-bottom: 20px;"><i class="fas fa-gamepad"></i> All Games</h2>
+                <div class="games-grid">
+                    <a href="game1.html" class="game-card">
+                        <div class="game-card-image"><i class="fas fa-sync-alt"></i></div>
+                        <div class="game-card-info"><h3>Lucky Spin</h3><p>Spin the wheel, win up to 10x!</p><button class="play-btn">Play</button></div>
+                    </a>
+                    <a href="Dice-dual.html" class="game-card">
+                        <div class="game-card-image"><i class="fas fa-dice"></i></div>
+                        <div class="game-card-info"><h3>Dice Duel</h3><p>Over/Under 50 - 1.95x payout</p><button class="play-btn">Play</button></div>
+                    </a>
+                    <a href="Coin-clash.html" class="game-card">
+                        <div class="game-card-image"><i class="fas fa-coins"></i></div>
+                        <div class="game-card-info"><h3>Coin Clash</h3><p>Heads or Tails with streak bonus</p><button class="play-btn">Play</button></div>
+                    </a>
+                    <a href="Number-ninja.html" class="game-card">
+                        <div class="game-card-image"><i class="fas fa-calculator"></i></div>
+                        <div class="game-card-info"><h3>Number Ninja</h3><p>Guess the number, up to 10x!</p><button class="play-btn">Play</button></div>
+                    </a>
+                    <a href="Card-clash.html" class="game-card">
+                        <div class="game-card-image"><i class="fas fa-club"></i></div>
+                        <div class="game-card-info"><h3>Card Clash</h3><p>Blackjack-style card game</p><button class="play-btn">Play</button></div>
+                    </a>
+                    <a href="Royal.html" class="game-card">
+                        <div class="game-card-image"><i class="fas fa-circle"></i></div>
+                        <div class="game-card-info"><h3>Roulette Royale</h3><p>European roulette, multiple bets</p><button class="play-btn">Play</button></div>
+                    </a>
+                    <a href="solt-main.html" class="game-card">
+                        <div class="game-card-image"><i class="fas fa-slot-machine"></i></div>
+                        <div class="game-card-info"><h3>Slot Mania</h3><p>3-reel slots + progressive jackpot!</p><button class="play-btn">Play</button></div>
+                    </a>
+                </div>
+            `;
+        }
+        
+        function renderDepositPage() {
+            return `
+                <div style="background: white; border-radius: 20px; padding: 30px;">
+                    <h2>Deposit Funds</h2>
+                    <div class="payment-details" style="margin: 20px 0;">
+                        <div><strong>M-Pesa:</strong> 0725032395 (Abenezer Shigute)</div>
+                        <div><strong>TeleBirr:</strong> 0940980555 (Tenaye Hutalo)</div>
+                        <div><strong>CBE Birr:</strong> 0940980555</div>
+                        <div><strong>TRC20:</strong> TWym3qg8TUNTyutMxvPpnatjeWs8C7jsLY</div>
+                    </div>
+                    <input type="number" id="depositAmountPage" placeholder="Amount" style="width:100%;padding:12px;margin:10px 0;border:1px solid #ddd;border-radius:8px;">
+                    <select id="depositCurrencyPage" style="width:100%;padding:12px;margin:10px 0;border:1px solid #ddd;border-radius:8px;">
+                        <option value="BIRR">Birr (ETB) - 1:1</option>
+                        <option value="USDT">USDT - 1:157</option>
+                    </select>
+                    <input type="file" id="depositScreenshotPage" accept="image/*" style="width:100%;padding:10px;margin:10px 0;">
+                    <button onclick="submitDepositPage()" style="background:#48bb78;color:white;padding:12px;border:none;border-radius:8px;width:100%;">Submit</button>
+                </div>
+            `;
+        }
+        
+        function renderWithdrawPage() {
+            return `
+                <div style="background: white; border-radius: 20px; padding: 30px;">
+                    <h2>Withdraw Funds</h2>
+                    <input type="password" id="withdrawCodePage" placeholder="4-digit Code" maxlength="4" style="width:100%;padding:12px;margin:10px 0;border:1px solid #ddd;border-radius:8px;">
+                    <select id="withdrawMethodPage" style="width:100%;padding:12px;margin:10px 0;border:1px solid #ddd;border-radius:8px;">
+                        <option value="TeleBirr">TeleBirr</option>
+                        <option value="M-Pesa">M-Pesa</option>
+                        <option value="CBE">CBE Bank</option>
+                    </select>
+                    <input type="text" id="withdrawAccountPage" placeholder="Account Number" style="width:100%;padding:12px;margin:10px 0;border:1px solid #ddd;border-radius:8px;">
+                    <input type="number" id="withdrawAmountPage" placeholder="Amount" style="width:100%;padding:12px;margin:10px 0;border:1px solid #ddd;border-radius:8px;">
+                    <div style="margin:10px 0;">Balance: ${userData?.balance || 0} VEVO</div>
+                    <button onclick="submitWithdrawPage()" style="background:#ff4757;color:white;padding:12px;border:none;border-radius:8px;width:100%;">Request</button>
+                </div>
+            `;
+        }
+        
+        function renderSettingsPage() {
+            return `
+                <div style="background: white; border-radius: 20px; padding: 30px;">
+                    <h2>Settings</h2>
+                    <div class="settings-section">
+                        <h4>Withdrawal Code</h4>
+                        <input type="password" id="settingsCodePage" placeholder="4-digit code" maxlength="4" style="padding:10px;width:200px;">
+                        <button onclick="saveSettingsCode()" style="background:#48bb78;color:white;padding:10px 20px;border:none;border-radius:8px;">Save</button>
+                    </div>
+                    <div class="settings-section">
+                        <h4>Account Info</h4>
+                        <p>Name: ${userData?.name || '-'}</p>
+                        <p>Email: ${currentUser?.email || '-'}</p>
+                        <p>Invites: ${userData?.inviteCount || 0}</p>
+                        <p>Rewards: ${userData?.inviteRewards || 0} VEVO</p>
+                    </div>
+                </div>
+            `;
+        }
+        
+        async function submitDepositPage() {
+            const amount = document.getElementById('depositAmountPage').value;
+            const currency = document.getElementById('depositCurrencyPage').value;
+            const file = document.getElementById('depositScreenshotPage').files[0];
+            if (!amount || !file) { showNotification('Fill all fields', 'error'); return; }
+            const vevo = currency === 'BIRR' ? parseInt(amount) : parseInt(amount) * 157;
+            const reader = new FileReader();
+            reader.onloadend = async function() {
+                await db.ref(`deposits/${Date.now()}`).set({ userId: currentUser.uid, amount, currency, vevoAmount: vevo, screenshot: reader.result, status: 'pending', createdAt: Date.now() });
+                showNotification('Deposit submitted!', 'success');
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        async function submitWithdrawPage() {
+            const code = document.getElementById('withdrawCodePage').value;
+            const method = document.getElementById('withdrawMethodPage').value;
+            const account = document.getElementById('withdrawAccountPage').value;
+            const amount = parseInt(document.getElementById('withdrawAmountPage').value);
+            if (!code || code.length !== 4 || !amount) { showNotification('Invalid', 'error'); return; }
+            if (amount > userData.balance) { showNotification('Insufficient balance', 'error'); return; }
+            if (userData.withdrawCode !== code) { showNotification('Wrong code', 'error'); return; }
+            await db.ref(`withdraws/${Date.now()}`).set({ userId: currentUser.uid, amount, method, account, status: 'pending', createdAt: Date.now() });
+            showNotification('Withdrawal requested!', 'success');
+        }
+        
+        async function saveSettingsCode() {
+            const code = document.getElementById('settingsCodePage').value;
+            if (!code || code.length !== 4 || isNaN(code)) { showNotification('Enter 4-digit code', 'error'); return; }
+            await db.ref(`users/${currentUser.uid}`).update({ withdrawCode: code });
+            userData.withdrawCode = code;
+            showNotification('Code saved!', 'success');
+        }
+        
+        async function loadPage(page) {
+            currentPage = page;
+            document.querySelectorAll('.nav-item').forEach(item => {
+                if (item.dataset.page === page) item.classList.add('active');
+                else item.classList.remove('active');
+            });
+            if (!currentUser) {
+                pageContent.innerHTML = `<div style="text-align:center;padding:60px;"><h2 style="color:white;">Please Login</h2><button onclick="showModal(loginModal)" style="background:#ffd700;padding:12px 30px;border:none;border-radius:25px;">Login</button></div>`;
+                return;
+            }
+            if (page === 'dashboard') pageContent.innerHTML = renderDashboard();
+            else if (page === 'games') pageContent.innerHTML = renderGamesPage();
+            else if (page === 'deposit') pageContent.innerHTML = renderDepositPage();
+            else if (page === 'withdraw') pageContent.innerHTML = renderWithdrawPage();
+            else if (page === 'settings') pageContent.innerHTML = renderSettingsPage();
+        }
+        
+        // Auth & Modal Handlers
+        async function handleAuth(email, password, name) {
+            try {
+                let userCred = await auth.signInWithEmailAndPassword(email, password);
+                currentUser = userCred.user;
+                await loadUserData();
+                hideModal(loginModal);
+                loadPage(currentPage);
+                showNotification('Welcome back!', 'success');
+            } catch (err) {
+                if (err.code === 'auth/user-not-found') {
+                    let userCred = await auth.createUserWithEmailAndPassword(email, password);
+                    await userCred.user.updateProfile({ displayName: name });
+                    currentUser = userCred.user;
+                    await loadUserData();
+                    hideModal(loginModal);
+                    loadPage(currentPage);
+                    showNotification('Account created! +100 VEVO', 'success');
+                } else showNotification(err.message, 'error');
+            }
+        }
+        
+        function showModal(modal) { modal.style.display = 'block'; }
+        function hideModal(modal) { modal.style.display = 'none'; }
+        
+        document.getElementById('authForm')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await handleAuth(document.getElementById('authEmail').value, document.getElementById('authPassword').value, document.getElementById('authName').value);
+        });
+        document.getElementById('submitDepositBtn')?.addEventListener('click', submitDepositPage);
+        document.getElementById('submitWithdrawBtn')?.addEventListener('click', submitWithdrawPage);
+        document.getElementById('saveWithdrawCodeBtn')?.addEventListener('click', saveSettingsCode);
+        document.getElementById('logoutBtnSidebar')?.addEventListener('click', async () => { await auth.signOut(); currentUser = null; userData = null; loadPage('dashboard'); showNotification('Logged out', 'info'); });
+        document.querySelectorAll('.close-modal').forEach(btn => btn.addEventListener('click', () => document.querySelectorAll('.modal').forEach(m => m.style.display = 'none')));
+        window.onclick = (e) => { if (e.target.classList.contains('modal')) hideModal(e.target); };
+        
+        auth.onAuthStateChanged(async (user) => {
+            if (user) { currentUser = user; await loadUserData(); loadPage(currentPage); }
+            else { currentUser = null; userData = null; loadPage('dashboard'); }
+        });
+        
+        window.loadPage = loadPage;
+        window.showModal = showModal;
+        window.submitDepositPage = submitDepositPage;
+        window.submitWithdrawPage = submitWithdrawPage;
+        window.saveSettingsCode = saveSettingsCode;
+    </script>
 </body>
 </html>
