@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>VEVOBet - Deposit & Withdraw</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 15px 25px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .logo i {
+            color: #ffd700;
+            margin-right: 10px;
+        }
+
+        .back-btn {
+            color: white;
+            text-decoration: none;
+            padding: 8px 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 8px 20px;
+            border-radius: 50px;
+        }
+
+        .balance {
+            font-weight: bold;
+            color: white;
+        }
+
+        .balance i {
+            color: #ffd700;
+            margin-right: 5px;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            justify-content: center;
+        }
+
+        .tab-btn {
+            padding: 12px 40px;
+            font-size: 18px;
+            font-weight: bold;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, #ffd700, #ff8c00);
+            color: #1a1a2e;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .tab-btn:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Payment Methods Grid */
+        .payment-methods {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .payment-card {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+            border: 3px solid transparent;
+        }
+
+        .payment-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .payment-card.selected {
+            border-color: #ffd700;
+            background: linear-gradient(135deg, #fff, #fff8e7);
+        }
+
+        .payment-logo {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f5f5f5;
+            border-radius: 50%;
+            font-size: 40px;
+        }
+
+        .payment-logo img {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+        }
+
+        .payment-name {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .payment-details {
+            color: #666;
+            font-size: 14px;
+            margin-top: 10px;
+            word-break: break-all;
+        }
+
+        .payment-details strong {
+            color: #667eea;
+        }
+
+        /* Form Section */
+        .form-section {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-top: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-group input.error {
+            border-color: #ff4757;
+        }
+
+        .error-message {
+            color: #ff4757;
+            font-size: 12px;
+            margin-top: 5px;
+            display: block;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(72,187,120,0.4);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .info-box {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            border-left: 4px solid #ffd700;
+        }
+
+        .rate-info {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        /* Notification */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 10px;
+            color: white;
+            z-index: 2000;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+
+        /* Loading Spinner */
+        .loading-spinner {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .payment-methods {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .tab-btn {
+                padding: 10px 25px;
+                font-size: 16px;
+            }
+            .form-section {
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .payment-methods {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">
+                <i class="fas fa-dice-d6"></i> VEVOBet
+            </div>
+            <a href="dashboard.html" class="back-btn"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+            <div class="user-info">
+                <i class="fas fa-user-circle"></i>
+                <span id="userName">Loading...</span>
+                <span class="balance"><i class="fas fa-coins"></i> <span id="userBalance">0</span> VEVO</span>
+                <button class="logout-btn" onclick="logout()" style="background: #ff4757; color: white; border: none; padding: 6px 15px; border-radius: 8px; cursor: pointer;"><i class="fas fa-sign-out-alt"></i> Logout</button>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" id="depositTabBtn" onclick="switchTab('deposit')">💸 Deposit</button>
+            <button class="tab-btn" id="withdrawTabBtn" onclick="switchTab('withdraw')">💰 Withdraw</button>
+        </div>
+
+        <!-- Deposit Section -->
+        <div id="depositSection">
+            <div class="payment-methods" id="depositMethods">
+                <!-- M-Pesa -->
+                <div class="payment-card" data-method="mpesa" data-type="deposit" onclick="selectPaymentMethod('mpesa', 'deposit')">
+                    <div class="payment-logo">
+                        <i class="fas fa-mobile-alt" style="font-size: 48px; color: #6c5ce7;"></i>
+                    </div>
+                    <div class="payment-name">M-Pesa</div>
+                    <div class="payment-details">
+                        <strong>Account:</strong> 0725032395<br>
+                        <strong>Name:</strong> Abenezer Shigute
+                    </div>
+                </div>
+
+                <!-- TeleBirr -->
+                <div class="payment-card" data-method="telebirr" data-type="deposit" onclick="selectPaymentMethod('telebirr', 'deposit')">
+                    <div class="payment-logo">
+                        <i class="fas fa-comment-dots" style="font-size: 48px; color: #00a859;"></i>
+                    </div>
+                    <div class="payment-name">TeleBirr</div>
+                    <div class="payment-details">
+                        <strong>Account:</strong> 0940980555<br>
+                        <strong>Name:</strong> Tenaye Hutalo
+                    </div>
+                </div>
+
+                <!-- CBE Birr -->
+                <div class="payment-card" data-method="cbebirr" data-type="deposit" onclick="selectPaymentMethod('cbebirr', 'deposit')">
+                    <div class="payment-logo">
+                        <i class="fas fa-building" style="font-size: 48px; color: #2c3e50;"></i>
+                    </div>
+                    <div class="payment-name">CBE Birr</div>
+                    <div class="payment-details">
+                        <strong>Account:</strong> 0940980555<br>
+                        <strong>Name:</strong> Tenaye Hutalo
+                    </div>
+                </div>
+
+                <!-- CBE Bank -->
+                <div class="payment-card" data-method="cbe" data-type="deposit" onclick="selectPaymentMethod('cbe', 'deposit')">
+                    <div class="payment-logo">
+                        <i class="fas fa-university" style="font-size: 48px; color: #3498db;"></i>
+                    </div>
+                    <div class="payment-name">CBE Bank</div>
+                    <div class="payment-details">
+                        <strong>Account:</strong> 1000612391754<br>
+                        <strong>Name:</strong> Abenezer Shigute
+                    </div>
+                </div>
+
+                <!-- TRC20 USDT -->
+                <div class="payment-card" data-method="trc20" data-type="deposit" onclick="selectPaymentMethod('trc20', 'deposit')">
+                    <div class="payment-logo">
+                        <i class="fab fa-bitcoin" style="font-size: 48px; color: #f39c12;"></i>
+                    </div>
+                    <div class="payment-name">TRC20 (USDT)</div>
+                    <div class="payment-details">
+                        <strong>Address:</strong> TWym3qg8TUNTyutMxvPpnatjeWs8C7jsLY
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3 style="margin-bottom: 20px;">Deposit Funds</h3>
+                <div class="info-box">
+                    <strong>💰 Exchange Rate:</strong>
+                    <div class="rate-info">
+                        <span>1 Birr = 1 VEVO Token</span>
+                        <span>1 USDT = 157 VEVO Token</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-money-bill-wave"></i> Amount</label>
+                    <input type="number" id="depositAmount" placeholder="Enter amount" step="1">
+                    <span class="error-message" id="depositAmountError"></span>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-coins"></i> Currency</label>
+                    <select id="depositCurrency">
+                        <option value="BIRR">Birr (ETB) - 1 VEVO per Birr</option>
+                        <option value="USDT">USDT - 1 USDT = 157 VEVO</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-camera"></i> Payment Screenshot</label>
+                    <input type="file" id="depositScreenshot" accept="image/*">
+                    <span class="error-message" id="depositScreenshotError"></span>
+                </div>
+
+                <button class="submit-btn" id="depositSubmitBtn" onclick="submitDeposit()">Submit Deposit Request</button>
+                <div class="info-box" style="margin-top: 15px; background: #e8f5e9;">
+                    <i class="fas fa-clock"></i> <strong>Note:</strong> Deposits are processed within 24 hours after admin approval.
+                </div>
+            </div>
+        </div>
+
+        <!-- Withdraw Section -->
+        <div id="withdrawSection" style="display: none;">
+            <div class="payment-methods" id="withdrawMethods">
+                <!-- TeleBirr Withdraw -->
+                <div class="payment-card" data-method="telebirr" data-type="withdraw" onclick="selectPaymentMethod('telebirr', 'withdraw')">
+                    <div class="payment-logo">
+                        <i class="fas fa-comment-dots" style="font-size: 48px; color: #00a859;"></i>
+                    </div>
+                    <div class="payment-name">TeleBirr</div>
+                    <div class="payment-details">Fast withdrawal to TeleBirr account</div>
+                </div>
+
+                <!-- M-Pesa Withdraw -->
+                <div class="payment-card" data-method="mpesa" data-type="withdraw" onclick="selectPaymentMethod('mpesa', 'withdraw')">
+                    <div class="payment-logo">
+                        <i class="fas fa-mobile-alt" style="font-size: 48px; color: #6c5ce7;"></i>
+                    </div>
+                    <div class="payment-name">M-Pesa</div>
+                    <div class="payment-details">Withdraw to M-Pesa account</div>
+                </div>
+
+                <!-- CBE Bank Withdraw -->
+                <div class="payment-card" data-method="cbe" data-type="withdraw" onclick="selectPaymentMethod('cbe', 'withdraw')">
+                    <div class="payment-logo">
+                        <i class="fas fa-university" style="font-size: 48px; color: #3498db;"></i>
+                    </div>
+                    <div class="payment-name">CBE Bank</div>
+                    <div class="payment-details">Bank transfer to CBE account</div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3 style="margin-bottom: 20px;">Withdraw Funds</h3>
+
+                <div class="form-group">
+                    <label><i class="fas fa-lock"></i> 4-Digit Security Code</label>
+                    <input type="password" id="withdrawCode" maxlength="4" placeholder="Enter your 4-digit code">
+                    <span class="error-message" id="withdrawCodeError"></span>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-user"></i> Account Number / Phone</label>
+                    <input type="text" id="withdrawAccount" placeholder="Enter your account number or phone">
+                    <span class="error-message" id="withdrawAccountError"></span>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-coins"></i> Amount (VEVO)</label>
+                    <input type="number" id="withdrawAmount" placeholder="Enter amount to withdraw">
+                    <span class="error-message" id="withdrawAmountError"></span>
+                </div>
+
+                <div class="info-box">
+                    <strong>💰 Available Balance:</strong> <span id="availableBalance">0</span> VEVO
+                </div>
+
+                <button class="submit-btn" id="withdrawSubmitBtn" onclick="submitWithdraw()" style="background: linear-gradient(135deg, #ff6b6b, #ff4757);">Request Withdrawal</button>
+                <div class="info-box" style="margin-top: 15px; background: #fff3e0;">
+                    <i class="fas fa-info-circle"></i> <strong>Note:</strong> Withdrawals are processed within 24-48 hours after admin approval.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script>
+        // Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyCAfsKcVP7OUo870TKkBnk4BfDEq9LnAK8",
+            authDomain: "newporoject-c6f66.firebaseapp.com",
+            databaseURL: "https://newporoject-c6f66-default-rtdb.firebaseio.com",
+            projectId: "newporoject-c6f66",
+            storageBucket: "newporoject-c6f66.appspot.com",
+            messagingSenderId: "733557611631",
+            appId: "1:733557611631:web:02c9377f56d614ff3b019a"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.database();
+        
+        let currentUser = null;
+        let userData = null;
+        let selectedDepositMethod = null;
+        let selectedWithdrawMethod = null;
+        
+        // Show notification
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.style.background = type === 'success' ? '#48bb78' : type === 'error' ? '#ff4757' : '#667eea';
+            notification.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i> ${message}`;
+            document.body.appendChild(notification);
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+        
+        // Switch between deposit and withdraw tabs
+        function switchTab(tab) {
+            const depositSection = document.getElementById('depositSection');
+            const withdrawSection = document.getElementById('withdrawSection');
+            const depositTab = document.getElementById('depositTabBtn');
+            const withdrawTab = document.getElementById('withdrawTabBtn');
+            
+            if (tab === 'deposit') {
+                depositSection.style.display = 'block';
+                withdrawSection.style.display = 'none';
+                depositTab.classList.add('active');
+                withdrawTab.classList.remove('active');
+            } else {
+                depositSection.style.display = 'none';
+                withdrawSection.style.display = 'block';
+                withdrawTab.classList.add('active');
+                depositTab.classList.remove('active');
+            }
+        }
+        
+        // Select payment method
+        function selectPaymentMethod(method, type) {
+            if (type === 'deposit') {
+                selectedDepositMethod = method;
+                document.querySelectorAll('#depositMethods .payment-card').forEach(card => {
+                    card.classList.remove('selected');
+                    if (card.dataset.method === method) {
+                        card.classList.add('selected');
+                    }
+                });
+            } else {
+                selectedWithdrawMethod = method;
+                document.querySelectorAll('#withdrawMethods .payment-card').forEach(card => {
+                    card.classList.remove('selected');
+                    if (card.dataset.method === method) {
+                        card.classList.add('selected');
+                    }
+                });
+            }
+        }
+        
+        // Load user data
+        async function loadUserData() {
+            if (!currentUser) return;
+            const snapshot = await db.ref(`users/${currentUser.uid}`).once('value');
+            if (snapshot.exists()) {
+                userData = snapshot.val();
+                document.getElementById('userName').textContent = userData.name || currentUser.email.split('@')[0];
+                document.getElementById('userBalance').textContent = userData.balance || 0;
+                document.getElementById('availableBalance').textContent = userData.balance || 0;
+            }
+        }
+        
+        // Submit deposit
+        async function submitDeposit() {
+            if (!currentUser) {
+                showNotification('Please login first', 'error');
+                return;
+            }
+            
+            if (!selectedDepositMethod) {
+                showNotification('Please select a payment method', 'error');
+                return;
+            }
+            
+            const amount = document.getElementById('depositAmount').value;
+            const currency = document.getElementById('depositCurrency').value;
+            const screenshot = document.getElementById('depositScreenshot').files[0];
+            
+            if (!amount || amount <= 0) {
+                showNotification('Please enter a valid amount', 'error');
+                return;
+            }
+            
+            if (!screenshot) {
+                showNotification('Please upload a screenshot of payment', 'error');
+                return;
+            }
+            
+            let vevoAmount = 0;
+            if (currency === 'BIRR') {
+                vevoAmount = parseInt(amount);
+            } else {
+                vevoAmount = parseInt(amount) * 157;
+            }
+            
+            const depositMethods = {
+                mpesa: 'M-Pesa (0725032395 - Abenezer Shigute)',
+                telebirr: 'TeleBirr (0940980555 - Tenaye Hutalo)',
+                cbebirr: 'CBE Birr (0940980555 - Tenaye Hutalo)',
+                cbe: 'CBE Bank (1000612391754 - Abenezer Shigute)',
+                trc20: 'TRC20 (TWym3qg8TUNTyutMxvPpnatjeWs8C7jsLY)'
+            };
+            
+            const reader = new FileReader();
+            reader.onloadend = async function() {
+                const depositRequest = {
+                    id: Date.now(),
+                    userId: currentUser.uid,
+                    userName: userData.name,
+                    userEmail: currentUser.email,
+                    method: selectedDepositMethod,
+                    methodDetails: depositMethods[selectedDepositMethod],
+                    amount: parseFloat(amount),
+                    currency: currency,
+                    vevoAmount: vevoAmount,
+                    screenshot: reader.result,
+                    status: 'pending',
+                    createdAt: Date.now()
+                };
+                
+                try {
+                    await db.ref(`deposits/${depositRequest.id}`).set(depositRequest);
+                    showNotification('Deposit request submitted! Waiting for admin approval.', 'success');
+                    document.getElementById('depositAmount').value = '';
+                    document.getElementById('depositScreenshot').value = '';
+                    selectedDepositMethod = null;
+                    document.querySelectorAll('#depositMethods .payment-card').forEach(card => {
+                        card.classList.remove('selected');
+                    });
+                } catch (error) {
+                    console.error('Error submitting deposit:', error);
+                    showNotification('Error submitting deposit', 'error');
+                }
+            };
+            reader.readAsDataURL(screenshot);
+        }
+        
+        // Submit withdraw
+        async function submitWithdraw() {
+            if (!currentUser) {
+                showNotification('Please login first', 'error');
+                return;
+            }
+            
+            if (!selectedWithdrawMethod) {
+                showNotification('Please select a withdrawal method', 'error');
+                return;
+            }
+            
+            const withdrawCode = document.getElementById('withdrawCode').value;
+            const account = document.getElementById('withdrawAccount').value;
+            const amount = parseInt(document.getElementById('withdrawAmount').value);
+            
+            if (!withdrawCode || withdrawCode.length !== 4) {
+                showNotification('Please enter a valid 4-digit withdrawal code', 'error');
+                return;
+            }
+            
+            if (!account) {
+                showNotification('Please enter account number', 'error');
+                return;
+            }
+            
+            if (!amount || amount <= 0) {
+                showNotification('Please enter a valid amount', 'error');
+                return;
+            }
+            
+            if (amount > (userData?.balance || 0)) {
+                showNotification('Insufficient balance', 'error');
+                return;
+            }
+            
+            if (userData?.withdrawCode !== withdrawCode) {
+                showNotification('Invalid withdrawal code', 'error');
+                return;
+            }
+            
+            const withdrawMethods = {
+                telebirr: 'TeleBirr',
+                mpesa: 'M-Pesa',
+                cbe: 'CBE Bank'
+            };
+            
+            const withdrawRequest = {
+                id: Date.now(),
+                userId: currentUser.uid,
+                userName: userData.name,
+                userEmail: currentUser.email,
+                method: selectedWithdrawMethod,
+                methodName: withdrawMethods[selectedWithdrawMethod],
+                account: account,
+                amount: amount,
+                status: 'pending',
+                createdAt: Date.now()
+            };
+            
+            try {
+                await db.ref(`withdraws/${withdrawRequest.id}`).set(withdrawRequest);
+                showNotification('Withdrawal request submitted! Waiting for admin approval.', 'success');
+                document.getElementById('withdrawCode').value = '';
+                document.getElementById('withdrawAccount').value = '';
+                document.getElementById('withdrawAmount').value = '';
+                selectedWithdrawMethod = null;
+                document.querySelectorAll('#withdrawMethods .payment-card').forEach(card => {
+                    card.classList.remove('selected');
+                });
+            } catch (error) {
+                console.error('Error submitting withdrawal:', error);
+                showNotification('Error submitting withdrawal', 'error');
+            }
+        }
+        
+        // Logout
+        async function logout() {
+            try {
+                await auth.signOut();
+                window.location.href = 'index.html';
+            } catch (error) {
+                console.error('Error logging out:', error);
+            }
+        }
+        
+        // Auth state listener
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                currentUser = user;
+                await loadUserData();
+            } else {
+                window.location.href = 'index.html';
+            }
+        });
+        
+        // Real-time balance update
+        setInterval(async () => {
+            if (currentUser) {
+                await loadUserData();
+            }
+        }, 5000);
+    </script>
+</body>
+</html>
