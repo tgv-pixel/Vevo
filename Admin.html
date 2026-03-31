@@ -333,12 +333,22 @@
             cursor: pointer;
         }
 
+        .btn-add {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
         .screenshot-link {
             color: #667eea;
             cursor: pointer;
             text-decoration: underline;
         }
 
+        /* Modal */
         .modal {
             display: none;
             position: fixed;
@@ -377,18 +387,45 @@
             color: #333;
         }
 
+        .amount-input {
+            width: 100px;
+            padding: 5px;
+            margin-right: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        /* Menu Toggle */
+        .menu-toggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 101;
+            background: #ffd700;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
         @media (max-width: 768px) {
+            .menu-toggle {
+                display: block;
+            }
             .admin-sidebar {
                 width: 80px;
                 transform: translateX(-100%);
                 position: fixed;
                 z-index: 100;
+                transition: transform 0.3s;
             }
             .admin-sidebar.open {
                 transform: translateX(0);
             }
             .admin-main {
                 margin-left: 0;
+                padding-top: 60px;
             }
             .admin-logo h2, .admin-logo p, .nav-item span {
                 display: none;
@@ -400,26 +437,14 @@
                 font-size: 22px;
                 margin: 0;
             }
-            .menu-toggle {
-                display: block;
-                position: fixed;
-                top: 20px;
-                left: 20px;
-                z-index: 101;
-                background: #ffd700;
-                border: none;
-                padding: 10px;
-                border-radius: 8px;
-                cursor: pointer;
-            }
-        }
-
-        .menu-toggle {
-            display: none;
         }
     </style>
 </head>
 <body>
+    <button class="menu-toggle" onclick="toggleSidebar()">
+        <i class="fas fa-bars"></i>
+    </button>
+
     <!-- Login Page -->
     <div id="loginPage" class="login-container">
         <div class="login-box">
@@ -487,6 +512,19 @@
         </div>
     </div>
 
+    <!-- Add Balance Modal -->
+    <div id="addBalanceModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeAddBalanceModal()">&times;</span>
+            <h3>Add Balance to User</h3>
+            <input type="text" id="addBalanceUserId" style="display:none;">
+            <p><strong>User:</strong> <span id="addBalanceUserName"></span></p>
+            <p><strong>Current Balance:</strong> <span id="addBalanceCurrent"></span> VEVO</p>
+            <input type="number" id="addBalanceAmount" placeholder="Amount to add" style="width:100%; padding:10px; margin:10px 0; border:1px solid #ddd; border-radius:5px;">
+            <button onclick="confirmAddBalance()" style="background:#48bb78; color:white; padding:10px; border:none; border-radius:5px; width:100%; cursor:pointer;">Add Balance</button>
+        </div>
+    </div>
+
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script>
@@ -498,8 +536,7 @@
             projectId: "newporoject-c6f66",
             storageBucket: "newporoject-c6f66.appspot.com",
             messagingSenderId: "733557611631",
-            appId: "1:733557611631:web:02c9377f56d614ff3b019a",
-            measurementId: "G-53BEVW33FP"
+            appId: "1:733557611631:web:02c9377f56d614ff3b019a"
         };
         
         firebase.initializeApp(firebaseConfig);
@@ -511,6 +548,11 @@
         
         let isLoggedIn = false;
         let currentTab = 'dashboard';
+        
+        // Toggle sidebar for mobile
+        function toggleSidebar() {
+            document.getElementById('adminSidebar').classList.toggle('open');
+        }
         
         // Login function
         function adminLogin() {
@@ -537,25 +579,30 @@
             document.getElementById('loginError').textContent = '';
         }
         
+        // Show notification
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.style.cssText = `position:fixed;top:20px;right:20px;background:${type === 'success' ? '#48bb78' : '#ff4757'};color:white;padding:12px 20px;border-radius:10px;z-index:2000;animation:slideIn 0.3s ease;`;
+            notification.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i> ${message}`;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 3000);
+        }
+        
         // Load stats
         async function loadStats() {
             try {
-                // Get all users
                 const usersSnapshot = await db.ref('users').once('value');
                 const users = usersSnapshot.val() || {};
                 const userCount = Object.keys(users).length;
                 
-                // Get pending deposits
                 const depositsSnapshot = await db.ref('deposits').once('value');
                 const deposits = depositsSnapshot.val() || {};
                 const pendingDeposits = Object.values(deposits).filter(d => d.status === 'pending').length;
                 
-                // Get pending withdraws
                 const withdrawsSnapshot = await db.ref('withdraws').once('value');
                 const withdraws = withdrawsSnapshot.val() || {};
                 const pendingWithdraws = Object.values(withdraws).filter(w => w.status === 'pending').length;
                 
-                // Calculate total balance
                 let totalBalance = 0;
                 Object.values(users).forEach(user => {
                     totalBalance += user.balance || 0;
@@ -583,7 +630,7 @@
                         <div class="table-container">
                             <table>
                                 <thead>
-                                    <tr><th>ID</th><th>User</th><th>Amount</th><th>VEVO</th><th>Status</th><th>Date</th><th>Screenshot</th><th>Actions</th></tr>
+                                    <tr><th>ID</th><th>User</th><th>Amount</th><th>VEVO</th><th>Method</th><th>Status</th><th>Date</th><th>Screenshot</th><th>Actions</th></tr>
                                 </thead>
                                 <tbody>
                 `;
@@ -591,13 +638,15 @@
                 depositsArray.forEach(deposit => {
                     const date = new Date(deposit.createdAt).toLocaleString();
                     const statusClass = deposit.status === 'pending' ? 'status-pending' : (deposit.status === 'approved' ? 'status-approved' : 'status-rejected');
+                    const methodName = deposit.methodDetails || deposit.method || (deposit.currency === 'USDT' ? 'TRC20' : 'Bank Transfer');
                     
                     html += `
                         <tr>
                             <td>${deposit.id}</td>
                             <td>${deposit.userName || deposit.userEmail}<br><small>${deposit.userEmail}</small></td>
-                            <td>${deposit.amount} ${deposit.currency}</td>
+                            <td>${deposit.amount} ${deposit.currency || 'BIRR'}</td>
                             <td>${deposit.vevoAmount}</td>
+                            <td>${methodName}</td>
                             <td><span class="${statusClass}">${deposit.status.toUpperCase()}</span></td>
                             <td>${date}</td>
                             <td><a class="screenshot-link" onclick="viewScreenshot('${deposit.screenshot}')">View</a></td>
@@ -612,7 +661,7 @@
                 });
                 
                 if (depositsArray.length === 0) {
-                    html += '<tr><td colspan="8" style="text-align: center;">No deposit requests found</td></tr>';
+                    html += '<tr><td colspan="9" style="text-align: center;">No deposit requests found</td></tr>';
                 }
                 
                 html += '</tbody></table></div></div>';
@@ -650,7 +699,7 @@
                             <td>${withdraw.id}</td>
                             <td>${withdraw.userName || withdraw.userEmail}<br><small>${withdraw.userEmail}</small></td>
                             <td>${withdraw.amount}</td>
-                            <td>${withdraw.method}</td>
+                            <td>${withdraw.methodName || withdraw.method}</td>
                             <td>${withdraw.account}</td>
                             <td><span class="${statusClass}">${withdraw.status.toUpperCase()}</span></td>
                             <td>${date}</td>
@@ -681,7 +730,7 @@
             try {
                 const snapshot = await db.ref('users').once('value');
                 const users = snapshot.val() || {};
-                const usersArray = Object.values(users).map((user, index) => ({ ...user, uid: Object.keys(users)[index] }));
+                const usersArray = Object.entries(users).map(([uid, user]) => ({ ...user, uid }));
                 
                 let html = `
                     <div class="section-card">
@@ -689,7 +738,7 @@
                         <div class="table-container">
                             <table>
                                 <thead>
-                                    <tr><th>Email</th><th>Name</th><th>Balance (VEVO)</th><th>Invites</th><th>Withdraw Code</th><th>Actions</th></tr>
+                                    <tr><th>Email</th><th>Name</th><th>Balance (VEVO)</th><th>Invites</th><th>Rewards</th><th>Withdraw Code</th><th>Actions</th></tr>
                                 </thead>
                                 <tbody>
                 `;
@@ -699,19 +748,20 @@
                         <tr>
                             <td>${user.email}</td>
                             <td>${user.name || '-'}</td>
-                            <td>${user.balance || 0}</td>
+                            <td><strong>${user.balance || 0}</strong> VEVO</td>
                             <td>${user.inviteCount || 0}</td>
+                            <td>${user.inviteRewards || 0}</td>
                             <td>${user.withdrawCode ? '✓ Set' : '❌ Not set'}</td>
                             <td>
                                 <button class="btn-reset" onclick="resetWithdrawCode('${user.uid}')">Reset Code</button>
-                                <button class="btn-approve" onclick="addBalance('${user.uid}', ${user.balance || 0})">Add Balance</button>
+                                <button class="btn-add" onclick="openAddBalance('${user.uid}', '${user.name || user.email}', ${user.balance || 0})">Add Balance</button>
                             </td>
                         </tr>
                     `;
                 });
                 
                 if (usersArray.length === 0) {
-                    html += '<tr><td colspan="6" style="text-align: center;">No users found</td></tr>';
+                    html += '<tr><td colspan="7" style="text-align: center;">No users found</td></tr>';
                 }
                 
                 html += '</tbody></table></div></div>';
@@ -727,26 +777,10 @@
             await loadStats();
             const html = `
                 <div class="stats-grid">
-                    <div class="stat-card">
-                        <i class="fas fa-users"></i>
-                        <h3>Total Users</h3>
-                        <div class="number" id="statUserCount">0</div>
-                    </div>
-                    <div class="stat-card">
-                        <i class="fas fa-clock"></i>
-                        <h3>Pending Deposits</h3>
-                        <div class="number" id="statPendingDeposits">0</div>
-                    </div>
-                    <div class="stat-card">
-                        <i class="fas fa-clock"></i>
-                        <h3>Pending Withdrawals</h3>
-                        <div class="number" id="statPendingWithdraws">0</div>
-                    </div>
-                    <div class="stat-card">
-                        <i class="fas fa-coins"></i>
-                        <h3>Total VEVO in Circulation</h3>
-                        <div class="number" id="statTotalBalance">0</div>
-                    </div>
+                    <div class="stat-card"><i class="fas fa-users"></i><h3>Total Users</h3><div class="number" id="statUserCount">0</div></div>
+                    <div class="stat-card"><i class="fas fa-clock"></i><h3>Pending Deposits</h3><div class="number" id="statPendingDeposits">0</div></div>
+                    <div class="stat-card"><i class="fas fa-clock"></i><h3>Pending Withdrawals</h3><div class="number" id="statPendingWithdraws">0</div></div>
+                    <div class="stat-card"><i class="fas fa-coins"></i><h3>Total VEVO in Circulation</h3><div class="number" id="statTotalBalance">0</div></div>
                 </div>
                 <div class="section-card">
                     <h2 class="section-title"><i class="fas fa-chart-line"></i> Quick Actions</h2>
@@ -778,6 +812,12 @@
                         <p><strong>CBE Birr:</strong> 0940980555</p>
                         <p><strong>CBE Bank:</strong> 1000612391754</p>
                         <p><strong>TRC20:</strong> TWym3qg8TUNTyutMxvPpnatjeWs8C7jsLY</p>
+                        <hr style="margin: 20px 0;">
+                        <h3>Admin Instructions</h3>
+                        <p>✓ Approve deposits to add VEVO to user balance</p>
+                        <p>✓ Approve withdrawals to deduct VEVO from user balance</p>
+                        <p>✓ Reset withdrawal codes if users forget them</p>
+                        <p>✓ Add balance manually for special cases</p>
                     </div>
                 </div>
             `;
@@ -786,18 +826,19 @@
         
         // Approve deposit
         async function approveDeposit(depositId, vevoAmount, userId) {
-            if (confirm('Approve this deposit? User will receive ' + vevoAmount + ' VEVO tokens.')) {
+            if (confirm(`Approve this deposit? User will receive ${vevoAmount} VEVO tokens.`)) {
                 try {
                     await db.ref(`deposits/${depositId}`).update({ status: 'approved', approvedAt: Date.now() });
                     const userRef = db.ref(`users/${userId}`);
                     const snapshot = await userRef.once('value');
                     const user = snapshot.val();
-                    await userRef.update({ balance: (user.balance || 0) + vevoAmount });
-                    alert('Deposit approved!');
+                    const newBalance = (user.balance || 0) + vevoAmount;
+                    await userRef.update({ balance: newBalance });
+                    showNotification(`Deposit approved! ${vevoAmount} VEVO added to user balance.`, 'success');
                     loadAdminContent(currentTab);
                 } catch (error) {
                     console.error('Error approving deposit:', error);
-                    alert('Error approving deposit');
+                    showNotification('Error approving deposit', 'error');
                 }
             }
         }
@@ -807,29 +848,30 @@
             if (confirm('Reject this deposit?')) {
                 try {
                     await db.ref(`deposits/${depositId}`).update({ status: 'rejected', rejectedAt: Date.now() });
-                    alert('Deposit rejected!');
+                    showNotification('Deposit rejected!', 'success');
                     loadAdminContent(currentTab);
                 } catch (error) {
                     console.error('Error rejecting deposit:', error);
-                    alert('Error rejecting deposit');
+                    showNotification('Error rejecting deposit', 'error');
                 }
             }
         }
         
         // Approve withdraw
         async function approveWithdraw(withdrawId, amount, userId) {
-            if (confirm('Approve this withdrawal? ' + amount + ' VEVO will be deducted from user balance.')) {
+            if (confirm(`Approve this withdrawal? ${amount} VEVO will be deducted from user balance.`)) {
                 try {
                     await db.ref(`withdraws/${withdrawId}`).update({ status: 'approved', approvedAt: Date.now() });
                     const userRef = db.ref(`users/${userId}`);
                     const snapshot = await userRef.once('value');
                     const user = snapshot.val();
-                    await userRef.update({ balance: (user.balance || 0) - amount });
-                    alert('Withdrawal approved!');
+                    const newBalance = (user.balance || 0) - amount;
+                    await userRef.update({ balance: newBalance });
+                    showNotification(`Withdrawal approved! ${amount} VEVO deducted from user balance.`, 'success');
                     loadAdminContent(currentTab);
                 } catch (error) {
                     console.error('Error approving withdraw:', error);
-                    alert('Error approving withdrawal');
+                    showNotification('Error approving withdrawal', 'error');
                 }
             }
         }
@@ -839,11 +881,11 @@
             if (confirm('Reject this withdrawal?')) {
                 try {
                     await db.ref(`withdraws/${withdrawId}`).update({ status: 'rejected', rejectedAt: Date.now() });
-                    alert('Withdrawal rejected!');
+                    showNotification('Withdrawal rejected!', 'success');
                     loadAdminContent(currentTab);
                 } catch (error) {
                     console.error('Error rejecting withdraw:', error);
-                    alert('Error rejecting withdrawal');
+                    showNotification('Error rejecting withdrawal', 'error');
                 }
             }
         }
@@ -853,28 +895,49 @@
             if (confirm('Reset withdrawal code for this user? They will need to set a new code.')) {
                 try {
                     await db.ref(`users/${userId}`).update({ withdrawCode: null });
-                    alert('Withdrawal code reset successfully!');
+                    showNotification('Withdrawal code reset successfully!', 'success');
                     loadAdminContent('users');
                 } catch (error) {
                     console.error('Error resetting code:', error);
-                    alert('Error resetting code');
+                    showNotification('Error resetting code', 'error');
                 }
             }
         }
         
-        // Add balance
-        async function addBalance(userId, currentBalance) {
-            const amount = prompt('Enter amount to add (VEVO):');
-            if (amount && !isNaN(amount) && amount > 0) {
-                try {
-                    await db.ref(`users/${userId}`).update({ balance: currentBalance + parseInt(amount) });
-                    alert(`Added ${amount} VEVO to user balance!`);
-                    loadAdminContent('users');
-                } catch (error) {
-                    console.error('Error adding balance:', error);
-                    alert('Error adding balance');
-                }
+        // Open add balance modal
+        function openAddBalance(userId, userName, currentBalance) {
+            document.getElementById('addBalanceUserId').value = userId;
+            document.getElementById('addBalanceUserName').textContent = userName;
+            document.getElementById('addBalanceCurrent').textContent = currentBalance;
+            document.getElementById('addBalanceAmount').value = '';
+            document.getElementById('addBalanceModal').style.display = 'block';
+        }
+        
+        // Confirm add balance
+        async function confirmAddBalance() {
+            const userId = document.getElementById('addBalanceUserId').value;
+            const amount = parseInt(document.getElementById('addBalanceAmount').value);
+            if (!amount || amount <= 0) {
+                showNotification('Please enter a valid amount', 'error');
+                return;
             }
+            try {
+                const userRef = db.ref(`users/${userId}`);
+                const snapshot = await userRef.once('value');
+                const user = snapshot.val();
+                const newBalance = (user.balance || 0) + amount;
+                await userRef.update({ balance: newBalance });
+                showNotification(`Added ${amount} VEVO to user balance!`, 'success');
+                closeAddBalanceModal();
+                loadAdminContent('users');
+            } catch (error) {
+                console.error('Error adding balance:', error);
+                showNotification('Error adding balance', 'error');
+            }
+        }
+        
+        function closeAddBalanceModal() {
+            document.getElementById('addBalanceModal').style.display = 'none';
         }
         
         // View screenshot
@@ -928,13 +991,27 @@
             });
         });
         
-        // Close modal on outside click
+        // Close modals on outside click
         window.onclick = function(event) {
-            const modal = document.getElementById('screenshotModal');
-            if (event.target === modal) {
-                modal.style.display = 'none';
+            const screenshotModal = document.getElementById('screenshotModal');
+            const addBalanceModal = document.getElementById('addBalanceModal');
+            if (event.target === screenshotModal) {
+                screenshotModal.style.display = 'none';
+            }
+            if (event.target === addBalanceModal) {
+                addBalanceModal.style.display = 'none';
             }
         };
+        
+        // Add animation styles
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+        `;
+        document.head.appendChild(style);
     </script>
 </body>
 </html>
