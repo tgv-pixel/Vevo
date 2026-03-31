@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VEVOBet - Lucky Spin Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .game-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 15px 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+
+        .back-btn {
+            color: white;
+            text-decoration: none;
+            font-size: 16px;
+            padding: 8px 15px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .game-logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .game-logo i {
+            margin-right: 10px;
+            color: #ffd700;
+        }
+
+        .game-balance {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 8px 20px;
+            border-radius: 25px;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .game-balance i {
+            color: #ffd700;
+            margin-right: 8px;
+        }
+
+        /* Game Title */
+        .game-title {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .game-title h1 {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .game-title p {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+
+        /* Wheel */
+        .wheel-container {
+            position: relative;
+            width: 500px;
+            height: 500px;
+            margin: 0 auto 30px;
+        }
+
+        #wheelCanvas {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .pointer {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 40px;
+            color: #ffd700;
+            filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.5));
+            z-index: 10;
+        }
+
+        .spin-button {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #ff6b6b, #ff4757);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 24px;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+            z-index: 20;
+        }
+
+        .spin-button:hover:not(:disabled) {
+            transform: translateX(-50%) scale(1.05);
+        }
+
+        .spin-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Betting Section */
+        .betting-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 25px;
+            margin: 20px 0;
+        }
+
+        .bet-controls {
+            text-align: center;
+        }
+
+        .bet-controls label {
+            font-size: 18px;
+            font-weight: bold;
+            display: block;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .bet-input-group {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .bet-adjust {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        #betAmount {
+            width: 120px;
+            padding: 10px;
+            font-size: 18px;
+            text-align: center;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+
+        .quick-bets {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .quick-bet {
+            background: #48bb78;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #e0e0e0;
+        }
+
+        .last-result, .win-multiplier {
+            flex: 1;
+            text-align: center;
+        }
+
+        .last-result h4, .win-multiplier h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        #lastResult {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ff4757;
+        }
+
+        .multipliers {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .multipliers span {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+
+        /* History */
+        .history-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .history-section h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .history-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .history-item.win {
+            background: rgba(72, 187, 120, 0.1);
+            border-left: 4px solid #48bb78;
+        }
+
+        .history-item.loss {
+            border-left: 4px solid #ff4757;
+        }
+
+        .history-result.win {
+            color: #48bb78;
+            font-weight: bold;
+        }
+
+        .history-result.loss {
+            color: #ff4757;
+            font-weight: bold;
+        }
+
+        .no-history {
+            text-align: center;
+            color: #999;
+            padding: 20px;
+        }
+
+        @keyframes spinWheel {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .wheel-spinning {
+            animation: spinWheel 3s cubic-bezier(0.2, 0.9, 0.1, 1.1);
+        }
+
+        @media (max-width: 768px) {
+            .wheel-container {
+                width: 300px;
+                height: 300px;
+            }
+            .spin-button {
+                padding: 12px 30px;
+                font-size: 18px;
+            }
+            .game-title h1 {
+                font-size: 32px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i> Back</a>
+            <div class="game-logo">
+                <i class="fas fa-dice-d6"></i> VEVOBet
+            </div>
+            <div class="game-balance">
+                <i class="fas fa-coins"></i> <span id="gameBalance">0</span> VEVO
+            </div>
+        </div>
+
+        <div class="game-title">
+            <h1><i class="fas fa-sync-alt"></i> Lucky Spin</h1>
+            <p>Spin the wheel and win up to 10x your bet!</p>
+        </div>
+
+        <div class="wheel-container">
+            <canvas id="wheelCanvas" width="500" height="500"></canvas>
+            <div class="pointer"><i class="fas fa-caret-down"></i></div>
+            <button class="spin-button" id="spinBtn">SPIN!</button>
+        </div>
+
+        <div class="betting-section">
+            <div class="bet-controls">
+                <label>Bet Amount (VEVO):</label>
+                <div class="bet-input-group">
+                    <button class="bet-adjust" data-change="-10">-10</button>
+                    <input type="number" id="betAmount" value="10" min="1" step="1">
+                    <button class="bet-adjust" data-change="10">+10</button>
+                </div>
+                <div class="quick-bets">
+                    <button class="quick-bet" data-value="10">10</button>
+                    <button class="quick-bet" data-value="50">50</button>
+                    <button class="quick-bet" data-value="100">100</button>
+                    <button class="quick-bet" data-value="500">500</button>
+                </div>
+            </div>
+            <div class="game-info">
+                <div class="last-result">
+                    <h4>Last Result</h4>
+                    <p id="lastResult">-</p>
+                </div>
+                <div class="win-multiplier">
+                    <h4>Win Multipliers</h4>
+                    <div class="multipliers">
+                        <span>2x</span> <span>1x</span> <span>5x</span> <span>0.5x</span>
+                        <span>3x</span> <span>10x</span> <span>0x</span> <span>4x</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="history-section">
+            <h3><i class="fas fa-history"></i> Game History</h3>
+            <div id="gameHistory" class="history-list">
+                <p class="no-history">No spins yet. Start playing!</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://kit.fontawesome.com/a2e0a8c9d2.js" crossorigin="anonymous"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script>
+        // Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyCAfsKcVP7OUo870TKkBnk4BfDEq9LnAK8",
+            authDomain: "newporoject-c6f66.firebaseapp.com",
+            databaseURL: "https://newporoject-c6f66-default-rtdb.firebaseio.com",
+            projectId: "newporoject-c6f66",
+            storageBucket: "newporoject-c6f66.appspot.com",
+            messagingSenderId: "733557611631",
+            appId: "1:733557611631:web:02c9377f56d614ff3b019a",
+            measurementId: "G-53BEVW33FP"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.database();
+        
+        // Game Variables
+        const segments = [
+            { value: 2, color: '#FF6B6B', label: '2x' },
+            { value: 1, color: '#4ECDC4', label: '1x' },
+            { value: 5, color: '#45B7D1', label: '5x' },
+            { value: 0.5, color: '#96CEB4', label: '0.5x' },
+            { value: 3, color: '#FFEAA7', label: '3x' },
+            { value: 10, color: '#DDA0DD', label: '10x' },
+            { value: 0, color: '#FF9999', label: '0x' },
+            { value: 4, color: '#98D8C8', label: '4x' }
+        ];
+        
+        let currentRotation = 0;
+        let isSpinning = false;
+        let currentUser = null;
+        let userBalance = 0;
+        
+        const canvas = document.getElementById('wheelCanvas');
+        const ctx = canvas.getContext('2d');
+        let width = canvas.width;
+        let height = canvas.height;
+        
+        function drawWheel(rotation) {
+            const centerX = width / 2;
+            const centerY = height / 2;
+            const radius = width / 2;
+            const angleStep = (Math.PI * 2) / segments.length;
+            
+            ctx.clearRect(0, 0, width, height);
+            
+            for (let i = 0; i < segments.length; i++) {
+                const startAngle = i * angleStep + rotation;
+                const endAngle = (i + 1) * angleStep + rotation;
+                
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+                ctx.fillStyle = segments[i].color;
+                ctx.fill();
+                
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+                ctx.lineTo(centerX, centerY);
+                ctx.stroke();
+                
+                ctx.save();
+                ctx.translate(centerX, centerY);
+                ctx.rotate(startAngle + angleStep / 2);
+                ctx.textAlign = "center";
+                ctx.fillStyle = "#fff";
+                ctx.font = "bold 20px 'Segoe UI'";
+                ctx.shadowBlur = 0;
+                ctx.fillText(segments[i].label, radius * 0.7, 10);
+                ctx.restore();
+            }
+            
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 15, 0, Math.PI * 2);
+            ctx.fillStyle = '#fff';
+            ctx.fill();
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+        
+        function getWinner(rotation) {
+            const angleStep = (Math.PI * 2) / segments.length;
+            const pointerAngle = Math.PI * 1.5;
+            let rawAngle = (pointerAngle - rotation) % (Math.PI * 2);
+            if (rawAngle < 0) rawAngle += Math.PI * 2;
+            const index = Math.floor(rawAngle / angleStep) % segments.length;
+            return segments[index];
+        }
+        
+        function updateBalanceDisplay() {
+            document.getElementById('gameBalance').textContent = userBalance;
+        }
+        
+        async function loadUserBalance() {
+            if (!currentUser) return;
+            const userRef = db.ref(`users/${currentUser.uid}`);
+            const snapshot = await userRef.once('value');
+            const userData = snapshot.val();
+            if (userData) {
+                userBalance = userData.balance || 0;
+                updateBalanceDisplay();
+            }
+        }
+        
+        async function updateUserBalance(newBalance) {
+            if (!currentUser) return;
+            await db.ref(`users/${currentUser.uid}`).update({ balance: newBalance });
+            userBalance = newBalance;
+            updateBalanceDisplay();
+        }
+        
+        async function addGameHistory(bet, multiplier, winAmount, result) {
+            if (!currentUser) return;
+            const historyRef = db.ref(`users/${currentUser.uid}/gameHistory/luckySpin`);
+            const newEntry = {
+                bet: bet,
+                multiplier: multiplier,
+                winAmount: winAmount,
+                result: result,
+                timestamp: Date.now()
+            };
+            await historyRef.push(newEntry);
+            await loadHistory();
+        }
+        
+        async function loadHistory() {
+            if (!currentUser) return;
+            const historyRef = db.ref(`users/${currentUser.uid}/gameHistory/luckySpin`);
+            const snapshot = await historyRef.once('value');
+            const history = snapshot.val();
+            const historyDiv = document.getElementById('gameHistory');
+            
+            if (!history || Object.keys(history).length === 0) {
+                historyDiv.innerHTML = '<p class="no-history">No spins yet. Start playing!</p>';
+                return;
+            }
+            
+            const historyArray = Object.values(history).reverse().slice(0, 10);
+            historyDiv.innerHTML = historyArray.map(item => `
+                <div class="history-item ${item.winAmount > 0 ? 'win' : 'loss'}">
+                    <span class="history-time">${new Date(item.timestamp).toLocaleTimeString()}</span>
+                    <span>Bet: ${item.bet} VEVO</span>
+                    <span>${item.multiplier}x</span>
+                    <span class="history-result ${item.winAmount > 0 ? 'win' : 'loss'}">
+                        ${item.winAmount > 0 ? '+' : ''}${item.winAmount} VEVO
+                    </span>
+                </div>
+            `).join('');
+        }
+        
+        async function spin() {
+            if (isSpinning) {
+                alert('Spin already in progress!');
+                return;
+            }
+            
+            if (!currentUser) {
+                alert('Please login first!');
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            const betAmount = parseInt(document.getElementById('betAmount').value);
+            if (isNaN(betAmount) || betAmount < 1) {
+                alert('Please enter a valid bet amount!');
+                return;
+            }
+            
+            if (betAmount > userBalance) {
+                alert(`Insufficient balance! You have ${userBalance} VEVO`);
+                return;
+            }
+            
+            isSpinning = true;
+            const spinBtn = document.getElementById('spinBtn');
+            spinBtn.disabled = true;
+            
+            await updateUserBalance(userBalance - betAmount);
+            
+            const spinAngle = 360 * 10 + Math.random() * 360;
+            const targetRotation = currentRotation + (spinAngle * Math.PI / 180);
+            
+            const startTime = Date.now();
+            const duration = 3000;
+            
+            function animate() {
+                const now = Date.now();
+                const elapsed = now - startTime;
+                const progress = Math.min(1, elapsed / duration);
+                const easeOut = 1 - Math.pow(1 - progress, 3);
+                
+                currentRotation = currentRotation + (spinAngle * Math.PI / 180) * easeOut;
+                drawWheel(currentRotation % (Math.PI * 2));
+                
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
+                } else {
+                    currentRotation = targetRotation % (Math.PI * 2);
+                    drawWheel(currentRotation);
+                    
+                    const winner = getWinner(currentRotation);
+                    const winAmount = Math.floor(betAmount * winner.value);
+                    const resultText = winAmount > 0 ? `Won ${winAmount} VEVO! (${winner.value}x)` : `Lost! (${winner.value}x)`;
+                    
+                    document.getElementById('lastResult').textContent = resultText;
+                    
+                    if (winAmount > 0) {
+                        await updateUserBalance(userBalance + winAmount);
+                        await addGameHistory(betAmount, winner.value, winAmount, 'win');
+                    } else {
+                        await addGameHistory(betAmount, winner.value, 0, 'loss');
+                    }
+                    
+                    await loadUserBalance();
+                    isSpinning = false;
+                    spinBtn.disabled = false;
+                }
+            }
+            
+            animate();
+        }
+        
+        // Event Listeners
+        document.getElementById('spinBtn').addEventListener('click', spin);
+        
+        document.querySelectorAll('.bet-adjust').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const change = parseInt(btn.dataset.change);
+                const input = document.getElementById('betAmount');
+                let newVal = parseInt(input.value) + change;
+                if (newVal < 1) newVal = 1;
+                input.value = newVal;
+            });
+        });
+        
+        document.querySelectorAll('.quick-bet').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.getElementById('betAmount').value = btn.dataset.value;
+            });
+        });
+        
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                currentUser = user;
+                const userRef = db.ref(`users/${user.uid}`);
+                const snapshot = await userRef.once('value');
+                if (!snapshot.exists()) {
+                    await userRef.set({
+                        email: user.email,
+                        name: user.displayName || user.email.split('@')[0],
+                        balance: 100,
+                        withdrawCode: null,
+                        inviteCount: 0,
+                        inviteRewards: 0,
+                        createdAt: Date.now()
+                    });
+                }
+                await loadUserBalance();
+                await loadHistory();
+                drawWheel(currentRotation);
+            } else {
+                window.location.href = 'index.html';
+            }
+        });
+        
+        drawWheel(currentRotation);
+    </script>
+</body>
+</html>
