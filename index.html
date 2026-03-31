@@ -39,7 +39,6 @@
             }
         }
 
-        /* Logo Header */
         .logo-header {
             text-align: center;
             margin-bottom: 30px;
@@ -65,7 +64,6 @@
             font-size: 14px;
         }
 
-        /* Tab Buttons */
         .tab-buttons {
             display: flex;
             gap: 10px;
@@ -91,7 +89,6 @@
             box-shadow: 0 5px 15px rgba(0,0,0,0.2);
         }
 
-        /* Form Container */
         .form-container {
             background: white;
             border-radius: 24px;
@@ -210,7 +207,6 @@
             text-decoration: none;
         }
 
-        /* Loading Spinner */
         .loading-spinner {
             display: inline-block;
             width: 18px;
@@ -226,7 +222,6 @@
             to { transform: rotate(360deg); }
         }
 
-        /* Notification */
         .notification {
             position: fixed;
             top: 20px;
@@ -249,7 +244,6 @@
             }
         }
 
-        /* Responsive */
         @media (max-width: 480px) {
             .form-container {
                 padding: 24px;
@@ -319,7 +313,7 @@
                     <div class="form-group">
                         <label><i class="fas fa-gift"></i> Promo Code (Optional)</label>
                         <input type="text" id="regPromoCode" placeholder="Enter friend's promo code">
-                        <div class="promo-note">Enter a promo code to get 100 VEVO bonus!</div>
+                        <div class="promo-note">Enter a promo code to get 100 VEVO bonus on first deposit!</div>
                         <span class="error-message" id="regPromoError"></span>
                     </div>
                     <button type="submit" class="submit-btn" id="registerBtn">Create Account</button>
@@ -338,7 +332,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script>
-        // Firebase Config
         const firebaseConfig = {
             apiKey: "AIzaSyCAfsKcVP7OUo870TKkBnk4BfDEq9LnAK8",
             authDomain: "newporoject-c6f66.firebaseapp.com",
@@ -346,39 +339,31 @@
             projectId: "newporoject-c6f66",
             storageBucket: "newporoject-c6f66.appspot.com",
             messagingSenderId: "733557611631",
-            appId: "1:733557611631:web:02c9377f56d614ff3b019a",
-            measurementId: "G-53BEVW33FP"
+            appId: "1:733557611631:web:02c9377f56d614ff3b019a"
         };
         
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.database();
         
-        // DOM Elements
         const loginForm = document.getElementById('loginForm');
         const registerForm = document.getElementById('registerForm');
         const loginTab = document.getElementById('loginTabBtn');
         const registerTab = document.getElementById('registerTabBtn');
         
-        // Generate promo code from user ID
         function generatePromoCode(userId) {
             return userId ? userId.substring(0, 8).toUpperCase() : '';
         }
         
-        // Show notification
         function showNotification(message, type = 'info') {
             const notification = document.createElement('div');
             notification.className = 'notification';
             notification.style.background = type === 'success' ? '#48bb78' : type === 'error' ? '#ff4757' : '#667eea';
             notification.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i> ${message}`;
             document.body.appendChild(notification);
-            setTimeout(() => {
-                notification.style.animation = 'slideOut 0.3s ease';
-                setTimeout(() => notification.remove(), 300);
-            }, 3000);
+            setTimeout(() => notification.remove(), 3000);
         }
         
-        // Clear all errors
         function clearErrors(formType) {
             const errors = formType === 'login' 
                 ? ['loginEmailError', 'loginPasswordError']
@@ -390,20 +375,16 @@
             document.querySelectorAll('.form-group input').forEach(input => input.classList.remove('error'));
         }
         
-        // Validate email
         function isValidEmail(email) {
             return /^[^\s@]+@([^\s@]+\.)+[^\s@]+$/.test(email);
         }
         
-        // Apply invite code during registration
         async function applyInviteCode(userId, promoCode) {
             if (!promoCode) return false;
-            
             try {
                 const usersRef = db.ref('users');
                 const snapshot = await usersRef.once('value');
                 let inviterId = null;
-                
                 snapshot.forEach(childSnapshot => {
                     const user = childSnapshot.val();
                     const userCode = generatePromoCode(childSnapshot.key);
@@ -411,16 +392,13 @@
                         inviterId = childSnapshot.key;
                     }
                 });
-                
                 if (inviterId) {
                     await db.ref(`users/${userId}`).update({ invitedBy: inviterId });
-                    
                     const inviterRef = db.ref(`users/${inviterId}`);
                     const inviterSnapshot = await inviterRef.once('value');
                     const inviterData = inviterSnapshot.val();
                     const newInviteCount = (inviterData.inviteCount || 0) + 1;
                     const newInvitees = [...(inviterData.invitees || []), userId];
-                    
                     let reward = 0;
                     if (newInviteCount % 5 === 0) {
                         reward = 10;
@@ -429,7 +407,6 @@
                             inviteRewards: (inviterData.inviteRewards || 0) + reward
                         });
                     }
-                    
                     await inviterRef.update({
                         inviteCount: newInviteCount,
                         invitees: newInvitees
@@ -443,7 +420,6 @@
             }
         }
         
-        // Register function
         async function register(name, email, password, promoCode) {
             clearErrors('register');
             let isValid = true;
@@ -453,7 +429,6 @@
                 document.getElementById('regName').classList.add('error');
                 isValid = false;
             }
-            
             if (!email) {
                 document.getElementById('regEmailError').textContent = 'Email is required';
                 document.getElementById('regEmail').classList.add('error');
@@ -463,7 +438,6 @@
                 document.getElementById('regEmail').classList.add('error');
                 isValid = false;
             }
-            
             if (!password) {
                 document.getElementById('regPasswordError').textContent = 'Password is required';
                 document.getElementById('regPassword').classList.add('error');
@@ -473,7 +447,6 @@
                 document.getElementById('regPassword').classList.add('error');
                 isValid = false;
             }
-            
             if (!isValid) return false;
             
             const registerBtn = document.getElementById('registerBtn');
@@ -485,10 +458,11 @@
                 const user = userCredential.user;
                 await user.updateProfile({ displayName: name });
                 
+                // IMPORTANT: Start with 0 balance - no welcome bonus
                 const userData = {
                     email: email,
                     name: name,
-                    balance: 100,
+                    balance: 0,
                     withdrawCode: null,
                     inviteCount: 0,
                     inviteRewards: 0,
@@ -502,13 +476,13 @@
                 if (promoCode && promoCode.trim()) {
                     const applied = await applyInviteCode(user.uid, promoCode.trim());
                     if (applied) {
-                        showNotification('Promo code applied! You received 100 VEVO bonus!', 'success');
+                        showNotification('Promo code applied! You will get 100 VEVO on your first deposit!', 'success');
                     } else if (promoCode.trim()) {
                         showNotification('Promo code not found', 'error');
                     }
                 }
                 
-                showNotification('Account created successfully! Welcome to VEVOBet!', 'success');
+                showNotification('Account created successfully! Please deposit to start playing!', 'success');
                 setTimeout(() => {
                     window.location.href = 'dashboard.html';
                 }, 1500);
@@ -529,7 +503,6 @@
             }
         }
         
-        // Login function
         async function login(email, password) {
             clearErrors('login');
             let isValid = true;
@@ -543,13 +516,11 @@
                 document.getElementById('loginEmail').classList.add('error');
                 isValid = false;
             }
-            
             if (!password) {
                 document.getElementById('loginPasswordError').textContent = 'Password is required';
                 document.getElementById('loginPassword').classList.add('error');
                 isValid = false;
             }
-            
             if (!isValid) return false;
             
             const loginBtn = document.getElementById('loginBtn');
@@ -558,8 +529,7 @@
             
             try {
                 const userCredential = await auth.signInWithEmailAndPassword(email, password);
-                const user = userCredential.user;
-                await db.ref(`users/${user.uid}`).update({ lastLogin: Date.now() });
+                await db.ref(`users/${userCredential.user.uid}`).update({ lastLogin: Date.now() });
                 showNotification('Login successful! Redirecting...', 'success');
                 setTimeout(() => {
                     window.location.href = 'dashboard.html';
@@ -571,8 +541,6 @@
                     errorMessage = 'No account found with this email. Please register first.';
                 } else if (error.code === 'auth/wrong-password') {
                     errorMessage = 'Incorrect password. Please try again.';
-                } else if (error.code === 'auth/invalid-email') {
-                    errorMessage = 'Invalid email format.';
                 } else {
                     errorMessage += error.message;
                 }
@@ -583,7 +551,6 @@
             }
         }
         
-        // Tab switching
         function switchToRegister() {
             loginForm.classList.add('hidden');
             registerForm.classList.remove('hidden');
@@ -600,7 +567,6 @@
             clearErrors('register');
         }
         
-        // Event Listeners
         document.getElementById('loginFormElement').addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = document.getElementById('loginEmail').value.trim();
@@ -620,7 +586,6 @@
         loginTab.addEventListener('click', switchToLogin);
         registerTab.addEventListener('click', switchToRegister);
         
-        // Real-time validation
         document.getElementById('regPassword').addEventListener('input', function() {
             if (this.value.length > 0 && this.value.length < 6) {
                 document.getElementById('regPasswordError').textContent = 'Password must be at least 6 characters';
@@ -651,36 +616,21 @@
             }
         });
         
-        // Check if user is already logged in
         auth.onAuthStateChanged(async (user) => {
             if (user) {
                 window.location.href = 'dashboard.html';
             }
         });
         
-        // Check URL for referral code and auto-fill
         const urlParams = new URLSearchParams(window.location.search);
         const refCode = urlParams.get('ref');
         if (refCode) {
             setTimeout(() => {
                 switchToRegister();
                 document.getElementById('regPromoCode').value = refCode;
-                showNotification('Referral code detected! Complete registration to get bonus!', 'success');
+                showNotification('Referral code detected! Complete registration to get bonus on first deposit!', 'success');
             }, 500);
         }
-        
-        // Enter key support
-        document.getElementById('loginPassword').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                document.getElementById('loginFormElement').dispatchEvent(new Event('submit'));
-            }
-        });
-        
-        document.getElementById('regPassword').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                document.getElementById('registerFormElement').dispatchEvent(new Event('submit'));
-            }
-        });
     </script>
 </body>
 </html>
