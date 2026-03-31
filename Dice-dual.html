@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VEVOBet - Dice Duel</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .game-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 15px 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+
+        .back-btn {
+            color: white;
+            text-decoration: none;
+            font-size: 16px;
+            padding: 8px 15px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .game-logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .game-logo i {
+            margin-right: 10px;
+            color: #ffd700;
+        }
+
+        .game-balance {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 8px 20px;
+            border-radius: 25px;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .game-balance i {
+            color: #ffd700;
+            margin-right: 8px;
+        }
+
+        /* Game Title */
+        .game-title {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .game-title h1 {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .game-title p {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+
+        /* Dice Display */
+        .dice-container {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .dice {
+            width: 150px;
+            height: 150px;
+            background: white;
+            border-radius: 20px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s;
+        }
+
+        .dice.rolling {
+            animation: shake 0.5s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .dice-value {
+            font-size: 72px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .dice-number {
+            font-size: 24px;
+            margin-top: 15px;
+            color: white;
+            font-weight: bold;
+        }
+
+        /* Betting Options */
+        .betting-options {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .bet-option {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            min-width: 200px;
+            border: 3px solid transparent;
+        }
+
+        .bet-option:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .bet-option.selected {
+            border-color: #ffd700;
+            background: rgba(255, 255, 255, 1);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .bet-option h3 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .bet-option p {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .bet-odds {
+            font-size: 20px;
+            font-weight: bold;
+            color: #48bb78;
+        }
+
+        /* Bet Controls */
+        .bet-controls {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 25px;
+            margin: 20px 0;
+        }
+
+        .bet-controls label {
+            font-size: 18px;
+            font-weight: bold;
+            display: block;
+            margin-bottom: 15px;
+            color: #333;
+            text-align: center;
+        }
+
+        .bet-input-group {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .bet-adjust {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        #betAmount {
+            width: 120px;
+            padding: 10px;
+            font-size: 18px;
+            text-align: center;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+
+        .quick-bets {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .quick-bet {
+            background: #48bb78;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .roll-button {
+            background: linear-gradient(135deg, #ff6b6b, #ff4757);
+            color: white;
+            border: none;
+            padding: 15px 50px;
+            font-size: 24px;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: block;
+            margin: 20px auto;
+            width: fit-content;
+        }
+
+        .roll-button:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .roll-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Result Display */
+        .result-display {
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .result-message {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ffd700;
+        }
+
+        .result-win {
+            color: #48bb78;
+        }
+
+        .result-loss {
+            color: #ff4757;
+        }
+
+        /* History */
+        .history-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .history-section h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .history-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .history-item.win {
+            background: rgba(72, 187, 120, 0.1);
+            border-left: 4px solid #48bb78;
+        }
+
+        .history-item.loss {
+            border-left: 4px solid #ff4757;
+        }
+
+        .history-result.win {
+            color: #48bb78;
+            font-weight: bold;
+        }
+
+        .history-result.loss {
+            color: #ff4757;
+            font-weight: bold;
+        }
+
+        .no-history {
+            text-align: center;
+            color: #999;
+            padding: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .dice {
+                width: 100px;
+                height: 100px;
+            }
+            .dice-value {
+                font-size: 48px;
+            }
+            .bet-option {
+                min-width: 150px;
+            }
+            .game-title h1 {
+                font-size: 32px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i> Back</a>
+            <div class="game-logo">
+                <i class="fas fa-dice-d6"></i> VEVOBet
+            </div>
+            <div class="game-balance">
+                <i class="fas fa-coins"></i> <span id="gameBalance">0</span> VEVO
+            </div>
+        </div>
+
+        <div class="game-title">
+            <h1><i class="fas fa-dice"></i> Dice Duel</h1>
+            <p>Predict if the dice will roll OVER or UNDER the target number!</p>
+        </div>
+
+        <div class="dice-container">
+            <div class="dice" id="dice">
+                <div class="dice-value" id="diceValue">?</div>
+            </div>
+            <div class="dice-number" id="diceNumber">Click ROLL to start</div>
+        </div>
+
+        <div class="betting-options">
+            <div class="bet-option" data-bet="over">
+                <h3>🎲 OVER 50</h3>
+                <p>Roll 51-100</p>
+                <div class="bet-odds">Multiplier: 1.95x</div>
+            </div>
+            <div class="bet-option" data-bet="under">
+                <h3>🎲 UNDER 50</h3>
+                <p>Roll 1-49</p>
+                <div class="bet-odds">Multiplier: 1.95x</div>
+            </div>
+        </div>
+
+        <div class="bet-controls">
+            <label>Bet Amount (VEVO):</label>
+            <div class="bet-input-group">
+                <button class="bet-adjust" data-change="-10">-10</button>
+                <input type="number" id="betAmount" value="10" min="1" step="1">
+                <button class="bet-adjust" data-change="10">+10</button>
+            </div>
+            <div class="quick-bets">
+                <button class="quick-bet" data-value="10">10</button>
+                <button class="quick-bet" data-value="50">50</button>
+                <button class="quick-bet" data-value="100">100</button>
+                <button class="quick-bet" data-value="500">500</button>
+            </div>
+        </div>
+
+        <button class="roll-button" id="rollBtn">ROLL DICE!</button>
+
+        <div class="result-display" id="resultDisplay" style="display: none;">
+            <div class="result-message" id="resultMessage"></div>
+        </div>
+
+        <div class="history-section">
+            <h3><i class="fas fa-history"></i> Game History</h3>
+            <div id="gameHistory" class="history-list">
+                <p class="no-history">No rolls yet. Start playing!</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://kit.fontawesome.com/a2e0a8c9d2.js" crossorigin="anonymous"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script>
+        // Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyCAfsKcVP7OUo870TKkBnk4BfDEq9LnAK8",
+            authDomain: "newporoject-c6f66.firebaseapp.com",
+            databaseURL: "https://newporoject-c6f66-default-rtdb.firebaseio.com",
+            projectId: "newporoject-c6f66",
+            storageBucket: "newporoject-c6f66.appspot.com",
+            messagingSenderId: "733557611631",
+            appId: "1:733557611631:web:02c9377f56d614ff3b019a",
+            measurementId: "G-53BEVW33FP"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.database();
+        
+        // Game Variables
+        let currentUser = null;
+        let userBalance = 0;
+        let selectedBet = null;
+        let isRolling = false;
+        
+        function updateBalanceDisplay() {
+            document.getElementById('gameBalance').textContent = userBalance;
+        }
+        
+        async function loadUserBalance() {
+            if (!currentUser) return;
+            const userRef = db.ref(`users/${currentUser.uid}`);
+            const snapshot = await userRef.once('value');
+            const userData = snapshot.val();
+            if (userData) {
+                userBalance = userData.balance || 0;
+                updateBalanceDisplay();
+            }
+        }
+        
+        async function updateUserBalance(newBalance) {
+            if (!currentUser) return;
+            await db.ref(`users/${currentUser.uid}`).update({ balance: newBalance });
+            userBalance = newBalance;
+            updateBalanceDisplay();
+        }
+        
+        async function addGameHistory(bet, roll, winAmount, result, multiplier) {
+            if (!currentUser) return;
+            const historyRef = db.ref(`users/${currentUser.uid}/gameHistory/diceDuel`);
+            const newEntry = {
+                bet: bet,
+                roll: roll,
+                multiplier: multiplier,
+                winAmount: winAmount,
+                result: result,
+                timestamp: Date.now()
+            };
+            await historyRef.push(newEntry);
+            await loadHistory();
+        }
+        
+        async function loadHistory() {
+            if (!currentUser) return;
+            const historyRef = db.ref(`users/${currentUser.uid}/gameHistory/diceDuel`);
+            const snapshot = await historyRef.once('value');
+            const history = snapshot.val();
+            const historyDiv = document.getElementById('gameHistory');
+            
+            if (!history || Object.keys(history).length === 0) {
+                historyDiv.innerHTML = '<p class="no-history">No rolls yet. Start playing!</p>';
+                return;
+            }
+            
+            const historyArray = Object.values(history).reverse().slice(0, 10);
+            historyDiv.innerHTML = historyArray.map(item => `
+                <div class="history-item ${item.winAmount > 0 ? 'win' : 'loss'}">
+                    <span>🎲 ${item.roll}</span>
+                    <span>Bet: ${item.bet} VEVO</span>
+                    <span>${item.multiplier}x</span>
+                    <span class="history-result ${item.winAmount > 0 ? 'win' : 'loss'}">
+                        ${item.winAmount > 0 ? '+' : ''}${item.winAmount} VEVO
+                    </span>
+                </div>
+            `).join('');
+        }
+        
+        function animateRoll(finalValue, callback) {
+            const dice = document.getElementById('dice');
+            const diceValue = document.getElementById('diceValue');
+            let rolls = 0;
+            const maxRolls = 15;
+            
+            dice.classList.add('rolling');
+            
+            const interval = setInterval(() => {
+                const randomValue = Math.floor(Math.random() * 100) + 1;
+                diceValue.textContent = randomValue;
+                rolls++;
+                
+                if (rolls >= maxRolls) {
+                    clearInterval(interval);
+                    dice.classList.remove('rolling');
+                    diceValue.textContent = finalValue;
+                    callback();
+                }
+            }, 80);
+        }
+        
+        async function rollDice() {
+            if (isRolling) {
+                alert('Roll in progress!');
+                return;
+            }
+            
+            if (!currentUser) {
+                alert('Please login first!');
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            if (!selectedBet) {
+                alert('Please select OVER or UNDER!');
+                return;
+            }
+            
+            const betAmount = parseInt(document.getElementById('betAmount').value);
+            if (isNaN(betAmount) || betAmount < 1) {
+                alert('Please enter a valid bet amount!');
+                return;
+            }
+            
+            if (betAmount > userBalance) {
+                alert(`Insufficient balance! You have ${userBalance} VEVO`);
+                return;
+            }
+            
+            isRolling = true;
+            const rollBtn = document.getElementById('rollBtn');
+            rollBtn.disabled = true;
+            
+            await updateUserBalance(userBalance - betAmount);
+            
+            const roll = Math.floor(Math.random() * 100) + 1;
+            const isOver = roll > 50;
+            const won = (selectedBet === 'over' && isOver) || (selectedBet === 'under' && !isOver);
+            
+            let winAmount = 0;
+            let multiplier = 1.95;
+            let resultMessage = '';
+            
+            if (won) {
+                winAmount = Math.floor(betAmount * multiplier);
+                resultMessage = `🎉 WIN! Rolled ${roll}. You won ${winAmount} VEVO! 🎉`;
+                document.getElementById('resultMessage').className = 'result-message result-win';
+            } else {
+                winAmount = 0;
+                resultMessage = `😢 LOSS! Rolled ${roll}. You lost ${betAmount} VEVO.`;
+                document.getElementById('resultMessage').className = 'result-message result-loss';
+            }
+            
+            animateRoll(roll, async () => {
+                if (won) {
+                    await updateUserBalance(userBalance + winAmount);
+                }
+                
+                await addGameHistory(betAmount, roll, winAmount, won ? 'win' : 'loss', multiplier);
+                await loadUserBalance();
+                
+                document.getElementById('resultDisplay').style.display = 'block';
+                document.getElementById('resultMessage').textContent = resultMessage;
+                
+                setTimeout(() => {
+                    document.getElementById('resultDisplay').style.display = 'none';
+                }, 3000);
+                
+                isRolling = false;
+                rollBtn.disabled = false;
+            });
+        }
+        
+        // Event Listeners
+        document.getElementById('rollBtn').addEventListener('click', rollDice);
+        
+        document.querySelectorAll('.bet-option').forEach(option => {
+            option.addEventListener('click', () => {
+                document.querySelectorAll('.bet-option').forEach(opt => {
+                    opt.classList.remove('selected');
+                });
+                option.classList.add('selected');
+                selectedBet = option.dataset.bet;
+            });
+        });
+        
+        document.querySelectorAll('.bet-adjust').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const change = parseInt(btn.dataset.change);
+                const input = document.getElementById('betAmount');
+                let newVal = parseInt(input.value) + change;
+                if (newVal < 1) newVal = 1;
+                input.value = newVal;
+            });
+        });
+        
+        document.querySelectorAll('.quick-bet').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.getElementById('betAmount').value = btn.dataset.value;
+            });
+        });
+        
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                currentUser = user;
+                const userRef = db.ref(`users/${user.uid}`);
+                const snapshot = await userRef.once('value');
+                if (!snapshot.exists()) {
+                    await userRef.set({
+                        email: user.email,
+                        name: user.displayName || user.email.split('@')[0],
+                        balance: 100,
+                        withdrawCode: null,
+                        inviteCount: 0,
+                        inviteRewards: 0,
+                        createdAt: Date.now()
+                    });
+                }
+                await loadUserBalance();
+                await loadHistory();
+            } else {
+                window.location.href = 'index.html';
+            }
+        });
+    </script>
+</body>
+</html>
