@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VEVOBet - Roulette Royale</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #2c3e50 0%, #1a1a2e 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .game-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 15px 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+
+        .back-btn {
+            color: white;
+            text-decoration: none;
+            font-size: 16px;
+            padding: 8px 15px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .game-logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .game-logo i {
+            margin-right: 10px;
+            color: #ffd700;
+        }
+
+        .game-balance {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 8px 20px;
+            border-radius: 25px;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .game-balance i {
+            color: #ffd700;
+            margin-right: 8px;
+        }
+
+        /* Game Title */
+        .game-title {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .game-title h1 {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .game-title p {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+
+        /* Roulette Wheel */
+        .roulette-section {
+            display: flex;
+            gap: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+
+        .wheel-container {
+            flex: 1;
+            min-width: 300px;
+            text-align: center;
+        }
+
+        .roulette-wheel {
+            width: 300px;
+            height: 300px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .ball {
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            background: radial-gradient(circle, #ffd700, #ff8c00);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            transition: all 0.1s linear;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+
+        .spin-button {
+            margin-top: 20px;
+            background: linear-gradient(135deg, #ff6b6b, #ff4757);
+            color: white;
+            border: none;
+            padding: 12px 40px;
+            font-size: 20px;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .spin-button:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .spin-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .last-number {
+            margin-top: 15px;
+            color: white;
+            font-size: 18px;
+        }
+
+        .last-number span {
+            font-size: 32px;
+            font-weight: bold;
+            color: #ffd700;
+        }
+
+        /* Betting Table */
+        .betting-table {
+            flex: 2;
+            min-width: 400px;
+            background: rgba(0, 100, 0, 0.8);
+            border-radius: 15px;
+            padding: 20px;
+            border: 2px solid #ffd700;
+        }
+
+        .numbers-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 5px;
+            margin-bottom: 15px;
+        }
+
+        .number-btn {
+            background: #2c3e50;
+            color: white;
+            border: 1px solid #ffd700;
+            padding: 12px 5px;
+            text-align: center;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            border-radius: 5px;
+        }
+
+        .number-btn:hover {
+            background: #ffd700;
+            color: #2c3e50;
+            transform: scale(1.05);
+        }
+
+        .number-btn.selected {
+            background: #ffd700;
+            color: #2c3e50;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+        }
+
+        .zero {
+            background: #e74c3c;
+            grid-column: span 1;
+        }
+
+        .special-bets {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .special-btn {
+            background: #34495e;
+            color: white;
+            border: 1px solid #ffd700;
+            padding: 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+
+        .special-btn:hover {
+            background: #ffd700;
+            color: #2c3e50;
+        }
+
+        .special-btn.selected {
+            background: #ffd700;
+            color: #2c3e50;
+        }
+
+        /* Bet Controls */
+        .bet-controls {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 25px;
+            margin: 20px 0;
+        }
+
+        .bet-controls label {
+            font-size: 18px;
+            font-weight: bold;
+            display: block;
+            margin-bottom: 15px;
+            color: #333;
+            text-align: center;
+        }
+
+        .bet-input-group {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .bet-adjust {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        #betAmount {
+            width: 120px;
+            padding: 10px;
+            font-size: 18px;
+            text-align: center;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+
+        .quick-bets {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .quick-bet {
+            background: #48bb78;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .selected-bet-info {
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 10px;
+            padding: 10px;
+            margin: 10px 0;
+            text-align: center;
+            color: white;
+        }
+
+        /* Result Display */
+        .result-display {
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .result-message {
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .result-win {
+            color: #48bb78;
+        }
+
+        .result-loss {
+            color: #ff4757;
+        }
+
+        /* History */
+        .history-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .history-section h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .history-list {
+            max-height: 150px;
+            overflow-y: auto;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .history-ball {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ffd700, #ff8c00);
+            color: #2c3e50;
+            text-align: center;
+            line-height: 40px;
+            font-weight: bold;
+            margin: 5px;
+        }
+
+        .no-history {
+            text-align: center;
+            color: #999;
+            padding: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .numbers-grid {
+                grid-template-columns: repeat(6, 1fr);
+            }
+            .game-title h1 {
+                font-size: 32px;
+            }
+            .roulette-wheel {
+                width: 250px;
+                height: 250px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i> Back</a>
+            <div class="game-logo">
+                <i class="fas fa-dice-d6"></i> VEVOBet
+            </div>
+            <div class="game-balance">
+                <i class="fas fa-coins"></i> <span id="gameBalance">0</span> VEVO
+            </div>
+        </div>
+
+        <div class="game-title">
+            <h1><i class="fas fa-circle"></i> Roulette Royale <i class="fas fa-circle"></i></h1>
+            <p>Place your bets on numbers, colors, or sections!</p>
+        </div>
+
+        <div class="roulette-section">
+            <div class="wheel-container">
+                <div class="roulette-wheel">
+                    <canvas id="rouletteCanvas" width="300" height="300"></canvas>
+                    <div class="ball" id="ball" style="display: none;"></div>
+                </div>
+                <button class="spin-button" id="spinBtn">SPIN THE WHEEL!</button>
+                <div class="last-number">
+                    Last Number: <span id="lastNumber">-</span>
+                </div>
+            </div>
+
+            <div class="betting-table">
+                <div class="numbers-grid" id="numbersGrid"></div>
+                <div class="special-bets">
+                    <button class="special-btn" data-bet="red">🔴 RED (2x)</button>
+                    <button class="special-btn" data-bet="black">⚫ BLACK (2x)</button>
+                    <button class="special-btn" data-bet="even">EVEN (2x)</button>
+                    <button class="special-btn" data-bet="odd">ODD (2x)</button>
+                    <button class="special-btn" data-bet="1-18">1-18 (2x)</button>
+                    <button class="special-btn" data-bet="19-36">19-36 (2x)</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="selected-bet-info" id="selectedBetInfo">
+            No bet selected. Click on a number or special bet to choose!
+        </div>
+
+        <div class="bet-controls">
+            <label>Bet Amount (VEVO):</label>
+            <div class="bet-input-group">
+                <button class="bet-adjust" data-change="-10">-10</button>
+                <input type="number" id="betAmount" value="10" min="1" step="1">
+                <button class="bet-adjust" data-change="10">+10</button>
+            </div>
+            <div class="quick-bets">
+                <button class="quick-bet" data-value="10">10</button>
+                <button class="quick-bet" data-value="50">50</button>
+                <button class="quick-bet" data-value="100">100</button>
+                <button class="quick-bet" data-value="500">500</button>
+            </div>
+        </div>
+
+        <div class="result-display" id="resultDisplay" style="display: none;">
+            <div class="result-message" id="resultMessage"></div>
+        </div>
+
+        <div class="history-section">
+            <h3><i class="fas fa-history"></i> Recent Numbers</h3>
+            <div id="gameHistory" class="history-list">
+                <p class="no-history">No spins yet. Start playing!</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://kit.fontawesome.com/a2e0a8c9d2.js" crossorigin="anonymous"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script>
+        // Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyCAfsKcVP7OUo870TKkBnk4BfDEq9LnAK8",
+            authDomain: "newporoject-c6f66.firebaseapp.com",
+            databaseURL: "https://newporoject-c6f66-default-rtdb.firebaseio.com",
+            projectId: "newporoject-c6f66",
+            storageBucket: "newporoject-c6f66.appspot.com",
+            messagingSenderId: "733557611631",
+            appId: "1:733557611631:web:02c9377f56d614ff3b019a",
+            measurementId: "G-53BEVW33FP"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.database();
+        
+        // Roulette Data
+        const rouletteNumbers = [
+            { number: 0, color: 'green' },
+            { number: 32, color: 'red' }, { number: 15, color: 'black' }, { number: 19, color: 'red' },
+            { number: 4, color: 'black' }, { number: 21, color: 'red' }, { number: 2, color: 'black' },
+            { number: 25, color: 'red' }, { number: 17, color: 'black' }, { number: 34, color: 'red' },
+            { number: 6, color: 'black' }, { number: 27, color: 'red' }, { number: 13, color: 'black' },
+            { number: 36, color: 'red' }, { number: 11, color: 'black' }, { number: 30, color: 'red' },
+            { number: 8, color: 'black' }, { number: 23, color: 'red' }, { number: 10, color: 'black' },
+            { number: 5, color: 'red' }, { number: 24, color: 'black' }, { number: 16, color: 'red' },
+            { number: 33, color: 'black' }, { number: 1, color: 'red' }, { number: 20, color: 'black' },
+            { number: 14, color: 'red' }, { number: 31, color: 'black' }, { number: 9, color: 'red' },
+            { number: 22, color: 'black' }, { number: 18, color: 'red' }, { number: 29, color: 'black' },
+            { number: 7, color: 'red' }, { number: 28, color: 'black' }, { number: 12, color: 'red' },
+            { number: 35, color: 'black' }, { number: 3, color: 'red' }, { number: 26, color: 'black' }
+        ];
+        
+        let currentUser = null;
+        let userBalance = 0;
+        let selectedBet = null;
+        let selectedBetType = 'number';
+        let isSpinning = false;
+        let spinHistory = [];
+        
+        function updateBalanceDisplay() {
+            document.getElementById('gameBalance').textContent = userBalance;
+        }
+        
+        async function loadUserBalance() {
+            if (!currentUser) return;
+            const userRef = db.ref(`users/${currentUser.uid}`);
+            const snapshot = await userRef.once('value');
+            const userData = snapshot.val();
+            if (userData) {
+                userBalance = userData.balance || 0;
+                updateBalanceDisplay();
+                spinHistory = userData.rouletteHistory || [];
+                updateHistoryDisplay();
+            }
+        }
+        
+        async function updateUserBalance(newBalance) {
+            if (!currentUser) return;
+            await db.ref(`users/${currentUser.uid}`).update({ balance: newBalance });
+            userBalance = newBalance;
+            updateBalanceDisplay();
+        }
+        
+        async function saveHistory(number) {
+            if (!currentUser) return;
+            spinHistory.unshift(number);
+            if (spinHistory.length > 20) spinHistory.pop();
+            await db.ref(`users/${currentUser.uid}`).update({ rouletteHistory: spinHistory });
+            updateHistoryDisplay();
+        }
+        
+        async function addGameHistory(bet, result, winAmount, multiplier) {
+            if (!currentUser) return;
+            const historyRef = db.ref(`users/${currentUser.uid}/gameHistory/roulette`);
+            const newEntry = {
+                bet: bet,
+                result: result,
+                multiplier: multiplier,
+                winAmount: winAmount,
+                timestamp: Date.now()
+            };
+            await historyRef.push(newEntry);
+        }
+        
+        function updateHistoryDisplay() {
+            const historyDiv = document.getElementById('gameHistory');
+            if (!spinHistory || spinHistory.length === 0) {
+                historyDiv.innerHTML = '<p class="no-history">No spins yet. Start playing!</p>';
+                return;
+            }
+            historyDiv.innerHTML = spinHistory.map(num => 
+                `<div class="history-ball">${num}</div>`
+            ).join('');
+        }
+        
+        function checkWin(bet, betType, result) {
+            const resultColor = rouletteNumbers.find(n => n.number === result).color;
+            
+            if (betType === 'number') {
+                return bet == result;
+            } else if (betType === 'red') {
+                return resultColor === 'red' && result !== 0;
+            } else if (betType === 'black') {
+                return resultColor === 'black' && result !== 0;
+            } else if (betType === 'even') {
+                return result !== 0 && result % 2 === 0;
+            } else if (betType === 'odd') {
+                return result !== 0 && result % 2 === 1;
+            } else if (betType === '1-18') {
+                return result >= 1 && result <= 18;
+            } else if (betType === '19-36') {
+                return result >= 19 && result <= 36;
+            }
+            return false;
+        }
+        
+        function getMultiplier(betType) {
+            if (betType === 'number') return 36;
+            return 2;
+        }
+        
+        function drawWheel() {
+            const canvas = document.getElementById('rouletteCanvas');
+            const ctx = canvas.getContext('2d');
+            const size = 300;
+            const centerX = size / 2;
+            const centerY = size / 2;
+            const radius = size / 2;
+            const angleStep = (Math.PI * 2) / rouletteNumbers.length;
+            
+            ctx.clearRect(0, 0, size, size);
+            
+            rouletteNumbers.forEach((item, index) => {
+                const startAngle = index * angleStep;
+                const endAngle = (index + 1) * angleStep;
+                
+                ctx.beginPath();
+                ctx.moveTo(centerX, centerY);
+                ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+                ctx.fillStyle = item.color === 'red' ? '#e74c3c' : (item.color === 'black' ? '#2c3e50' : '#27ae60');
+                ctx.fill();
+                ctx.strokeStyle = '#ffd700';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+                
+                ctx.save();
+                ctx.translate(centerX, centerY);
+                ctx.rotate(startAngle + angleStep / 2);
+                ctx.textAlign = "center";
+                ctx.fillStyle = "white";
+                ctx.font = "bold 14px Arial";
+                ctx.shadowBlur = 0;
+                ctx.fillText(item.number.toString(), radius * 0.7, 8);
+                ctx.restore();
+            });
+            
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 20, 0, Math.PI * 2);
+            ctx.fillStyle = '#ffd700';
+            ctx.fill();
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+        
+        function createNumbersGrid() {
+            const grid = document.getElementById('numbersGrid');
+            grid.innerHTML = '';
+            
+            // Add zero
+            const zeroBtn = document.createElement('div');
+            zeroBtn.className = 'number-btn zero';
+            zeroBtn.textContent = '0';
+            zeroBtn.dataset.number = '0';
+            zeroBtn.addEventListener('click', () => selectNumber(0));
+            grid.appendChild(zeroBtn);
+            
+            // Add numbers 1-36
+            for (let i = 1; i <= 36; i++) {
+                const btn = document.createElement('div');
+                btn.className = 'number-btn';
+                btn.textContent = i;
+                btn.dataset.number = i;
+                btn.addEventListener('click', () => selectNumber(i));
+                grid.appendChild(btn);
+            }
+        }
+        
+        function selectNumber(number) {
+            selectedBet = number;
+            selectedBetType = 'number';
+            document.querySelectorAll('.number-btn').forEach(btn => btn.classList.remove('selected'));
+            document.querySelectorAll('.special-btn').forEach(btn => btn.classList.remove('selected'));
+            event.target.classList.add('selected');
+            updateBetInfo();
+        }
+        
+        function selectSpecialBet(betType) {
+            selectedBet = betType;
+            selectedBetType = betType;
+            document.querySelectorAll('.number-btn').forEach(btn => btn.classList.remove('selected'));
+            document.querySelectorAll('.special-btn').forEach(btn => btn.classList.remove('selected'));
+            event.target.classList.add('selected');
+            updateBetInfo();
+        }
+        
+        function updateBetInfo() {
+            const infoDiv = document.getElementById('selectedBetInfo');
+            if (!selectedBet) {
+                infoDiv.innerHTML = 'No bet selected. Click on a number or special bet to choose!';
+                return;
+            }
+            
+            let displayText = '';
+            if (selectedBetType === 'number') {
+                displayText = `Selected: Number ${selectedBet} (Pays 36x)`;
+            } else {
+                let multiplier = 2;
+                let betName = '';
+                switch(selectedBet) {
+                    case 'red': betName = 'RED'; break;
+                    case 'black': betName = 'BLACK'; break;
+                    case 'even': betName = 'EVEN'; break;
+                    case 'odd': betName = 'ODD'; break;
+                    case '1-18': betName = '1-18'; break;
+                    case '19-36': betName = '19-36'; break;
+                }
+                displayText = `Selected: ${betName} (Pays ${multiplier}x)`;
+            }
+            infoDiv.innerHTML = displayText;
+        }
+        
+        function animateSpin(result, callback) {
+            const canvas = document.getElementById('rouletteCanvas');
+            let rotation = 0;
+            const spins = 20;
+            let currentSpin = 0;
+            
+            const interval = setInterval(() => {
+                rotation += Math.PI * 2 / rouletteNumbers.length;
+                canvas.style.transform = `rotate(${rotation}rad)`;
+                currentSpin++;
+                
+                if (currentSpin >= spins) {
+                    clearInterval(interval);
+                    canvas.style.transform = '';
+                    callback();
+                }
+            }, 50);
+        }
+        
+        async function spin() {
+            if (isSpinning) {
+                alert('Spin in progress!');
+                return;
+            }
+            
+            if (!currentUser) {
+                alert('Please login first!');
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            if (!selectedBet) {
+                alert('Please select a bet first!');
+                return;
+            }
+            
+            const betAmount = parseInt(document.getElementById('betAmount').value);
+            if (isNaN(betAmount) || betAmount < 1) {
+                alert('Please enter a valid bet amount!');
+                return;
+            }
+            
+            if (betAmount > userBalance) {
+                alert(`Insufficient balance! You have ${userBalance} VEVO`);
+                return;
+            }
+            
+            isSpinning = true;
+            const spinBtn = document.getElementById('spinBtn');
+            spinBtn.disabled = true;
+            
+            await updateUserBalance(userBalance - betAmount);
+            
+            const resultIndex = Math.floor(Math.random() * rouletteNumbers.length);
+            const result = rouletteNumbers[resultIndex].number;
+            const won = checkWin(selectedBet, selectedBetType, result);
+            const multiplier = getMultiplier(selectedBetType);
+            let winAmount = 0;
+            
+            animateSpin(result, async () => {
+                if (won) {
+                    winAmount = betAmount * multiplier;
+                    await updateUserBalance(userBalance + winAmount);
+                }
+                
+                await saveHistory(result);
+                await addGameHistory(selectedBet, result, winAmount, multiplier);
+                await loadUserBalance();
+                
+                document.getElementById('lastNumber').textContent = result;
+                
+                let message = '';
+                if (won) {
+                    message = `🎉 WIN! Number ${result}. You won ${winAmount} VEVO! (${multiplier}x) 🎉`;
+                    document.getElementById('resultMessage').className = 'result-message result-win';
+                } else {
+                    message = `😢 LOSS! Number ${result}. You lost ${betAmount} VEVO.`;
+                    document.getElementById('resultMessage').className = 'result-message result-loss';
+                }
+                
+                document.getElementById('resultDisplay').style.display = 'block';
+                document.getElementById('resultMessage').textContent = message;
+                
+                setTimeout(() => {
+                    document.getElementById('resultDisplay').style.display = 'none';
+                }, 3000);
+                
+                isSpinning = false;
+                spinBtn.disabled = false;
+            });
+        }
+        
+        // Event Listeners
+        document.getElementById('spinBtn').addEventListener('click', spin);
+        
+        document.querySelectorAll('.special-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const betType = btn.dataset.bet;
+                selectedBet = betType;
+                selectedBetType = betType;
+                document.querySelectorAll('.number-btn').forEach(b => b.classList.remove('selected'));
+                document.querySelectorAll('.special-btn').forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                updateBetInfo();
+            });
+        });
+        
+        document.querySelectorAll('.bet-adjust').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const change = parseInt(btn.dataset.change);
+                const input = document.getElementById('betAmount');
+                let newVal = parseInt(input.value) + change;
+                if (newVal < 1) newVal = 1;
+                input.value = newVal;
+            });
+        });
+        
+        document.querySelectorAll('.quick-bet').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.getElementById('betAmount').value = btn.dataset.value;
+            });
+        });
+        
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                currentUser = user;
+                const userRef = db.ref(`users/${user.uid}`);
+                const snapshot = await userRef.once('value');
+                if (!snapshot.exists()) {
+                    await userRef.set({
+                        email: user.email,
+                        name: user.displayName || user.email.split('@')[0],
+                        balance: 100,
+                        withdrawCode: null,
+                        inviteCount: 0,
+                        inviteRewards: 0,
+                        rouletteHistory: [],
+                        createdAt: Date.now()
+                    });
+                }
+                await loadUserBalance();
+                createNumbersGrid();
+                drawWheel();
+            } else {
+                window.location.href = 'index.html';
+            }
+        });
+    </script>
+</body>
+</html>
