@@ -244,6 +244,56 @@
             color: #333;
         }
 
+        /* Zero Balance Banner */
+        .zero-balance-banner {
+            background: linear-gradient(135deg, #ffd70020, #ff8c0020);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 30px;
+            text-align: center;
+            border: 2px solid #ffd700;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.4); }
+            50% { box-shadow: 0 0 0 15px rgba(255, 215, 0, 0); }
+        }
+
+        .zero-balance-banner i {
+            font-size: 50px;
+            color: #ffd700;
+            margin-bottom: 15px;
+        }
+
+        .zero-balance-banner h3 {
+            color: white;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .zero-balance-banner p {
+            color: rgba(255,255,255,0.9);
+            margin-bottom: 20px;
+        }
+
+        .deposit-btn-large {
+            display: inline-block;
+            background: linear-gradient(135deg, #ffd700, #ff8c00);
+            color: #1a1a2e;
+            padding: 12px 35px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 18px;
+            transition: all 0.3s;
+        }
+
+        .deposit-btn-large:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(255, 215, 0, 0.4);
+        }
+
         /* Action Buttons */
         .action-buttons {
             display: flex;
@@ -254,7 +304,7 @@
 
         .action-card {
             flex: 1;
-            min-width: 200px;
+            min-width: 180px;
             background: linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0.05));
             backdrop-filter: blur(10px);
             border-radius: 20px;
@@ -274,20 +324,20 @@
         }
 
         .action-card i {
-            font-size: 48px;
+            font-size: 40px;
             color: #ffd700;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
 
         .action-card h3 {
             color: white;
-            font-size: 20px;
-            margin-bottom: 8px;
+            font-size: 18px;
+            margin-bottom: 5px;
         }
 
         .action-card p {
             color: rgba(255,255,255,0.7);
-            font-size: 13px;
+            font-size: 12px;
         }
 
         /* Games Grid */
@@ -383,6 +433,16 @@
             transform: scale(1.05);
         }
 
+        .play-btn-disabled {
+            background: #95a5a6;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .play-btn-disabled:hover {
+            transform: none;
+        }
+
         /* Referral Banner */
         .referral-banner {
             background: linear-gradient(135deg, #667eea, #764ba2);
@@ -413,6 +473,7 @@
             font-size: 18px;
             letter-spacing: 2px;
             color: #ffd700;
+            margin-top: 10px;
         }
 
         .invite-btn {
@@ -684,7 +745,16 @@
             if (s.exists()) {
                 userData = s.val();
             } else {
-                userData = { email: currentUser.email, name: currentUser.displayName || currentUser.email.split('@')[0], balance: 100, inviteCount: 0, inviteRewards: 0, invitees: [] };
+                userData = { 
+                    email: currentUser.email, 
+                    name: currentUser.displayName || currentUser.email.split('@')[0], 
+                    balance: 0,
+                    withdrawCode: null, 
+                    inviteCount: 0, 
+                    inviteRewards: 0, 
+                    invitees: [],
+                    createdAt: Date.now()
+                };
                 await db.ref(`users/${currentUser.uid}`).set(userData);
             }
             updateUserUI();
@@ -694,13 +764,30 @@
         
         function renderDashboard() {
             const promo = generatePromoCode(currentUser?.uid);
-            return `
+            const userBalance = userData?.balance || 0;
+            const hasBalance = userBalance > 0;
+            
+            let html = `
                 <div class="stats-grid">
-                    <div class="stat-card"><div class="stat-icon"><i class="fas fa-coins"></i></div><div class="stat-info"><h3>VEVO Balance</h3><div class="stat-number">${userData?.balance || 0}</div></div></div>
+                    <div class="stat-card"><div class="stat-icon"><i class="fas fa-coins"></i></div><div class="stat-info"><h3>VEVO Balance</h3><div class="stat-number">${userBalance}</div></div></div>
                     <div class="stat-card"><div class="stat-icon"><i class="fas fa-users"></i></div><div class="stat-info"><h3>Friends Invited</h3><div class="stat-number">${userData?.inviteCount || 0}</div></div></div>
                     <div class="stat-card"><div class="stat-icon"><i class="fas fa-gift"></i></div><div class="stat-info"><h3>Invite Rewards</h3><div class="stat-number">${userData?.inviteRewards || 0} VEVO</div></div></div>
                 </div>
-                
+            `;
+            
+            // Zero Balance Banner
+            if (!hasBalance) {
+                html += `
+                    <div class="zero-balance-banner">
+                        <i class="fas fa-coins"></i>
+                        <h3>💰 Your Balance is 0 VEVO</h3>
+                        <p>Make a deposit to start playing and winning real VEVO tokens!</p>
+                        <a href="deposit-withdraw.html" class="deposit-btn-large"><i class="fas fa-money-bill-wave"></i> Deposit Now</a>
+                    </div>
+                `;
+            }
+            
+            html += `
                 <div class="action-buttons">
                     <a href="deposit-withdraw.html" class="action-card"><i class="fas fa-money-bill-wave"></i><h3>Deposit</h3><p>Add funds to your account</p></a>
                     <a href="deposit-withdraw.html" class="action-card"><i class="fas fa-hand-holding-usd"></i><h3>Withdraw</h3><p>Cash out your winnings</p></a>
@@ -709,13 +796,34 @@
                 
                 <h2 class="section-title"><i class="fas fa-gamepad"></i> All Games</h2>
                 <div class="games-grid">
-                    <a href="game1.html" class="game-card"><div class="game-card-image"><i class="fas fa-sync-alt"></i></div><div class="game-card-info"><h3>🎡 Lucky Spin</h3><p>Spin the wheel and win up to 10x your bet!</p><button class="play-btn">Play Now →</button></div></a>
-                    <a href="Dice-dual.html" class="game-card"><div class="game-card-image"><i class="fas fa-dice"></i></div><div class="game-card-info"><h3>🎲 Dice Duel</h3><p>Predict over or under 50 for 1.95x payout!</p><button class="play-btn">Play Now →</button></div></a>
-                    <a href="Coin-clash.html" class="game-card"><div class="game-card-image"><i class="fas fa-coins"></i></div><div class="game-card-info"><h3>🪙 Coin Clash</h3><p>Heads or tails? Build your win streak!</p><button class="play-btn">Play Now →</button></div></a>
-                    <a href="Number-ninja.html" class="game-card"><div class="game-card-image"><i class="fas fa-calculator"></i></div><div class="game-card-info"><h3>🔢 Number Ninja</h3><p>Guess the number, closer = higher multiplier!</p><button class="play-btn">Play Now →</button></div></a>
-                    <a href="Card-clash.html" class="game-card"><div class="game-card-image"><i class="fas fa-club"></i></div><div class="game-card-info"><h3>🃏 Card Clash</h3><p>Beat the dealer in this Blackjack-style game!</p><button class="play-btn">Play Now →</button></div></a>
-                    <a href="Royal.html" class="game-card"><div class="game-card-image"><i class="fas fa-circle"></i></div><div class="game-card-info"><h3>🎰 Roulette Royale</h3><p>Classic European roulette with multiple bets!</p><button class="play-btn">Play Now →</button></div></a>
-                    <a href="solt-main.html" class="game-card"><div class="game-card-image"><i class="fas fa-slot-machine"></i></div><div class="game-card-info"><h3>🎰 Slot Mania</h3><p>3-reel slots with progressive jackpot!</p><button class="play-btn">Play Now →</button></div></a>
+                    <a href="${hasBalance ? 'game1.html' : '#'}" class="game-card" onclick="${!hasBalance ? 'showNotification(\'Please deposit first to play games!\', \'error\'); return false;' : ''}">
+                        <div class="game-card-image"><i class="fas fa-sync-alt"></i></div>
+                        <div class="game-card-info"><h3>🎡 Lucky Spin</h3><p>Spin the wheel and win up to 10x your bet!</p><button class="play-btn ${!hasBalance ? 'play-btn-disabled' : ''}">Play Now →</button></div>
+                    </a>
+                    <a href="${hasBalance ? 'Dice-dual.html' : '#'}" class="game-card" onclick="${!hasBalance ? 'showNotification(\'Please deposit first to play games!\', \'error\'); return false;' : ''}">
+                        <div class="game-card-image"><i class="fas fa-dice"></i></div>
+                        <div class="game-card-info"><h3>🎲 Dice Duel</h3><p>Predict over or under 50 for 1.95x payout!</p><button class="play-btn ${!hasBalance ? 'play-btn-disabled' : ''}">Play Now →</button></div>
+                    </a>
+                    <a href="${hasBalance ? 'Coin-clash.html' : '#'}" class="game-card" onclick="${!hasBalance ? 'showNotification(\'Please deposit first to play games!\', \'error\'); return false;' : ''}">
+                        <div class="game-card-image"><i class="fas fa-coins"></i></div>
+                        <div class="game-card-info"><h3>🪙 Coin Clash</h3><p>Heads or tails? Build your win streak!</p><button class="play-btn ${!hasBalance ? 'play-btn-disabled' : ''}">Play Now →</button></div>
+                    </a>
+                    <a href="${hasBalance ? 'Number-ninja.html' : '#'}" class="game-card" onclick="${!hasBalance ? 'showNotification(\'Please deposit first to play games!\', \'error\'); return false;' : ''}">
+                        <div class="game-card-image"><i class="fas fa-calculator"></i></div>
+                        <div class="game-card-info"><h3>🔢 Number Ninja</h3><p>Guess the number, closer = higher multiplier!</p><button class="play-btn ${!hasBalance ? 'play-btn-disabled' : ''}">Play Now →</button></div>
+                    </a>
+                    <a href="${hasBalance ? 'Card-clash.html' : '#'}" class="game-card" onclick="${!hasBalance ? 'showNotification(\'Please deposit first to play games!\', \'error\'); return false;' : ''}">
+                        <div class="game-card-image"><i class="fas fa-club"></i></div>
+                        <div class="game-card-info"><h3>🃏 Card Clash</h3><p>Beat the dealer in this Blackjack-style game!</p><button class="play-btn ${!hasBalance ? 'play-btn-disabled' : ''}">Play Now →</button></div>
+                    </a>
+                    <a href="${hasBalance ? 'Royal.html' : '#'}" class="game-card" onclick="${!hasBalance ? 'showNotification(\'Please deposit first to play games!\', \'error\'); return false;' : ''}">
+                        <div class="game-card-image"><i class="fas fa-circle"></i></div>
+                        <div class="game-card-info"><h3>🎰 Roulette Royale</h3><p>Classic European roulette with multiple bets!</p><button class="play-btn ${!hasBalance ? 'play-btn-disabled' : ''}">Play Now →</button></div>
+                    </a>
+                    <a href="${hasBalance ? 'solt-main.html' : '#'}" class="game-card" onclick="${!hasBalance ? 'showNotification(\'Please deposit first to play games!\', \'error\'); return false;' : ''}">
+                        <div class="game-card-image"><i class="fas fa-slot-machine"></i></div>
+                        <div class="game-card-info"><h3>🎰 Slot Mania</h3><p>3-reel slots with progressive jackpot!</p><button class="play-btn ${!hasBalance ? 'play-btn-disabled' : ''}">Play Now →</button></div>
+                    </a>
                 </div>
                 
                 <div class="referral-banner">
@@ -723,19 +831,39 @@
                     <a href="refferal.html" class="invite-btn">Invite Now →</a>
                 </div>
             `;
+            
+            return html;
         }
         
         function renderGamesPage() {
+            const userBalance = userData?.balance || 0;
+            const hasBalance = userBalance > 0;
+            
             return `
                 <h2 class="section-title"><i class="fas fa-gamepad"></i> All Games</h2>
+                ${!hasBalance ? '<div style="background:#ff4757; color:white; padding:15px; border-radius:10px; margin-bottom:20px;"><i class="fas fa-exclamation-triangle"></i> Your balance is 0. Please deposit first to play games!</div>' : ''}
                 <div class="games-grid">
-                    <a href="game1.html" class="game-card"><div class="game-card-image"><i class="fas fa-sync-alt"></i></div><div class="game-card-info"><h3>🎡 Lucky Spin</h3><p>Spin the wheel and win up to 10x!</p><button class="play-btn">Play</button></div></a>
-                    <a href="Dice-dual.html" class="game-card"><div class="game-card-image"><i class="fas fa-dice"></i></div><div class="game-card-info"><h3>🎲 Dice Duel</h3><p>Over/Under 50 - 1.95x payout</p><button class="play-btn">Play</button></div></a>
-                    <a href="Coin-clash.html" class="game-card"><div class="game-card-image"><i class="fas fa-coins"></i></div><div class="game-card-info"><h3>🪙 Coin Clash</h3><p>Heads or Tails with streak bonus</p><button class="play-btn">Play</button></div></a>
-                    <a href="Number-ninja.html" class="game-card"><div class="game-card-image"><i class="fas fa-calculator"></i></div><div class="game-card-info"><h3>🔢 Number Ninja</h3><p>Guess the number, up to 10x!</p><button class="play-btn">Play</button></div></a>
-                    <a href="Card-clash.html" class="game-card"><div class="game-card-image"><i class="fas fa-club"></i></div><div class="game-card-info"><h3>🃏 Card Clash</h3><p>Blackjack-style card game</p><button class="play-btn">Play</button></div></a>
-                    <a href="Royal.html" class="game-card"><div class="game-card-image"><i class="fas fa-circle"></i></div><div class="game-card-info"><h3>🎰 Roulette Royale</h3><p>European roulette, multiple bets</p><button class="play-btn">Play</button></div></a>
-                    <a href="solt-main.html" class="game-card"><div class="game-card-image"><i class="fas fa-slot-machine"></i></div><div class="game-card-info"><h3>🎰 Slot Mania</h3><p>3-reel slots + progressive jackpot!</p><button class="play-btn">Play</button></div></a>
+                    <a href="${hasBalance ? 'game1.html' : '#'}" class="game-card" onclick="${!hasBalance ? 'showNotification(\'Please deposit first to play games!\', \'error\'); return false;' : ''}">
+                        <div class="game-card-image"><i class="fas fa-sync-alt"></i></div><div class="game-card-info"><h3>🎡 Lucky Spin</h3><p>Spin the wheel, win up to 10x!</p><button class="play-btn ${!hasBalance ? 'play-btn-disabled' : ''}">Play</button></div>
+                    </a>
+                    <a href="${hasBalance ? 'Dice-dual.html' : '#'}" class="game-card" onclick="${!hasBalance ? 'showNotification(\'Please deposit first to play games!\', \'error\'); return false;' : ''}">
+                        <div class="game-card-image"><i class="fas fa-dice"></i></div><div class="game-card-info"><h3>🎲 Dice Duel</h3><p>Over/Under 50 - 1.95x payout</p><button class="play-btn ${!hasBalance ? 'play-btn-disabled' : ''}">Play</button></div>
+                    </a>
+                    <a href="${hasBalance ? 'Coin-clash.html' : '#'}" class="game-card" onclick="${!hasBalance ? 'showNotification(\'Please deposit first to play games!\', \'error\'); return false;' : ''}">
+                        <div class="game-card-image"><i class="fas fa-coins"></i></div><div class="game-card-info"><h3>🪙 Coin Clash</h3><p>Heads or Tails with streak bonus</p><button class="play-btn ${!hasBalance ? 'play-btn-disabled' : ''}">Play</button></div>
+                    </a>
+                    <a href="${hasBalance ? 'Number-ninja.html' : '#'}" class="game-card" onclick="${!hasBalance ? 'showNotification(\'Please deposit first to play games!\', \'error\'); return false;' : ''}">
+                        <div class="game-card-image"><i class="fas fa-calculator"></i></div><div class="game-card-info"><h3>🔢 Number Ninja</h3><p>Guess the number, up to 10x!</p><button class="play-btn ${!hasBalance ? 'play-btn-disabled' : ''}">Play</button></div>
+                    </a>
+                    <a href="${hasBalance ? 'Card-clash.html' : '#'}" class="game-card" onclick="${!hasBalance ? 'showNotification(\'Please deposit first to play games!\', \'error\'); return false;' : ''}">
+                        <div class="game-card-image"><i class="fas fa-club"></i></div><div class="game-card-info"><h3>🃏 Card Clash</h3><p>Blackjack-style card game</p><button class="play-btn ${!hasBalance ? 'play-btn-disabled' : ''}">Play</button></div>
+                    </a>
+                    <a href="${hasBalance ? 'Royal.html' : '#'}" class="game-card" onclick="${!hasBalance ? 'showNotification(\'Please deposit first to play games!\', \'error\'); return false;' : ''}">
+                        <div class="game-card-image"><i class="fas fa-circle"></i></div><div class="game-card-info"><h3>🎰 Roulette Royale</h3><p>European roulette, multiple bets</p><button class="play-btn ${!hasBalance ? 'play-btn-disabled' : ''}">Play</button></div>
+                    </a>
+                    <a href="${hasBalance ? 'solt-main.html' : '#'}" class="game-card" onclick="${!hasBalance ? 'showNotification(\'Please deposit first to play games!\', \'error\'); return false;' : ''}">
+                        <div class="game-card-image"><i class="fas fa-slot-machine"></i></div><div class="game-card-info"><h3>🎰 Slot Mania</h3><p>3-reel slots + progressive jackpot!</p><button class="play-btn ${!hasBalance ? 'play-btn-disabled' : ''}">Play</button></div>
+                    </a>
                 </div>
             `;
         }
@@ -792,7 +920,7 @@
                     await loadUserData();
                     hideModal(loginModal);
                     loadPage(currentPage);
-                    showNotification('Account created! +100 VEVO', 'success');
+                    showNotification('Account created! Please deposit to start playing.', 'success');
                 } else showNotification(err.message, 'error');
             }
         }
