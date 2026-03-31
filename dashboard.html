@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>VEVOBet - Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo-area">
+                <i class="fas fa-dice-d6"></i>
+                <span>VEVOBet</span>
+            </div>
+            <nav class="nav-menu">
+                <a href="#" class="nav-item active" data-page="dashboard">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </a>
+                <a href="#" class="nav-item" data-page="games">
+                    <i class="fas fa-gamepad"></i> Games
+                </a>
+                <a href="#" class="nav-item" data-page="deposit">
+                    <i class="fas fa-money-bill-wave"></i> Deposit
+                </a>
+                <a href="#" class="nav-item" data-page="withdraw">
+                    <i class="fas fa-hand-holding-usd"></i> Withdraw
+                </a>
+                <a href="#" class="nav-item" data-page="invite">
+                    <i class="fas fa-user-plus"></i> Invite Friends
+                </a>
+                <a href="#" class="nav-item" data-page="settings">
+                    <i class="fas fa-cog"></i> Settings
+                </a>
+            </nav>
+            <div class="user-info-sidebar">
+                <div class="user-avatar"><i class="fas fa-user-circle"></i></div>
+                <div class="user-details-side" id="sidebarUserInfo">
+                    <span id="sidebarUserName">Guest</span>
+                    <span id="sidebarUserEmail">Not logged in</span>
+                </div>
+                <button id="logoutBtnSidebar" class="logout-btn"><i class="fas fa-sign-out-alt"></i></button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header with user profile (right side) -->
+            <header class="dashboard-header">
+                <div class="header-title">
+                    <h1>Welcome to VEVOBet</h1>
+                </div>
+                <div class="user-profile-header" id="userProfileHeader">
+                    <div class="profile-name-email">
+                        <span id="headerUserName">User Name</span>
+                        <small id="headerUserEmail">user@example.com</small>
+                    </div>
+                    <div class="balance-box">
+                        <i class="fas fa-coins"></i>
+                        <span id="userBalance">0</span> VEVO
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dynamic page content -->
+            <div id="pageContent" class="page-content">
+                <!-- Dashboard content loaded dynamically -->
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>Login / Register</h2>
+            <form id="authForm">
+                <input type="text" id="authName" placeholder="Full Name" required>
+                <input type="email" id="authEmail" placeholder="Email Address" required>
+                <input type="password" id="authPassword" placeholder="Password (min 6 chars)" required>
+                <button type="submit" id="authSubmitBtn">Login / Register</button>
+                <p class="form-switch">New user? Account will be created automatically.</p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Deposit Screenshot Modal -->
+    <div id="depositModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h3>Complete Deposit</h3>
+            <p>Send payment to one of our accounts and upload screenshot.</p>
+            <div class="payment-details">
+                <div><strong>M-Pesa:</strong> 0725032395 (Abenezer Shigute)</div>
+                <div><strong>TeleBirr:</strong> 0940980555 (Tenaye Hutalo)</div>
+                <div><strong>CBE Birr:</strong> 0940980555</div>
+                <div><strong>CBE Bank:</strong> 1000612391754</div>
+                <div><strong>TRC20:</strong> TWym3qg8TUNTyutMxvPpnatjeWs8C7jsLY</div>
+                <div><strong>Rate:</strong> 1 Birr = 1 VEVO Token | 1 USDT = 157 VEVO</div>
+            </div>
+            <input type="number" id="depositAmount" placeholder="Amount in Birr or USDT (specify currency)">
+            <select id="depositCurrency">
+                <option value="BIRR">Birr (ETB)</option>
+                <option value="USDT">USDT</option>
+            </select>
+            <input type="file" id="depositScreenshot" accept="image/*">
+            <button id="submitDepositBtn">Submit Deposit Request</button>
+        </div>
+    </div>
+
+    <!-- Withdraw Modal (requires 4-digit code) -->
+    <div id="withdrawModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h3>Withdraw Funds</h3>
+            <p>Enter 4-digit withdrawal code and details.</p>
+            <input type="password" id="withdrawCode" placeholder="4-digit Security Code" maxlength="4">
+            <select id="withdrawMethod">
+                <option value="TeleBirr">TeleBirr</option>
+                <option value="M-Pesa">M-Pesa</option>
+                <option value="CBE">CBE Bank</option>
+            </select>
+            <input type="text" id="withdrawAccount" placeholder="Account Number / Phone">
+            <input type="number" id="withdrawAmount" placeholder="Amount (VEVO Tokens)">
+            <button id="submitWithdrawBtn">Request Withdrawal</button>
+            <p class="note">*Withdrawal code is set during registration; if forgotten, contact admin.</p>
+        </div>
+    </div>
+
+    <!-- Invite Modal -->
+    <div id="inviteModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h3>Invite Friends</h3>
+            <p>Share your promo code: <strong id="userPromoCode">loading...</strong></p>
+            <p>For every 5 invited friends you get 10 VEVO Tokens reward!</p>
+            <button id="copyPromoBtn">Copy Code</button>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h3>Account Settings</h3>
+            <div class="settings-section">
+                <h4>Withdrawal Security Code</h4>
+                <p>Set or change your 4-digit withdrawal code (required for withdrawals)</p>
+                <input type="password" id="settingsWithdrawCode" placeholder="New 4-digit code" maxlength="4">
+                <button id="saveWithdrawCodeBtn">Save Withdrawal Code</button>
+            </div>
+            <div class="settings-section">
+                <h4>Account Information</h4>
+                <p><strong>Name:</strong> <span id="settingsName"></span></p>
+                <p><strong>Email:</strong> <span id="settingsEmail"></span></p>
+                <p><strong>Total Invited:</strong> <span id="settingsInviteCount">0</span></p>
+                <p><strong>Rewards Earned:</strong> <span id="settingsRewards">0</span> VEVO</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
