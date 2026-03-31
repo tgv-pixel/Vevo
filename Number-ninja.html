@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VEVOBet - Number Ninja</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .game-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 15px 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+
+        .back-btn {
+            color: white;
+            text-decoration: none;
+            font-size: 16px;
+            padding: 8px 15px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .game-logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .game-logo i {
+            margin-right: 10px;
+            color: #ffd700;
+        }
+
+        .game-balance {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 8px 20px;
+            border-radius: 25px;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .game-balance i {
+            color: #ffd700;
+            margin-right: 8px;
+        }
+
+        /* Game Title */
+        .game-title {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .game-title h1 {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+
+        .game-title p {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+
+        /* Number Display */
+        .number-container {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .target-number {
+            width: 200px;
+            height: 200px;
+            background: linear-gradient(135deg, #ff6b6b, #ff4757);
+            border-radius: 50%;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s;
+        }
+
+        .target-number.revealing {
+            animation: pulse 0.5s ease-in-out;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); background: linear-gradient(135deg, #ff4757, #ff6b6b); }
+        }
+
+        .target-label {
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 10px;
+        }
+
+        .target-value {
+            font-size: 72px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .target-range {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+            margin-top: 10px;
+        }
+
+        /* Guess Input Section */
+        .guess-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 25px;
+            margin: 20px 0;
+        }
+
+        .guess-input-group {
+            text-align: center;
+        }
+
+        .guess-input-group label {
+            font-size: 18px;
+            font-weight: bold;
+            display: block;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .guess-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .guess-adjust {
+            background: #667eea;
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            font-size: 24px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .guess-adjust:hover {
+            background: #5a67d8;
+            transform: scale(1.05);
+        }
+
+        #guessNumber {
+            width: 150px;
+            padding: 12px;
+            font-size: 24px;
+            text-align: center;
+            border: 3px solid #667eea;
+            border-radius: 10px;
+            font-weight: bold;
+        }
+
+        .quick-guess {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .quick-guess-btn {
+            background: #48bb78;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* Bet Controls */
+        .bet-controls {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 25px;
+            margin: 20px 0;
+        }
+
+        .bet-controls label {
+            font-size: 18px;
+            font-weight: bold;
+            display: block;
+            margin-bottom: 15px;
+            color: #333;
+            text-align: center;
+        }
+
+        .bet-input-group {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .bet-adjust {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        #betAmount {
+            width: 120px;
+            padding: 10px;
+            font-size: 18px;
+            text-align: center;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+
+        .quick-bets {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .quick-bet {
+            background: #48bb78;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .guess-button {
+            background: linear-gradient(135deg, #ff6b6b, #ff4757);
+            color: white;
+            border: none;
+            padding: 15px 50px;
+            font-size: 24px;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: block;
+            margin: 20px auto;
+            width: fit-content;
+        }
+
+        .guess-button:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .guess-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Multiplier Info */
+        .multiplier-info {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 15px;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: center;
+            color: white;
+        }
+
+        .multiplier-title {
+            font-size: 16px;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+
+        .multiplier-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: #ffd700;
+        }
+
+        .distance-info {
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        /* Result Display */
+        .result-display {
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .result-message {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .result-win {
+            color: #48bb78;
+        }
+
+        .result-loss {
+            color: #ff4757;
+        }
+
+        /* History */
+        .history-section {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .history-section h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .history-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .history-item.win {
+            background: rgba(72, 187, 120, 0.1);
+            border-left: 4px solid #48bb78;
+        }
+
+        .history-item.loss {
+            border-left: 4px solid #ff4757;
+        }
+
+        .history-result.win {
+            color: #48bb78;
+            font-weight: bold;
+        }
+
+        .history-result.loss {
+            color: #ff4757;
+            font-weight: bold;
+        }
+
+        .no-history {
+            text-align: center;
+            color: #999;
+            padding: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .target-number {
+                width: 150px;
+                height: 150px;
+            }
+            .target-value {
+                font-size: 48px;
+            }
+            .game-title h1 {
+                font-size: 32px;
+            }
+            #guessNumber {
+                width: 120px;
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i> Back</a>
+            <div class="game-logo">
+                <i class="fas fa-dice-d6"></i> VEVOBet
+            </div>
+            <div class="game-balance">
+                <i class="fas fa-coins"></i> <span id="gameBalance">0</span> VEVO
+            </div>
+        </div>
+
+        <div class="game-title">
+            <h1><i class="fas fa-calculator"></i> Number Ninja</h1>
+            <p>Guess the secret number (1-100) and win big! Closer guess = higher multiplier!</p>
+        </div>
+
+        <div class="number-container">
+            <div class="target-number" id="targetNumber">
+                <div class="target-label">Secret Number</div>
+                <div class="target-value" id="targetValue">???</div>
+                <div class="target-range">1 - 100</div>
+            </div>
+        </div>
+
+        <div class="multiplier-info">
+            <div class="multiplier-title">🎯 Current Guess Multiplier</div>
+            <div class="multiplier-value" id="currentMultiplier">0.00x</div>
+            <div class="distance-info" id="distanceInfo">Enter a guess to see potential payout</div>
+        </div>
+
+        <div class="guess-section">
+            <div class="guess-input-group">
+                <label>Your Guess (1-100):</label>
+                <div class="guess-controls">
+                    <button class="guess-adjust" data-change="-1">-1</button>
+                    <input type="number" id="guessNumber" value="50" min="1" max="100" step="1">
+                    <button class="guess-adjust" data-change="1">+1</button>
+                </div>
+                <div class="quick-guess">
+                    <button class="quick-guess-btn" data-value="1">1</button>
+                    <button class="quick-guess-btn" data-value="25">25</button>
+                    <button class="quick-guess-btn" data-value="50">50</button>
+                    <button class="quick-guess-btn" data-value="75">75</button>
+                    <button class="quick-guess-btn" data-value="100">100</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="bet-controls">
+            <label>Bet Amount (VEVO):</label>
+            <div class="bet-input-group">
+                <button class="bet-adjust" data-change="-10">-10</button>
+                <input type="number" id="betAmount" value="10" min="1" step="1">
+                <button class="bet-adjust" data-change="10">+10</button>
+            </div>
+            <div class="quick-bets">
+                <button class="quick-bet" data-value="10">10</button>
+                <button class="quick-bet" data-value="50">50</button>
+                <button class="quick-bet" data-value="100">100</button>
+                <button class="quick-bet" data-value="500">500</button>
+            </div>
+        </div>
+
+        <button class="guess-button" id="guessBtn">MAKE GUESS!</button>
+
+        <div class="result-display" id="resultDisplay" style="display: none;">
+            <div class="result-message" id="resultMessage"></div>
+        </div>
+
+        <div class="history-section">
+            <h3><i class="fas fa-history"></i> Game History</h3>
+            <div id="gameHistory" class="history-list">
+                <p class="no-history">No guesses yet. Start playing!</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://kit.fontawesome.com/a2e0a8c9d2.js" crossorigin="anonymous"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script>
+        // Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyCAfsKcVP7OUo870TKkBnk4BfDEq9LnAK8",
+            authDomain: "newporoject-c6f66.firebaseapp.com",
+            databaseURL: "https://newporoject-c6f66-default-rtdb.firebaseio.com",
+            projectId: "newporoject-c6f66",
+            storageBucket: "newporoject-c6f66.appspot.com",
+            messagingSenderId: "733557611631",
+            appId: "1:733557611631:web:02c9377f56d614ff3b019a",
+            measurementId: "G-53BEVW33FP"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.database();
+        
+        // Game Variables
+        let currentUser = null;
+        let userBalance = 0;
+        let secretNumber = null;
+        let isGuessing = false;
+        
+        function updateBalanceDisplay() {
+            document.getElementById('gameBalance').textContent = userBalance;
+        }
+        
+        function generateSecretNumber() {
+            secretNumber = Math.floor(Math.random() * 100) + 1;
+            console.log('Secret number:', secretNumber); // For testing, remove in production
+        }
+        
+        function calculateMultiplier(guess, target) {
+            const distance = Math.abs(guess - target);
+            if (distance === 0) {
+                return 10.0; // Exact match: 10x multiplier
+            } else if (distance <= 5) {
+                return 5.0; // Within 5: 5x
+            } else if (distance <= 10) {
+                return 3.0; // Within 10: 3x
+            } else if (distance <= 20) {
+                return 2.0; // Within 20: 2x
+            } else if (distance <= 30) {
+                return 1.5; // Within 30: 1.5x
+            } else if (distance <= 40) {
+                return 1.2; // Within 40: 1.2x
+            } else {
+                return 0; // Too far: lose
+            }
+        }
+        
+        function updateMultiplierDisplay() {
+            const guessInput = document.getElementById('guessNumber');
+            let guess = parseInt(guessInput.value);
+            if (isNaN(guess)) guess = 50;
+            if (guess < 1) guess = 1;
+            if (guess > 100) guess = 100;
+            
+            if (secretNumber) {
+                const multiplier = calculateMultiplier(guess, secretNumber);
+                const distance = Math.abs(guess - secretNumber);
+                document.getElementById('currentMultiplier').textContent = multiplier.toFixed(2) + 'x';
+                if (multiplier > 0) {
+                    const betAmount = parseInt(document.getElementById('betAmount').value) || 0;
+                    const potentialWin = Math.floor(betAmount * multiplier);
+                    document.getElementById('distanceInfo').innerHTML = `Distance: ${distance} away | Potential win: ${potentialWin} VEVO`;
+                } else {
+                    document.getElementById('distanceInfo').innerHTML = `Distance: ${distance} away | No win if guessed now`;
+                }
+            }
+        }
+        
+        async function loadUserBalance() {
+            if (!currentUser) return;
+            const userRef = db.ref(`users/${currentUser.uid}`);
+            const snapshot = await userRef.once('value');
+            const userData = snapshot.val();
+            if (userData) {
+                userBalance = userData.balance || 0;
+                updateBalanceDisplay();
+            }
+        }
+        
+        async function updateUserBalance(newBalance) {
+            if (!currentUser) return;
+            await db.ref(`users/${currentUser.uid}`).update({ balance: newBalance });
+            userBalance = newBalance;
+            updateBalanceDisplay();
+        }
+        
+        async function addGameHistory(guess, target, multiplier, winAmount, result) {
+            if (!currentUser) return;
+            const historyRef = db.ref(`users/${currentUser.uid}/gameHistory/numberNinja`);
+            const newEntry = {
+                guess: guess,
+                target: target,
+                multiplier: multiplier,
+                winAmount: winAmount,
+                result: result,
+                timestamp: Date.now()
+            };
+            await historyRef.push(newEntry);
+            await loadHistory();
+        }
+        
+        async function loadHistory() {
+            if (!currentUser) return;
+            const historyRef = db.ref(`users/${currentUser.uid}/gameHistory/numberNinja`);
+            const snapshot = await historyRef.once('value');
+            const history = snapshot.val();
+            const historyDiv = document.getElementById('gameHistory');
+            
+            if (!history || Object.keys(history).length === 0) {
+                historyDiv.innerHTML = '<p class="no-history">No guesses yet. Start playing!</p>';
+                return;
+            }
+            
+            const historyArray = Object.values(history).reverse().slice(0, 10);
+            historyDiv.innerHTML = historyArray.map(item => `
+                <div class="history-item ${item.winAmount > 0 ? 'win' : 'loss'}">
+                    <span>🎯 ${item.guess} → ${item.target}</span>
+                    <span>Bet: ${item.winAmount > 0 ? (item.winAmount / item.multiplier).toFixed(0) : '?'}</span>
+                    <span>${item.multiplier}x</span>
+                    <span class="history-result ${item.winAmount > 0 ? 'win' : 'loss'}">
+                        ${item.winAmount > 0 ? '+' : ''}${item.winAmount} VEVO
+                    </span>
+                </div>
+            `).join('');
+        }
+        
+        function revealNumberWithAnimation(callback) {
+            const targetDiv = document.getElementById('targetNumber');
+            const targetValueSpan = document.getElementById('targetValue');
+            
+            targetDiv.classList.add('revealing');
+            
+            let count = 0;
+            const interval = setInterval(() => {
+                const randomNum = Math.floor(Math.random() * 100) + 1;
+                targetValueSpan.textContent = randomNum;
+                count++;
+                
+                if (count >= 10) {
+                    clearInterval(interval);
+                    targetValueSpan.textContent = secretNumber;
+                    setTimeout(() => {
+                        targetDiv.classList.remove('revealing');
+                        callback();
+                    }, 200);
+                }
+            }, 80);
+        }
+        
+        async function makeGuess() {
+            if (isGuessing) {
+                alert('Guess in progress!');
+                return;
+            }
+            
+            if (!currentUser) {
+                alert('Please login first!');
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            const guess = parseInt(document.getElementById('guessNumber').value);
+            if (isNaN(guess) || guess < 1 || guess > 100) {
+                alert('Please enter a valid guess between 1 and 100!');
+                return;
+            }
+            
+            const betAmount = parseInt(document.getElementById('betAmount').value);
+            if (isNaN(betAmount) || betAmount < 1) {
+                alert('Please enter a valid bet amount!');
+                return;
+            }
+            
+            if (betAmount > userBalance) {
+                alert(`Insufficient balance! You have ${userBalance} VEVO`);
+                return;
+            }
+            
+            isGuessing = true;
+            const guessBtn = document.getElementById('guessBtn');
+            guessBtn.disabled = true;
+            
+            await updateUserBalance(userBalance - betAmount);
+            
+            generateSecretNumber();
+            const multiplier = calculateMultiplier(guess, secretNumber);
+            const winAmount = multiplier > 0 ? Math.floor(betAmount * multiplier) : 0;
+            const distance = Math.abs(guess - secretNumber);
+            
+            let resultMessage = '';
+            if (winAmount > 0) {
+                resultMessage = `🎉 AMAZING! Number was ${secretNumber}! You were ${distance} away! Won ${winAmount} VEVO (${multiplier}x multiplier)! 🎉`;
+                document.getElementById('resultMessage').className = 'result-message result-win';
+            } else {
+                resultMessage = `😢 SORRY! Number was ${secretNumber}. You were ${distance} away. Lost ${betAmount} VEVO. Try again!`;
+                document.getElementById('resultMessage').className = 'result-message result-loss';
+            }
+            
+            revealNumberWithAnimation(async () => {
+                if (winAmount > 0) {
+                    await updateUserBalance(userBalance + winAmount);
+                }
+                
+                await addGameHistory(guess, secretNumber, multiplier, winAmount, winAmount > 0 ? 'win' : 'loss');
+                await loadUserBalance();
+                
+                document.getElementById('resultDisplay').style.display = 'block';
+                document.getElementById('resultMessage').textContent = resultMessage;
+                
+                setTimeout(() => {
+                    document.getElementById('resultDisplay').style.display = 'none';
+                    generateSecretNumber();
+                    updateMultiplierDisplay();
+                }, 4000);
+                
+                isGuessing = false;
+                guessBtn.disabled = false;
+            });
+        }
+        
+        // Event Listeners
+        document.getElementById('guessBtn').addEventListener('click', makeGuess);
+        
+        document.querySelectorAll('.guess-adjust').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const change = parseInt(btn.dataset.change);
+                const input = document.getElementById('guessNumber');
+                let newVal = parseInt(input.value) + change;
+                if (newVal < 1) newVal = 1;
+                if (newVal > 100) newVal = 100;
+                input.value = newVal;
+                updateMultiplierDisplay();
+            });
+        });
+        
+        document.querySelectorAll('.quick-guess-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.getElementById('guessNumber').value = btn.dataset.value;
+                updateMultiplierDisplay();
+            });
+        });
+        
+        document.querySelectorAll('.bet-adjust').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const change = parseInt(btn.dataset.change);
+                const input = document.getElementById('betAmount');
+                let newVal = parseInt(input.value) + change;
+                if (newVal < 1) newVal = 1;
+                input.value = newVal;
+                updateMultiplierDisplay();
+            });
+        });
+        
+        document.querySelectorAll('.quick-bet').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.getElementById('betAmount').value = btn.dataset.value;
+                updateMultiplierDisplay();
+            });
+        });
+        
+        document.getElementById('guessNumber').addEventListener('input', updateMultiplierDisplay);
+        document.getElementById('betAmount').addEventListener('input', updateMultiplierDisplay);
+        
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                currentUser = user;
+                const userRef = db.ref(`users/${user.uid}`);
+                const snapshot = await userRef.once('value');
+                if (!snapshot.exists()) {
+                    await userRef.set({
+                        email: user.email,
+                        name: user.displayName || user.email.split('@')[0],
+                        balance: 100,
+                        withdrawCode: null,
+                        inviteCount: 0,
+                        inviteRewards: 0,
+                        createdAt: Date.now()
+                    });
+                }
+                await loadUserBalance();
+                await loadHistory();
+                generateSecretNumber();
+                updateMultiplierDisplay();
+            } else {
+                window.location.href = 'index.html';
+            }
+        });
+    </script>
+</body>
+</html>
