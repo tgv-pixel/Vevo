@@ -27,39 +27,45 @@ let userData = null;
 let currentPage = 'dashboard';
 
 // ============================================
-// DOM Elements
-// ============================================
-const pageContent = document.getElementById('pageContent');
-const loginModal = document.getElementById('loginModal');
-const depositModal = document.getElementById('depositModal');
-const withdrawModal = document.getElementById('withdrawModal');
-const inviteModal = document.getElementById('inviteModal');
-const settingsModal = document.getElementById('settingsModal');
-
-// ============================================
 // Helper Functions
 // ============================================
-function showModal(modal) {
-    if (modal) modal.style.display = 'block';
+
+// Show notification
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `notification notification-${type}`;
+    notification.innerHTML = `
+        <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i>
+        <span>${message}</span>
+    `;
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${type === 'success' ? '#48bb78' : type === 'error' ? '#ff4757' : '#667eea'};
+        color: white;
+        padding: 12px 20px;
+        border-radius: 10px;
+        z-index: 2000;
+        animation: slideInRight 0.3s ease;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+    `;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.style.animation = 'slideOutRight 0.3s ease';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
 }
 
-function hideModal(modal) {
-    if (modal) modal.style.display = 'none';
+// Generate promo code from user ID
+function generatePromoCode(userId) {
+    return userId ? userId.substring(0, 8).toUpperCase() : '';
 }
 
-function closeAllModals() {
-    const modals = document.querySelectorAll('.modal');
-    modals.forEach(modal => {
-        modal.style.display = 'none';
-    });
-}
-
+// Format date
 function formatDate(timestamp) {
     return new Date(timestamp).toLocaleString();
-}
-
-function generatePromoCode(userId) {
-    return userId.substring(0, 8).toUpperCase();
 }
 
 // ============================================
@@ -67,17 +73,37 @@ function generatePromoCode(userId) {
 // ============================================
 function updateUserUI() {
     if (currentUser && userData) {
-        document.getElementById('headerUserName').textContent = userData.name || currentUser.displayName || 'User';
-        document.getElementById('headerUserEmail').textContent = currentUser.email;
-        document.getElementById('sidebarUserName').textContent = userData.name || currentUser.displayName || 'User';
-        document.getElementById('sidebarUserEmail').textContent = currentUser.email;
-        document.getElementById('userBalance').textContent = userData.balance || 0;
+        const headerName = document.getElementById('headerUserName');
+        const headerEmail = document.getElementById('headerUserEmail');
+        const sidebarName = document.getElementById('sidebarUserName');
+        const sidebarEmail = document.getElementById('sidebarUserEmail');
+        const userBalance = document.getElementById('userBalance');
+        const settingsName = document.getElementById('settingsName');
+        const settingsEmail = document.getElementById('settingsEmail');
+        const settingsInviteCount = document.getElementById('settingsInviteCount');
+        const settingsRewards = document.getElementById('settingsRewards');
+        
+        if (headerName) headerName.textContent = userData.name || currentUser.displayName || 'User';
+        if (headerEmail) headerEmail.textContent = currentUser.email;
+        if (sidebarName) sidebarName.textContent = userData.name || currentUser.displayName || 'User';
+        if (sidebarEmail) sidebarEmail.textContent = currentUser.email;
+        if (userBalance) userBalance.textContent = userData.balance || 0;
+        if (settingsName) settingsName.textContent = userData.name || '-';
+        if (settingsEmail) settingsEmail.textContent = currentUser.email;
+        if (settingsInviteCount) settingsInviteCount.textContent = userData.inviteCount || 0;
+        if (settingsRewards) settingsRewards.textContent = userData.inviteRewards || 0;
     } else {
-        document.getElementById('headerUserName').textContent = 'Guest';
-        document.getElementById('headerUserEmail').textContent = 'Not logged in';
-        document.getElementById('sidebarUserName').textContent = 'Guest';
-        document.getElementById('sidebarUserEmail').textContent = 'Not logged in';
-        document.getElementById('userBalance').textContent = '0';
+        const headerName = document.getElementById('headerUserName');
+        const headerEmail = document.getElementById('headerUserEmail');
+        const sidebarName = document.getElementById('sidebarUserName');
+        const sidebarEmail = document.getElementById('sidebarUserEmail');
+        const userBalance = document.getElementById('userBalance');
+        
+        if (headerName) headerName.textContent = 'Guest';
+        if (headerEmail) headerEmail.textContent = 'Not logged in';
+        if (sidebarName) sidebarName.textContent = 'Guest';
+        if (sidebarEmail) sidebarEmail.textContent = 'Not logged in';
+        if (userBalance) userBalance.textContent = '0';
     }
 }
 
@@ -117,6 +143,13 @@ async function loadUserData() {
         console.error('Error loading user data:', error);
         return null;
     }
+}
+
+async function updateUserBalance(newBalance) {
+    if (!currentUser) return;
+    await db.ref(`users/${currentUser.uid}`).update({ balance: newBalance });
+    if (userData) userData.balance = newBalance;
+    updateUserUI();
 }
 
 // ============================================
@@ -351,7 +384,14 @@ async function loadInviteInfo() {
     if (!currentUser || !userData) return;
     
     const promoCode = generatePromoCode(currentUser.uid);
-    document.getElementById('userPromoCode').textContent = promoCode;
+    const promoElement = document.getElementById('userPromoCode');
+    if (promoElement) promoElement.textContent = promoCode;
+    
+    const inviteCountElement = document.getElementById('inviteCount');
+    if (inviteCountElement) inviteCountElement.textContent = userData.inviteCount || 0;
+    
+    const rewardsElement = document.getElementById('rewardsEarned');
+    if (rewardsElement) rewardsElement.textContent = userData.inviteRewards || 0;
 }
 
 function copyPromoCode() {
@@ -416,7 +456,13 @@ async function applyInviteCode(code) {
             invitees: newInvitees
         });
         
-        showNotification('Invite code applied successfully!', 'success');
+        // Add 100 VEVO bonus to current user
+        const newBalance = (userData.balance || 0) + 100;
+        await db.ref(`users/${currentUser.uid}`).update({ balance: newBalance });
+        userData.balance = newBalance;
+        updateUserUI();
+        
+        showNotification('Invite code applied successfully! You received 100 VEVO!', 'success');
         await loadUserData();
         return true;
     } catch (error) {
@@ -432,7 +478,7 @@ async function applyInviteCode(code) {
 function renderDashboard() {
     const inviteCount = userData?.inviteCount || 0;
     const inviteRewards = userData?.inviteRewards || 0;
-    const pendingDeposits = userData?.depositRequests?.filter(r => r.status === 'pending').length || 0;
+    const promoCode = generatePromoCode(currentUser?.uid || '');
     
     return `
         <div class="stats-grid">
@@ -457,13 +503,6 @@ function renderDashboard() {
                     <div class="stat-number">${inviteRewards} VEVO</div>
                 </div>
             </div>
-            <div class="stat-card">
-                <div class="stat-icon"><i class="fas fa-clock"></i></div>
-                <div class="stat-info">
-                    <h3>Pending Requests</h3>
-                    <div class="stat-number">${pendingDeposits}</div>
-                </div>
-            </div>
         </div>
         
         <h2 style="color: white; margin: 30px 0 20px 0;"><i class="fas fa-gamepad"></i> Available Games</h2>
@@ -476,7 +515,7 @@ function renderDashboard() {
                     <button class="play-btn">Play Now →</button>
                 </div>
             </a>
-            <a href="game2.html" class="game-card">
+            <a href="Dice-dual.html" class="game-card">
                 <div class="game-card-image"><i class="fas fa-dice"></i></div>
                 <div class="game-card-info">
                     <h3>Dice Duel</h3>
@@ -484,7 +523,7 @@ function renderDashboard() {
                     <button class="play-btn">Play Now →</button>
                 </div>
             </a>
-            <a href="game3.html" class="game-card">
+            <a href="Coin-clash.html" class="game-card">
                 <div class="game-card-image"><i class="fas fa-coins"></i></div>
                 <div class="game-card-info">
                     <h3>Coin Clash</h3>
@@ -492,7 +531,7 @@ function renderDashboard() {
                     <button class="play-btn">Play Now →</button>
                 </div>
             </a>
-            <a href="game4.html" class="game-card">
+            <a href="Number-ninja.html" class="game-card">
                 <div class="game-card-image"><i class="fas fa-calculator"></i></div>
                 <div class="game-card-info">
                     <h3>Number Ninja</h3>
@@ -500,7 +539,7 @@ function renderDashboard() {
                     <button class="play-btn">Play Now →</button>
                 </div>
             </a>
-            <a href="game5.html" class="game-card">
+            <a href="Card-clash.html" class="game-card">
                 <div class="game-card-image"><i class="fas fa-club"></i></div>
                 <div class="game-card-info">
                     <h3>Card Clash</h3>
@@ -508,7 +547,7 @@ function renderDashboard() {
                     <button class="play-btn">Play Now →</button>
                 </div>
             </a>
-            <a href="game6.html" class="game-card">
+            <a href="Royal.html" class="game-card">
                 <div class="game-card-image"><i class="fas fa-circle"></i></div>
                 <div class="game-card-info">
                     <h3>Roulette Royale</h3>
@@ -516,7 +555,7 @@ function renderDashboard() {
                     <button class="play-btn">Play Now →</button>
                 </div>
             </a>
-            <a href="game7.html" class="game-card">
+            <a href="solt-main.html" class="game-card">
                 <div class="game-card-image"><i class="fas fa-slot-machine"></i></div>
                 <div class="game-card-info">
                     <h3>Slot Mania</h3>
@@ -528,75 +567,44 @@ function renderDashboard() {
         
         <div class="invite-section" style="background: rgba(255,255,255,0.1); border-radius: 15px; padding: 20px; margin-top: 30px;">
             <h3 style="color: white;"><i class="fas fa-user-plus"></i> Invite Friends & Earn!</h3>
-            <p style="color: white; margin: 10px 0;">Share your promo code: <strong style="color: #ffd700;">${generatePromoCode(currentUser?.uid || '')}</strong></p>
+            <p style="color: white; margin: 10px 0;">Share your promo code: <strong style="color: #ffd700;">${promoCode}</strong></p>
             <p style="color: white; font-size: 14px;">For every 5 friends who join using your code, you get 10 VEVO tokens!</p>
-            <button class="play-btn" onclick="showModal(inviteModal); loadInviteInfo();" style="margin-top: 10px;"><i class="fas fa-share-alt"></i> Invite Friends</button>
+            <button class="play-btn" onclick="window.location.href='refferal.html'" style="margin-top: 10px;"><i class="fas fa-share-alt"></i> Invite Friends</button>
         </div>
     `;
 }
 
-// ============================================
-// Page Loading
-// ============================================
 function renderGamesPage() {
     return `
         <h2 style="color: white; margin-bottom: 20px;"><i class="fas fa-gamepad"></i> All Games</h2>
         <div class="games-grid">
             <a href="game1.html" class="game-card">
                 <div class="game-card-image"><i class="fas fa-sync-alt"></i></div>
-                <div class="game-card-info">
-                    <h3>Lucky Spin</h3>
-                    <p>Spin the wheel and win up to 10x your bet!</p>
-                    <button class="play-btn">Play Now →</button>
-                </div>
+                <div class="game-card-info"><h3>Lucky Spin</h3><p>Spin the wheel, win up to 10x!</p><button class="play-btn">Play</button></div>
             </a>
-            <a href="game2.html" class="game-card">
+            <a href="Dice-dual.html" class="game-card">
                 <div class="game-card-image"><i class="fas fa-dice"></i></div>
-                <div class="game-card-info">
-                    <h3>Dice Duel</h3>
-                    <p>Predict over or under 50 for 1.95x payout!</p>
-                    <button class="play-btn">Play Now →</button>
-                </div>
+                <div class="game-card-info"><h3>Dice Duel</h3><p>Over/Under 50 - 1.95x payout</p><button class="play-btn">Play</button></div>
             </a>
-            <a href="game3.html" class="game-card">
+            <a href="Coin-clash.html" class="game-card">
                 <div class="game-card-image"><i class="fas fa-coins"></i></div>
-                <div class="game-card-info">
-                    <h3>Coin Clash</h3>
-                    <p>Heads or tails? Build your win streak!</p>
-                    <button class="play-btn">Play Now →</button>
-                </div>
+                <div class="game-card-info"><h3>Coin Clash</h3><p>Heads or Tails with streak bonus</p><button class="play-btn">Play</button></div>
             </a>
-            <a href="game4.html" class="game-card">
+            <a href="Number-ninja.html" class="game-card">
                 <div class="game-card-image"><i class="fas fa-calculator"></i></div>
-                <div class="game-card-info">
-                    <h3>Number Ninja</h3>
-                    <p>Guess the number, closer = higher multiplier!</p>
-                    <button class="play-btn">Play Now →</button>
-                </div>
+                <div class="game-card-info"><h3>Number Ninja</h3><p>Guess the number, up to 10x!</p><button class="play-btn">Play</button></div>
             </a>
-            <a href="game5.html" class="game-card">
+            <a href="Card-clash.html" class="game-card">
                 <div class="game-card-image"><i class="fas fa-club"></i></div>
-                <div class="game-card-info">
-                    <h3>Card Clash</h3>
-                    <p>Beat the dealer in this Blackjack-style game!</p>
-                    <button class="play-btn">Play Now →</button>
-                </div>
+                <div class="game-card-info"><h3>Card Clash</h3><p>Blackjack-style card game</p><button class="play-btn">Play</button></div>
             </a>
-            <a href="game6.html" class="game-card">
+            <a href="Royal.html" class="game-card">
                 <div class="game-card-image"><i class="fas fa-circle"></i></div>
-                <div class="game-card-info">
-                    <h3>Roulette Royale</h3>
-                    <p>Classic European roulette with multiple bets!</p>
-                    <button class="play-btn">Play Now →</button>
-                </div>
+                <div class="game-card-info"><h3>Roulette Royale</h3><p>European roulette, multiple bets</p><button class="play-btn">Play</button></div>
             </a>
-            <a href="game7.html" class="game-card">
+            <a href="solt-main.html" class="game-card">
                 <div class="game-card-image"><i class="fas fa-slot-machine"></i></div>
-                <div class="game-card-info">
-                    <h3>Slot Mania</h3>
-                    <p>3-reel slots with progressive jackpot!</p>
-                    <button class="play-btn">Play Now →</button>
-                </div>
+                <div class="game-card-info"><h3>Slot Mania</h3><p>3-reel slots + progressive jackpot!</p><button class="play-btn">Play</button></div>
             </a>
         </div>
     `;
@@ -615,9 +623,7 @@ function renderDepositPage() {
                 <div><strong>🏦 CBE Birr:</strong> 0940980555</div>
                 <div><strong>🏦 CBE Bank:</strong> 1000612391754</div>
                 <div><strong>💎 TRC20 (USDT):</strong> TWym3qg8TUNTyutMxvPpnatjeWs8C7jsLY</div>
-                <div style="margin-top: 15px; padding-top: 10px; border-top: 1px solid #ddd;">
-                    <strong>Exchange Rate:</strong> 1 Birr = 1 VEVO Token | 1 USDT = 157 VEVO
-                </div>
+                <div style="margin-top: 15px;"><strong>Exchange Rate:</strong> 1 Birr = 1 VEVO | 1 USDT = 157 VEVO</div>
             </div>
             
             <div class="deposit-form">
@@ -639,7 +645,13 @@ function renderDepositPage() {
     `;
 }
 
-function submitDepositFromPage() {
+async function submitDepositFromPage() {
+    if (!currentUser) {
+        showNotification('Please login first', 'error');
+        showModal(loginModal);
+        return;
+    }
+    
     const amount = document.getElementById('depositAmountPage').value;
     const currency = document.getElementById('depositCurrencyPage').value;
     const screenshot = document.getElementById('depositScreenshotPage').files[0];
@@ -819,24 +831,8 @@ function renderInvitePage() {
                 <p style="color: #2c3e50;">For every 5 friends you invite, you get <strong>10 VEVO Tokens</strong>!</p>
                 <p style="color: #2c3e50; font-size: 14px; margin-top: 5px;">Your friends also get 100 VEVO on signup!</p>
             </div>
-            
-            <div style="margin-top: 25px;">
-                <input type="text" id="inviteCodeInput" placeholder="Enter friend's promo code" style="padding: 12px; border: 1px solid #ddd; border-radius: 8px; width: 100%; margin-bottom: 10px;">
-                <button onclick="applyInviteCodeFromPage()" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 12px 30px; border: none; border-radius: 8px; cursor: pointer; width: 100%;">Apply Promo Code</button>
-            </div>
         </div>
     `;
-}
-
-async function applyInviteCodeFromPage() {
-    const code = document.getElementById('inviteCodeInput').value;
-    if (!code) {
-        showNotification('Please enter a promo code', 'error');
-        return;
-    }
-    await applyInviteCode(code);
-    document.getElementById('inviteCodeInput').value = '';
-    loadPage('invite');
 }
 
 function renderSettingsPage() {
@@ -849,7 +845,7 @@ function renderSettingsPage() {
                 <p>Set a 4-digit code for withdrawals. This code is required every time you withdraw funds.</p>
                 <div style="margin-top: 15px;">
                     <input type="password" id="settingsWithdrawCodePage" maxlength="4" placeholder="Enter 4-digit code" style="padding: 10px; border: 1px solid #ddd; border-radius: 8px; width: 200px;">
-                    <button onclick="saveWithdrawCodeFromPage()" style="background: #48bb78; color: white; padding: 10px 20px; border: none; border-radius: 8px; margin-left: 10px; cursor: pointer;">Save Code</button>
+                    <button onclick="saveSettingsCode()" style="background: #48bb78; color: white; padding: 10px 20px; border: none; border-radius: 8px; margin-left: 10px; cursor: pointer;">Save Code</button>
                 </div>
                 ${userData?.withdrawCode ? '<p style="color: green; margin-top: 10px;"><i class="fas fa-check-circle"></i> Withdrawal code is set</p>' : '<p style="color: red; margin-top: 10px;"><i class="fas fa-exclamation-triangle"></i> No withdrawal code set. Please set one to withdraw funds.</p>'}
             </div>
@@ -866,7 +862,7 @@ function renderSettingsPage() {
     `;
 }
 
-async function saveWithdrawCodeFromPage() {
+async function saveSettingsCode() {
     if (!currentUser) {
         showNotification('Please login first', 'error');
         return;
@@ -890,11 +886,15 @@ async function saveWithdrawCodeFromPage() {
     }
 }
 
+// ============================================
+// Page Loading
+// ============================================
 async function loadPage(page) {
     currentPage = page;
     
     // Update active nav item
-    document.querySelectorAll('.nav-item').forEach(item => {
+    const navItems = document.querySelectorAll('.nav-item');
+    navItems.forEach(item => {
         if (item.dataset.page === page) {
             item.classList.add('active');
         } else {
@@ -905,26 +905,35 @@ async function loadPage(page) {
     // Render page content
     if (!currentUser) {
         if (page === 'dashboard') {
-            pageContent.innerHTML = `
-                <div style="text-align: center; padding: 60px 20px;">
-                    <i class="fas fa-user-lock" style="font-size: 80px; color: white; margin-bottom: 20px;"></i>
-                    <h2 style="color: white;">Welcome to VEVOBet!</h2>
-                    <p style="color: white; margin: 20px 0;">Please login or register to start playing and winning!</p>
-                    <button onclick="showModal(loginModal)" style="background: #ffd700; color: #1a1a2e; padding: 12px 30px; border: none; border-radius: 25px; font-size: 16px; font-weight: bold; cursor: pointer;">Login / Register</button>
-                </div>
-            `;
+            const pageContent = document.getElementById('pageContent');
+            if (pageContent) {
+                pageContent.innerHTML = `
+                    <div style="text-align: center; padding: 60px 20px;">
+                        <i class="fas fa-user-lock" style="font-size: 80px; color: white; margin-bottom: 20px;"></i>
+                        <h2 style="color: white;">Welcome to VEVOBet!</h2>
+                        <p style="color: white; margin: 20px 0;">Please login or register to start playing and winning!</p>
+                        <button onclick="showModal(loginModal)" style="background: #ffd700; color: #1a1a2e; padding: 12px 30px; border: none; border-radius: 25px; font-size: 16px; font-weight: bold; cursor: pointer;">Login / Register</button>
+                    </div>
+                `;
+            }
         } else {
-            pageContent.innerHTML = `
-                <div style="text-align: center; padding: 60px 20px;">
-                    <i class="fas fa-sign-in-alt" style="font-size: 80px; color: white; margin-bottom: 20px;"></i>
-                    <h2 style="color: white;">Please Login First</h2>
-                    <p style="color: white; margin: 20px 0;">You need to be logged in to access this page.</p>
-                    <button onclick="showModal(loginModal)" style="background: #ffd700; color: #1a1a2e; padding: 12px 30px; border: none; border-radius: 25px; font-size: 16px; font-weight: bold; cursor: pointer;">Login / Register</button>
-                </div>
-            `;
+            const pageContent = document.getElementById('pageContent');
+            if (pageContent) {
+                pageContent.innerHTML = `
+                    <div style="text-align: center; padding: 60px 20px;">
+                        <i class="fas fa-sign-in-alt" style="font-size: 80px; color: white; margin-bottom: 20px;"></i>
+                        <h2 style="color: white;">Please Login First</h2>
+                        <p style="color: white; margin: 20px 0;">You need to be logged in to access this page.</p>
+                        <button onclick="showModal(loginModal)" style="background: #ffd700; color: #1a1a2e; padding: 12px 30px; border: none; border-radius: 25px; font-size: 16px; font-weight: bold; cursor: pointer;">Login / Register</button>
+                    </div>
+                `;
+            }
         }
         return;
     }
+    
+    const pageContent = document.getElementById('pageContent');
+    if (!pageContent) return;
     
     switch(page) {
         case 'dashboard':
@@ -951,71 +960,36 @@ async function loadPage(page) {
 }
 
 // ============================================
-// Notification System
+// Modal Functions
 // ============================================
-function showNotification(message, type = 'info') {
-    const notification = document.createElement('div');
-    notification.className = `notification notification-${type}`;
-    notification.innerHTML = `
-        <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i>
-        <span>${message}</span>
-    `;
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: ${type === 'success' ? '#48bb78' : type === 'error' ? '#ff4757' : '#667eea'};
-        color: white;
-        padding: 12px 20px;
-        border-radius: 10px;
-        z-index: 2000;
-        animation: slideInRight 0.3s ease;
-        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-    `;
-    document.body.appendChild(notification);
-    
-    setTimeout(() => {
-        notification.style.animation = 'slideOutRight 0.3s ease';
-        setTimeout(() => notification.remove(), 300);
-    }, 3000);
+function showModal(modal) {
+    if (modal) modal.style.display = 'block';
 }
 
-// Add animation styles
-const style = document.createElement('style');
-style.textContent = `
-    @keyframes slideInRight {
-        from {
-            transform: translateX(100%);
-            opacity: 0;
-        }
-        to {
-            transform: translateX(0);
-            opacity: 1;
-        }
-    }
-    @keyframes slideOutRight {
-        from {
-            transform: translateX(0);
-            opacity: 1;
-        }
-        to {
-            transform: translateX(100%);
-            opacity: 0;
-        }
-    }
-`;
-document.head.appendChild(style);
+function hideModal(modal) {
+    if (modal) modal.style.display = 'none';
+}
+
+function closeAllModals() {
+    const modals = document.querySelectorAll('.modal');
+    modals.forEach(modal => {
+        modal.style.display = 'none';
+    });
+}
 
 // ============================================
 // Event Listeners
 // ============================================
 document.addEventListener('DOMContentLoaded', () => {
     // Navigation
-    document.querySelectorAll('.nav-item').forEach(item => {
+    const navItems = document.querySelectorAll('.nav-item');
+    navItems.forEach(item => {
         item.addEventListener('click', (e) => {
             e.preventDefault();
             const page = item.dataset.page;
-            loadPage(page);
+            if (page) {
+                loadPage(page);
+            }
         });
     });
     
@@ -1062,7 +1036,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // Close modals
-    document.querySelectorAll('.close-modal').forEach(closeBtn => {
+    const closeModals = document.querySelectorAll('.close-modal');
+    closeModals.forEach(closeBtn => {
         closeBtn.addEventListener('click', () => {
             closeAllModals();
         });
@@ -1101,5 +1076,7 @@ window.loadInviteInfo = loadInviteInfo;
 window.applyInviteCode = applyInviteCode;
 window.submitDepositFromPage = submitDepositFromPage;
 window.submitWithdrawFromPage = submitWithdrawFromPage;
-window.applyInviteCodeFromPage = applyInviteCodeFromPage;
-window.saveWithdrawCodeFromPage = saveWithdrawCodeFromPage;
+window.saveSettingsCode = saveSettingsCode;
+window.loadPage = loadPage;
+window.logout = logout;
+window.showNotification = showNotification;
