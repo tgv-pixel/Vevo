@@ -3,303 +3,150 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>VEVOBet - Login & Register</title>
+    <title>VEVOBet - Dashboard</title>
     <link rel="stylesheet" href="style.css">
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <style>
-        /* Login/Register Page Specific Styles */
-        .auth-page {
-            min-height: 100vh;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-
-        .auth-container {
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-            width: 100%;
-            max-width: 450px;
-            overflow: hidden;
-            animation: fadeInUp 0.5s ease;
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .auth-header {
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            padding: 30px;
-            text-align: center;
-            color: white;
-        }
-
-        .auth-header .logo {
-            font-size: 50px;
-            margin-bottom: 10px;
-        }
-
-        .auth-header h1 {
-            font-size: 28px;
-            margin-bottom: 5px;
-        }
-
-        .auth-header p {
-            opacity: 0.9;
-            font-size: 14px;
-        }
-
-        .auth-tabs {
-            display: flex;
-            border-bottom: 2px solid #f0f0f0;
-        }
-
-        .tab-btn {
-            flex: 1;
-            padding: 15px;
-            background: none;
-            border: none;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s;
-            color: #666;
-        }
-
-        .tab-btn.active {
-            color: #667eea;
-            border-bottom: 3px solid #667eea;
-        }
-
-        .auth-form {
-            padding: 30px;
-        }
-
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            color: #333;
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 12px 15px;
-            border: 2px solid #e0e0e0;
-            border-radius: 10px;
-            font-size: 16px;
-            transition: all 0.3s;
-        }
-
-        .form-group input:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-        .form-group input.error {
-            border-color: #ff4757;
-        }
-
-        .error-message {
-            color: #ff4757;
-            font-size: 12px;
-            margin-top: 5px;
-            display: block;
-        }
-
-        .submit-btn {
-            width: 100%;
-            padding: 14px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s;
-            margin-top: 10px;
-        }
-
-        .submit-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-        }
-
-        .submit-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .auth-footer {
-            text-align: center;
-            padding: 20px;
-            border-top: 1px solid #f0f0f0;
-            color: #666;
-            font-size: 14px;
-        }
-
-        .switch-link {
-            color: #667eea;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        .switch-link:hover {
-            text-decoration: underline;
-        }
-
-        .promo-section {
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid #f0f0f0;
-        }
-
-        .promo-section input {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 14px;
-        }
-
-        .promo-section label {
-            font-size: 13px;
-            color: #666;
-            margin-bottom: 5px;
-            display: block;
-        }
-
-        .terms {
-            font-size: 12px;
-            color: #999;
-            text-align: center;
-            margin-top: 15px;
-        }
-
-        .terms a {
-            color: #667eea;
-            text-decoration: none;
-        }
-
-        .loading-spinner {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 2px solid rgba(255,255,255,0.3);
-            border-top-color: white;
-            border-radius: 50%;
-            animation: spin 0.6s linear infinite;
-            margin-right: 8px;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        @media (max-width: 480px) {
-            .auth-container {
-                margin: 10px;
-            }
-            .auth-header {
-                padding: 20px;
-            }
-            .auth-form {
-                padding: 20px;
-            }
-        }
-    </style>
 </head>
 <body>
-    <div class="auth-page">
-        <div class="auth-container">
-            <div class="auth-header">
-                <div class="logo">
-                    <i class="fas fa-dice-d6"></i>
-                </div>
-                <h1>VEVOBet</h1>
-                <p>Your Ultimate Gaming Platform</p>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo-area">
+                <i class="fas fa-dice-d6"></i>
+                <span>VEVOBet</span>
             </div>
-            
-            <div class="auth-tabs">
-                <button class="tab-btn active" data-tab="login">Login</button>
-                <button class="tab-btn" data-tab="register">Register</button>
+            <nav class="nav-menu">
+                <a href="#" class="nav-item active" data-page="dashboard">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </a>
+                <a href="#" class="nav-item" data-page="games">
+                    <i class="fas fa-gamepad"></i> Games
+                </a>
+                <a href="#" class="nav-item" data-page="deposit">
+                    <i class="fas fa-money-bill-wave"></i> Deposit
+                </a>
+                <a href="#" class="nav-item" data-page="withdraw">
+                    <i class="fas fa-hand-holding-usd"></i> Withdraw
+                </a>
+                <a href="#" class="nav-item" data-page="referral">
+                    <i class="fas fa-users"></i> Referral
+                </a>
+                <a href="#" class="nav-item" data-page="settings">
+                    <i class="fas fa-cog"></i> Settings
+                </a>
+            </nav>
+            <div class="user-info-sidebar">
+                <div class="user-avatar"><i class="fas fa-user-circle"></i></div>
+                <div class="user-details-side" id="sidebarUserInfo">
+                    <span id="sidebarUserName">Guest</span>
+                    <span id="sidebarUserEmail">Not logged in</span>
+                </div>
+                <button id="logoutBtnSidebar" class="logout-btn"><i class="fas fa-sign-out-alt"></i></button>
             </div>
-            
-            <!-- Login Form -->
-            <div id="loginForm" class="auth-form">
-                <form id="loginFormElement">
-                    <div class="form-group">
-                        <label><i class="fas fa-envelope"></i> Email Address</label>
-                        <input type="email" id="loginEmail" placeholder="Enter your email" required>
-                        <span class="error-message" id="loginEmailError"></span>
-                    </div>
-                    <div class="form-group">
-                        <label><i class="fas fa-lock"></i> Password</label>
-                        <input type="password" id="loginPassword" placeholder="Enter your password" required>
-                        <span class="error-message" id="loginPasswordError"></span>
-                    </div>
-                    <button type="submit" class="submit-btn" id="loginBtn">Login</button>
-                </form>
-                <div class="auth-footer">
-                    Don't have an account? <span class="switch-link" onclick="switchToRegister()">Register Now</span>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header with user profile (right side) -->
+            <header class="dashboard-header">
+                <div class="header-title">
+                    <h1>Welcome to VEVOBet</h1>
                 </div>
+                <div class="user-profile-header" id="userProfileHeader">
+                    <div class="profile-name-email">
+                        <span id="headerUserName">User Name</span>
+                        <small id="headerUserEmail">user@example.com</small>
+                    </div>
+                    <div class="balance-box">
+                        <i class="fas fa-coins"></i>
+                        <span id="userBalance">0</span> VEVO
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dynamic page content -->
+            <div id="pageContent" class="page-content">
+                <!-- Dashboard content loaded dynamically -->
             </div>
-            
-            <!-- Register Form -->
-            <div id="registerForm" class="auth-form" style="display: none;">
-                <form id="registerFormElement">
-                    <div class="form-group">
-                        <label><i class="fas fa-user"></i> Full Name</label>
-                        <input type="text" id="regName" placeholder="Enter your full name" required>
-                        <span class="error-message" id="regNameError"></span>
-                    </div>
-                    <div class="form-group">
-                        <label><i class="fas fa-envelope"></i> Email Address</label>
-                        <input type="email" id="regEmail" placeholder="Enter your email" required>
-                        <span class="error-message" id="regEmailError"></span>
-                    </div>
-                    <div class="form-group">
-                        <label><i class="fas fa-lock"></i> Password</label>
-                        <input type="password" id="regPassword" placeholder="Create a password (min 6 characters)" required>
-                        <span class="error-message" id="regPasswordError"></span>
-                    </div>
-                    <div class="form-group">
-                        <label><i class="fas fa-check-circle"></i> Confirm Password</label>
-                        <input type="password" id="regConfirmPassword" placeholder="Confirm your password" required>
-                        <span class="error-message" id="regConfirmError"></span>
-                    </div>
-                    <div class="promo-section">
-                        <label><i class="fas fa-gift"></i> Invite Code (Optional)</label>
-                        <input type="text" id="regPromoCode" placeholder="Enter friend's promo code">
-                        <span class="error-message" id="regPromoError"></span>
-                    </div>
-                    <button type="submit" class="submit-btn" id="registerBtn">Create Account</button>
-                </form>
-                <div class="auth-footer">
-                    Already have an account? <span class="switch-link" onclick="switchToLogin()">Login Here</span>
-                </div>
-                <div class="terms">
-                    By registering, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
-                </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>Login / Register</h2>
+            <form id="authForm">
+                <input type="text" id="authName" placeholder="Full Name" required>
+                <input type="email" id="authEmail" placeholder="Email Address" required>
+                <input type="password" id="authPassword" placeholder="Password (min 6 chars)" required>
+                <button type="submit" id="authSubmitBtn">Login / Register</button>
+                <p class="form-switch">New user? Account will be created automatically.</p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Deposit Screenshot Modal -->
+    <div id="depositModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h3>Complete Deposit</h3>
+            <p>Send payment to one of our accounts and upload screenshot.</p>
+            <div class="payment-details">
+                <div><strong>M-Pesa:</strong> 0725032395 (Abenezer Shigute)</div>
+                <div><strong>TeleBirr:</strong> 0940980555 (Tenaye Hutalo)</div>
+                <div><strong>CBE Birr:</strong> 0940980555</div>
+                <div><strong>CBE Bank:</strong> 1000612391754</div>
+                <div><strong>TRC20:</strong> TWym3qg8TUNTyutMxvPpnatjeWs8C7jsLY</div>
+                <div><strong>Rate:</strong> 1 Birr = 1 VEVO Token | 1 USDT = 157 VEVO</div>
+            </div>
+            <input type="number" id="depositAmount" placeholder="Amount in Birr or USDT (specify currency)">
+            <select id="depositCurrency">
+                <option value="BIRR">Birr (ETB)</option>
+                <option value="USDT">USDT</option>
+            </select>
+            <input type="file" id="depositScreenshot" accept="image/*">
+            <button id="submitDepositBtn">Submit Deposit Request</button>
+        </div>
+    </div>
+
+    <!-- Withdraw Modal -->
+    <div id="withdrawModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h3>Withdraw Funds</h3>
+            <p>Enter 4-digit withdrawal code and details.</p>
+            <input type="password" id="withdrawCode" placeholder="4-digit Security Code" maxlength="4">
+            <select id="withdrawMethod">
+                <option value="TeleBirr">TeleBirr</option>
+                <option value="M-Pesa">M-Pesa</option>
+                <option value="CBE">CBE Bank</option>
+            </select>
+            <input type="text" id="withdrawAccount" placeholder="Account Number / Phone">
+            <input type="number" id="withdrawAmount" placeholder="Amount (VEVO Tokens)">
+            <button id="submitWithdrawBtn">Request Withdrawal</button>
+            <p class="note">*Withdrawal code is set during registration; if forgotten, contact admin.</p>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h3>Account Settings</h3>
+            <div class="settings-section">
+                <h4>Withdrawal Security Code</h4>
+                <p>Set or change your 4-digit withdrawal code (required for withdrawals)</p>
+                <input type="password" id="settingsWithdrawCode" placeholder="New 4-digit code" maxlength="4">
+                <button id="saveWithdrawCodeBtn">Save Withdrawal Code</button>
+            </div>
+            <div class="settings-section">
+                <h4>Account Information</h4>
+                <p><strong>Name:</strong> <span id="settingsName"></span></p>
+                <p><strong>Email:</strong> <span id="settingsEmail"></span></p>
+                <p><strong>Total Invited:</strong> <span id="settingsInviteCount">0</span></p>
+                <p><strong>Rewards Earned:</strong> <span id="settingsRewards">0</span> VEVO</p>
             </div>
         </div>
     </div>
@@ -307,431 +154,278 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="script.js"></script>
     <script>
-        // Firebase Config
-        const firebaseConfig = {
-            apiKey: "AIzaSyCAfsKcVP7OUo870TKkBnk4BfDEq9LnAK8",
-            authDomain: "newporoject-c6f66.firebaseapp.com",
-            databaseURL: "https://newporoject-c6f66-default-rtdb.firebaseio.com",
-            projectId: "newporoject-c6f66",
-            storageBucket: "newporoject-c6f66.appspot.com",
-            messagingSenderId: "733557611631",
-            appId: "1:733557611631:web:02c9377f56d614ff3b019a",
-            measurementId: "G-53BEVW33FP"
+        // Additional referral page functions
+        function copyReferralLink() {
+            const link = document.getElementById('referralLink').value;
+            navigator.clipboard.writeText(link);
+            showNotification('Referral link copied! Share with your friends!', 'success');
+        }
+        
+        function copyPromoCode() {
+            const code = document.getElementById('promoCodeDisplay').textContent;
+            navigator.clipboard.writeText(code);
+            showNotification('Promo code copied!', 'success');
+        }
+        
+        function shareOnWhatsApp() {
+            const link = document.getElementById('referralLink').value;
+            const text = encodeURIComponent(`Join me on VEVOBet! Use my referral link to get 100 VEVO bonus on signup! ${link}`);
+            window.open(`https://wa.me/?text=${text}`, '_blank');
+        }
+        
+        function shareOnTelegram() {
+            const link = document.getElementById('referralLink').value;
+            const text = encodeURIComponent(`Join me on VEVOBet! Use my referral link to get 100 VEVO bonus on signup! ${link}`);
+            window.open(`https://t.me/share/url?url=${encodeURIComponent(link)}&text=${text}`, '_blank');
+        }
+        
+        function shareOnFacebook() {
+            const link = document.getElementById('referralLink').value;
+            window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(link)}`, '_blank');
+        }
+        
+        function shareOnTwitter() {
+            const link = document.getElementById('referralLink').value;
+            const text = encodeURIComponent(`Join me on VEVOBet! Get 100 VEVO bonus on signup!`);
+            window.open(`https://twitter.com/intent/tweet?text=${text}&url=${encodeURIComponent(link)}`, '_blank');
+        }
+        
+        // Override renderReferralPage function
+        window.renderReferralPage = function() {
+            const user = currentUser;
+            const userDataObj = userData;
+            const promoCode = user ? user.uid.substring(0, 8).toUpperCase() : '';
+            const referralLink = `${window.location.origin}/index.html?ref=${promoCode}`;
+            const inviteCount = userDataObj?.inviteCount || 0;
+            const inviteRewards = userDataObj?.inviteRewards || 0;
+            const nextReward = 5 - (inviteCount % 5);
+            
+            // Get invited users list
+            const invitedUsers = userDataObj?.invitees || [];
+            
+            return `
+                <div style="background: white; border-radius: 20px; overflow: hidden;">
+                    <!-- Hero Section -->
+                    <div style="background: linear-gradient(135deg, #667eea, #764ba2); padding: 40px; text-align: center; color: white;">
+                        <i class="fas fa-gift" style="font-size: 60px; margin-bottom: 20px;"></i>
+                        <h2 style="font-size: 32px; margin-bottom: 10px;">Refer & Earn Rewards!</h2>
+                        <p style="font-size: 16px; opacity: 0.9;">Invite your friends to join VEVOBet and earn VEVO tokens</p>
+                    </div>
+                    
+                    <!-- Stats Cards -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; padding: 30px;">
+                        <div style="background: #f8f9fa; border-radius: 15px; padding: 20px; text-align: center;">
+                            <i class="fas fa-user-plus" style="font-size: 40px; color: #667eea; margin-bottom: 10px;"></i>
+                            <h3 style="font-size: 14px; color: #666;">Total Invites</h3>
+                            <div style="font-size: 36px; font-weight: bold; color: #333;">${inviteCount}</div>
+                        </div>
+                        <div style="background: #f8f9fa; border-radius: 15px; padding: 20px; text-align: center;">
+                            <i class="fas fa-coins" style="font-size: 40px; color: #ffd700; margin-bottom: 10px;"></i>
+                            <h3 style="font-size: 14px; color: #666;">Rewards Earned</h3>
+                            <div style="font-size: 36px; font-weight: bold; color: #333;">${inviteRewards} VEVO</div>
+                        </div>
+                        <div style="background: #f8f9fa; border-radius: 15px; padding: 20px; text-align: center;">
+                            <i class="fas fa-trophy" style="font-size: 40px; color: #48bb78; margin-bottom: 10px;"></i>
+                            <h3 style="font-size: 14px; color: #666;">Next Reward</h3>
+                            <div style="font-size: 36px; font-weight: bold; color: #333;">${nextReward} invites</div>
+                            <div style="font-size: 12px; color: #48bb78;">+10 VEVO</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Referral Link Section -->
+                    <div style="padding: 0 30px 30px 30px;">
+                        <h3 style="margin-bottom: 15px; color: #333;"><i class="fas fa-link"></i> Your Referral Link</h3>
+                        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                            <input type="text" id="referralLink" value="${referralLink}" readonly style="flex: 1; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 14px; background: #f5f5f5;">
+                            <button onclick="copyReferralLink()" style="background: #667eea; color: white; border: none; padding: 0 20px; border-radius: 10px; cursor: pointer;"><i class="fas fa-copy"></i> Copy</button>
+                        </div>
+                        
+                        <h3 style="margin-bottom: 15px; color: #333;"><i class="fas fa-code"></i> Your Promo Code</h3>
+                        <div style="display: flex; gap: 10px; margin-bottom: 30px;">
+                            <div id="promoCodeDisplay" style="flex: 1; padding: 12px; border: 2px solid #ffd700; border-radius: 10px; font-size: 20px; font-weight: bold; text-align: center; background: linear-gradient(135deg, #fff, #fff8e7); letter-spacing: 2px;">${promoCode}</div>
+                            <button onclick="copyPromoCode()" style="background: #ffd700; color: #333; border: none; padding: 0 20px; border-radius: 10px; cursor: pointer; font-weight: bold;"><i class="fas fa-copy"></i> Copy</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Share Buttons -->
+                    <div style="padding: 0 30px 30px 30px;">
+                        <h3 style="margin-bottom: 15px; color: #333;"><i class="fas fa-share-alt"></i> Share on Social Media</h3>
+                        <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                            <button onclick="shareOnWhatsApp()" style="background: #25D366; color: white; border: none; padding: 12px 24px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 8px;"><i class="fab fa-whatsapp"></i> WhatsApp</button>
+                            <button onclick="shareOnTelegram()" style="background: #0088cc; color: white; border: none; padding: 12px 24px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 8px;"><i class="fab fa-telegram"></i> Telegram</button>
+                            <button onclick="shareOnFacebook()" style="background: #1877f2; color: white; border: none; padding: 12px 24px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 8px;"><i class="fab fa-facebook"></i> Facebook</button>
+                            <button onclick="shareOnTwitter()" style="background: #1DA1F2; color: white; border: none; padding: 12px 24px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; gap: 8px;"><i class="fab fa-twitter"></i> Twitter</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Reward Structure -->
+                    <div style="background: #f8f9fa; padding: 30px; margin: 0 30px 30px 30px; border-radius: 15px;">
+                        <h3 style="margin-bottom: 15px; color: #333;"><i class="fas fa-chart-line"></i> Reward Structure</h3>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
+                            <div style="text-align: center;">
+                                <div style="font-size: 24px; font-weight: bold; color: #667eea;">5</div>
+                                <div style="color: #666;">Invites</div>
+                                <div style="color: #48bb78; font-weight: bold;">+10 VEVO</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 24px; font-weight: bold; color: #667eea;">10</div>
+                                <div style="color: #666;">Invites</div>
+                                <div style="color: #48bb78; font-weight: bold;">+20 VEVO</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 24px; font-weight: bold; color: #667eea;">20</div>
+                                <div style="color: #666;">Invites</div>
+                                <div style="color: #48bb78; font-weight: bold;">+40 VEVO</div>
+                            </div>
+                            <div style="text-align: center;">
+                                <div style="font-size: 24px; font-weight: bold; color: #667eea;">50</div>
+                                <div style="color: #666;">Invites</div>
+                                <div style="color: #ffd700; font-weight: bold;">+100 VEVO + Badge</div>
+                            </div>
+                        </div>
+                        <div style="margin-top: 20px; padding: 15px; background: #e8f5e9; border-radius: 10px;">
+                            <i class="fas fa-info-circle"></i> <strong>How it works:</strong> Every time a friend signs up using your referral link or promo code, they get 100 VEVO bonus, and you earn rewards! For every 5 invited friends, you get 10 VEVO tokens automatically added to your balance.
+                        </div>
+                    </div>
+                    
+                    <!-- Invited Friends List -->
+                    <div style="padding: 0 30px 30px 30px;">
+                        <h3 style="margin-bottom: 15px; color: #333;"><i class="fas fa-users"></i> Friends You've Invited (${invitedUsers.length})</h3>
+                        <div class="table-container" style="overflow-x: auto;">
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <thead>
+                                    <tr style="background: #f5f5f5;">
+                                        <th style="padding: 12px; text-align: left;">#</th>
+                                        <th style="padding: 12px; text-align: left;">User ID</th>
+                                        <th style="padding: 12px; text-align: left;">Joined Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${invitedUsers.length > 0 ? invitedUsers.slice(0, 10).map((userId, index) => `
+                                        <tr style="border-bottom: 1px solid #e0e0e0;">
+                                            <td style="padding: 12px;">${index + 1}</td>
+                                            <td style="padding: 12px;"><code>${userId.substring(0, 8)}...</code></td>
+                                            <td style="padding: 12px;">-</td>
+                                        </tr>
+                                    `).join('') : `
+                                        <tr>
+                                            <td colspan="3" style="padding: 40px; text-align: center; color: #999;">
+                                                <i class="fas fa-user-friends" style="font-size: 48px; margin-bottom: 10px; display: block;"></i>
+                                                No friends invited yet. Share your referral link to get started!
+                                            </td>
+                                        </tr>
+                                    `}
+                                </tbody>
+                            </table>
+                        </div>
+                        ${invitedUsers.length > 10 ? `<p style="text-align: center; margin-top: 10px; color: #666;">and ${invitedUsers.length - 10} more...</p>` : ''}
+                    </div>
+                    
+                    <!-- Referral Tips -->
+                    <div style="background: linear-gradient(135deg, #667eea20, #764ba220); padding: 30px; margin: 0 30px 30px 30px; border-radius: 15px;">
+                        <h3 style="margin-bottom: 15px; color: #333;"><i class="fas fa-lightbulb"></i> Pro Tips to Get More Referrals</h3>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
+                            <div style="display: flex; gap: 10px; align-items: start;">
+                                <i class="fas fa-share-alt" style="color: #667eea; font-size: 20px;"></i>
+                                <div><strong>Share on Social Media</strong><br>Post your referral link on Facebook, Telegram, and WhatsApp groups</div>
+                            </div>
+                            <div style="display: flex; gap: 10px; align-items: start;">
+                                <i class="fas fa-envelope" style="color: #667eea; font-size: 20px;"></i>
+                                <div><strong>Email Friends</strong><br>Send personalized invitations to your friends and family</div>
+                            </div>
+                            <div style="display: flex; gap: 10px; align-items: start;">
+                                <i class="fas fa-gamepad" style="color: #667eea; font-size: 20px;"></i>
+                                <div><strong>Share in Gaming Communities</strong><br>Join gaming forums and share your referral link</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
         };
         
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.database();
-        
-        // State variables
-        let currentTab = 'login';
-        let isLoading = false;
-        
-        // Helper function to generate promo code from user ID
-        function generatePromoCode(userId) {
-            return userId.substring(0, 8).toUpperCase();
-        }
-        
-        // Show notification
-        function showNotification(message, type = 'info') {
-            const notification = document.createElement('div');
-            notification.className = `notification notification-${type}`;
-            notification.innerHTML = `
-                <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i>
-                <span>${message}</span>
-            `;
-            notification.style.cssText = `
-                position: fixed;
-                top: 20px;
-                right: 20px;
-                background: ${type === 'success' ? '#48bb78' : type === 'error' ? '#ff4757' : '#667eea'};
-                color: white;
-                padding: 12px 20px;
-                border-radius: 10px;
-                z-index: 2000;
-                animation: slideInRight 0.3s ease;
-                box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-            `;
-            document.body.appendChild(notification);
+        // Override loadPage function to include referral
+        const originalLoadPage = window.loadPage;
+        window.loadPage = async function(page) {
+            currentPage = page;
             
-            setTimeout(() => {
-                notification.style.animation = 'slideOutRight 0.3s ease';
-                setTimeout(() => notification.remove(), 300);
-            }, 3000);
-        }
-        
-        // Add animation styles
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes slideInRight {
-                from { transform: translateX(100%); opacity: 0; }
-                to { transform: translateX(0); opacity: 1; }
-            }
-            @keyframes slideOutRight {
-                from { transform: translateX(0); opacity: 1; }
-                to { transform: translateX(100%); opacity: 0; }
-            }
-        `;
-        document.head.appendChild(style);
-        
-        // Clear all error messages
-        function clearErrors() {
-            document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
-            document.querySelectorAll('.form-group input').forEach(el => el.classList.remove('error'));
-        }
-        
-        // Validate email
-        function isValidEmail(email) {
-            const re = /^[^\s@]+@([^\s@]+\.)+[^\s@]+$/;
-            return re.test(email);
-        }
-        
-        // Validate name
-        function isValidName(name) {
-            return name && name.trim().length >= 2;
-        }
-        
-        // Validate password
-        function isValidPassword(password) {
-            return password && password.length >= 6;
-        }
-        
-        // Login function
-        async function login(email, password) {
-            clearErrors();
-            let isValid = true;
-            
-            if (!email) {
-                document.getElementById('loginEmailError').textContent = 'Email is required';
-                document.getElementById('loginEmail').classList.add('error');
-                isValid = false;
-            } else if (!isValidEmail(email)) {
-                document.getElementById('loginEmailError').textContent = 'Please enter a valid email';
-                document.getElementById('loginEmail').classList.add('error');
-                isValid = false;
-            }
-            
-            if (!password) {
-                document.getElementById('loginPasswordError').textContent = 'Password is required';
-                document.getElementById('loginPassword').classList.add('error');
-                isValid = false;
-            }
-            
-            if (!isValid) return false;
-            
-            const loginBtn = document.getElementById('loginBtn');
-            loginBtn.disabled = true;
-            loginBtn.innerHTML = '<span class="loading-spinner"></span> Logging in...';
-            
-            try {
-                const userCredential = await auth.signInWithEmailAndPassword(email, password);
-                const user = userCredential.user;
-                
-                // Update last login
-                await db.ref(`users/${user.uid}`).update({ lastLogin: Date.now() });
-                
-                showNotification('Login successful! Redirecting...', 'success');
-                
-                setTimeout(() => {
-                    window.location.href = 'index.html';
-                }, 1000);
-                
-                return true;
-            } catch (error) {
-                console.error('Login error:', error);
-                let errorMessage = 'Login failed. ';
-                switch (error.code) {
-                    case 'auth/user-not-found':
-                        errorMessage += 'No account found with this email. Please register first.';
-                        break;
-                    case 'auth/wrong-password':
-                        errorMessage += 'Incorrect password. Please try again.';
-                        break;
-                    case 'auth/invalid-email':
-                        errorMessage += 'Invalid email format.';
-                        break;
-                    case 'auth/user-disabled':
-                        errorMessage += 'This account has been disabled.';
-                        break;
-                    default:
-                        errorMessage += error.message;
+            // Update active nav item
+            document.querySelectorAll('.nav-item').forEach(item => {
+                if (item.dataset.page === page) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
                 }
-                showNotification(errorMessage, 'error');
-                loginBtn.disabled = false;
-                loginBtn.innerHTML = 'Login';
-                return false;
-            }
-        }
-        
-        // Apply invite code
-        async function applyInviteCode(userId, promoCode) {
-            if (!promoCode) return true;
+            });
             
-            try {
-                // Find user with this promo code
-                const usersRef = db.ref('users');
-                const snapshot = await usersRef.once('value');
-                let inviterId = null;
-                
-                snapshot.forEach(childSnapshot => {
-                    const user = childSnapshot.val();
-                    const userCode = generatePromoCode(childSnapshot.key);
-                    if (userCode === promoCode.toUpperCase() && childSnapshot.key !== userId) {
-                        inviterId = childSnapshot.key;
-                    }
-                });
-                
-                if (inviterId) {
-                    // Update current user
-                    await db.ref(`users/${userId}`).update({ invitedBy: inviterId });
-                    
-                    // Update inviter's invite count and check for reward
-                    const inviterRef = db.ref(`users/${inviterId}`);
-                    const inviterSnapshot = await inviterRef.once('value');
-                    const inviterData = inviterSnapshot.val();
-                    const newInviteCount = (inviterData.inviteCount || 0) + 1;
-                    const newInvitees = [...(inviterData.invitees || []), userId];
-                    
-                    let reward = 0;
-                    if (newInviteCount % 5 === 0) {
-                        reward = 10;
-                        await inviterRef.update({
-                            balance: (inviterData.balance || 0) + reward,
-                            inviteRewards: (inviterData.inviteRewards || 0) + reward
-                        });
-                    }
-                    
-                    await inviterRef.update({
-                        inviteCount: newInviteCount,
-                        invitees: newInvitees
-                    });
-                    
-                    return true;
+            // Render page content
+            if (!currentUser) {
+                if (page === 'dashboard') {
+                    pageContent.innerHTML = `
+                        <div style="text-align: center; padding: 60px 20px;">
+                            <i class="fas fa-user-lock" style="font-size: 80px; color: white; margin-bottom: 20px;"></i>
+                            <h2 style="color: white;">Welcome to VEVOBet!</h2>
+                            <p style="color: white; margin: 20px 0;">Please login or register to start playing and winning!</p>
+                            <button onclick="showModal(loginModal)" style="background: #ffd700; color: #1a1a2e; padding: 12px 30px; border: none; border-radius: 25px; font-size: 16px; font-weight: bold; cursor: pointer;">Login / Register</button>
+                        </div>
+                    `;
+                } else {
+                    pageContent.innerHTML = `
+                        <div style="text-align: center; padding: 60px 20px;">
+                            <i class="fas fa-sign-in-alt" style="font-size: 80px; color: white; margin-bottom: 20px;"></i>
+                            <h2 style="color: white;">Please Login First</h2>
+                            <p style="color: white; margin: 20px 0;">You need to be logged in to access this page.</p>
+                            <button onclick="showModal(loginModal)" style="background: #ffd700; color: #1a1a2e; padding: 12px 30px; border: none; border-radius: 25px; font-size: 16px; font-weight: bold; cursor: pointer;">Login / Register</button>
+                        </div>
+                    `;
                 }
-                return false;
-            } catch (error) {
-                console.error('Error applying invite code:', error);
-                return false;
+                return;
+            }
+            
+            switch(page) {
+                case 'dashboard':
+                    pageContent.innerHTML = renderDashboard();
+                    break;
+                case 'games':
+                    pageContent.innerHTML = renderGamesPage();
+                    break;
+                case 'deposit':
+                    pageContent.innerHTML = renderDepositPage();
+                    break;
+                case 'withdraw':
+                    pageContent.innerHTML = renderWithdrawPage();
+                    break;
+                case 'referral':
+                    pageContent.innerHTML = window.renderReferralPage();
+                    break;
+                case 'settings':
+                    pageContent.innerHTML = renderSettingsPage();
+                    break;
+                default:
+                    pageContent.innerHTML = renderDashboard();
+            }
+        };
+        
+        // Check URL for referral code on page load
+        function checkReferralCode() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const refCode = urlParams.get('ref');
+            if (refCode && !localStorage.getItem('refProcessed')) {
+                localStorage.setItem('refProcessed', refCode);
+                localStorage.setItem('pendingReferral', refCode);
+                showNotification('Welcome! You were referred by a friend! Complete registration to get 100 VEVO bonus!', 'success');
             }
         }
         
-        // Register function
-        async function register(name, email, password, confirmPassword, promoCode) {
-            clearErrors();
-            let isValid = true;
-            
-            if (!name) {
-                document.getElementById('regNameError').textContent = 'Full name is required';
-                document.getElementById('regName').classList.add('error');
-                isValid = false;
-            } else if (!isValidName(name)) {
-                document.getElementById('regNameError').textContent = 'Name must be at least 2 characters';
-                document.getElementById('regName').classList.add('error');
-                isValid = false;
-            }
-            
-            if (!email) {
-                document.getElementById('regEmailError').textContent = 'Email is required';
-                document.getElementById('regEmail').classList.add('error');
-                isValid = false;
-            } else if (!isValidEmail(email)) {
-                document.getElementById('regEmailError').textContent = 'Please enter a valid email';
-                document.getElementById('regEmail').classList.add('error');
-                isValid = false;
-            }
-            
-            if (!password) {
-                document.getElementById('regPasswordError').textContent = 'Password is required';
-                document.getElementById('regPassword').classList.add('error');
-                isValid = false;
-            } else if (!isValidPassword(password)) {
-                document.getElementById('regPasswordError').textContent = 'Password must be at least 6 characters';
-                document.getElementById('regPassword').classList.add('error');
-                isValid = false;
-            }
-            
-            if (!confirmPassword) {
-                document.getElementById('regConfirmError').textContent = 'Please confirm your password';
-                document.getElementById('regConfirmPassword').classList.add('error');
-                isValid = false;
-            } else if (password !== confirmPassword) {
-                document.getElementById('regConfirmError').textContent = 'Passwords do not match';
-                document.getElementById('regConfirmPassword').classList.add('error');
-                isValid = false;
-            }
-            
-            if (!isValid) return false;
-            
-            const registerBtn = document.getElementById('registerBtn');
-            registerBtn.disabled = true;
-            registerBtn.innerHTML = '<span class="loading-spinner"></span> Creating account...';
-            
-            try {
-                // Create user in Firebase Auth
-                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-                const user = userCredential.user;
-                
-                // Update profile with name
-                await user.updateProfile({ displayName: name });
-                
-                // Create user data in Realtime Database
-                const userData = {
-                    email: email,
-                    name: name,
-                    balance: 100, // Welcome bonus
-                    withdrawCode: null,
-                    inviteCount: 0,
-                    inviteRewards: 0,
-                    invitees: [],
-                    depositRequests: [],
-                    withdrawRequests: [],
-                    createdAt: Date.now(),
-                    lastLogin: Date.now()
-                };
-                
-                await db.ref(`users/${user.uid}`).set(userData);
-                
-                // Apply invite code if provided
-                if (promoCode && promoCode.trim()) {
-                    const inviteApplied = await applyInviteCode(user.uid, promoCode.trim());
-                    if (inviteApplied) {
-                        showNotification('Invite code applied! You got 100 VEVO bonus!', 'success');
-                    } else if (promoCode.trim()) {
-                        showNotification('Invite code not found, but you still get 100 VEVO!', 'info');
-                    }
-                }
-                
-                showNotification('Account created successfully! Welcome to VEVOBet! You received 100 VEVO bonus!', 'success');
-                
-                setTimeout(() => {
-                    window.location.href = 'index.html';
-                }, 1500);
-                
-                return true;
-            } catch (error) {
-                console.error('Registration error:', error);
-                let errorMessage = 'Registration failed. ';
-                switch (error.code) {
-                    case 'auth/email-already-in-use':
-                        errorMessage += 'This email is already registered. Please login instead.';
-                        break;
-                    case 'auth/invalid-email':
-                        errorMessage += 'Invalid email format.';
-                        break;
-                    case 'auth/weak-password':
-                        errorMessage += 'Password should be at least 6 characters.';
-                        break;
-                    default:
-                        errorMessage += error.message;
-                }
-                showNotification(errorMessage, 'error');
-                registerBtn.disabled = false;
-                registerBtn.innerHTML = 'Create Account';
-                return false;
-            }
-        }
+        // Apply referral code during registration
+        window.getPendingReferral = function() {
+            const ref = localStorage.getItem('pendingReferral');
+            localStorage.removeItem('pendingReferral');
+            return ref;
+        };
         
-        // Switch to register tab
-        function switchToRegister() {
-            currentTab = 'register';
-            document.querySelector('.tab-btn.active').classList.remove('active');
-            document.querySelectorAll('.tab-btn')[1].classList.add('active');
-            document.getElementById('loginForm').style.display = 'none';
-            document.getElementById('registerForm').style.display = 'block';
-            clearErrors();
-        }
-        
-        // Switch to login tab
-        function switchToLogin() {
-            currentTab = 'login';
-            document.querySelector('.tab-btn.active').classList.remove('active');
-            document.querySelectorAll('.tab-btn')[0].classList.add('active');
-            document.getElementById('registerForm').style.display = 'none';
-            document.getElementById('loginForm').style.display = 'block';
-            clearErrors();
-        }
-        
-        // Event Listeners
-        document.getElementById('loginFormElement').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('loginEmail').value.trim();
-            const password = document.getElementById('loginPassword').value;
-            await login(email, password);
-        });
-        
-        document.getElementById('registerFormElement').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const name = document.getElementById('regName').value.trim();
-            const email = document.getElementById('regEmail').value.trim();
-            const password = document.getElementById('regPassword').value;
-            const confirmPassword = document.getElementById('regConfirmPassword').value;
-            const promoCode = document.getElementById('regPromoCode').value.trim();
-            await register(name, email, password, confirmPassword, promoCode);
-        });
-        
-        // Add real-time validation
-        document.getElementById('regPassword').addEventListener('input', function() {
-            if (this.value.length > 0 && this.value.length < 6) {
-                document.getElementById('regPasswordError').textContent = 'Password must be at least 6 characters';
-                this.classList.add('error');
-            } else {
-                document.getElementById('regPasswordError').textContent = '';
-                this.classList.remove('error');
-            }
-        });
-        
-        document.getElementById('regConfirmPassword').addEventListener('input', function() {
-            const password = document.getElementById('regPassword').value;
-            if (this.value !== password) {
-                document.getElementById('regConfirmError').textContent = 'Passwords do not match';
-                this.classList.add('error');
-            } else {
-                document.getElementById('regConfirmError').textContent = '';
-                this.classList.remove('error');
-            }
-        });
-        
-        document.getElementById('regEmail').addEventListener('input', function() {
-            if (this.value.length > 0 && !isValidEmail(this.value)) {
-                document.getElementById('regEmailError').textContent = 'Please enter a valid email';
-                this.classList.add('error');
-            } else {
-                document.getElementById('regEmailError').textContent = '';
-                this.classList.remove('error');
-            }
-        });
-        
-        document.getElementById('regName').addEventListener('input', function() {
-            if (this.value.length > 0 && this.value.length < 2) {
-                document.getElementById('regNameError').textContent = 'Name must be at least 2 characters';
-                this.classList.add('error');
-            } else {
-                document.getElementById('regNameError').textContent = '';
-                this.classList.remove('error');
-            }
-        });
-        
-        // Check if user is already logged in
-        auth.onAuthStateChanged(async (user) => {
-            if (user) {
-                // User is already logged in, redirect to dashboard
-                window.location.href = 'index.html';
-            }
-        });
-        
-        // Add enter key support
-        document.getElementById('loginPassword').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                document.getElementById('loginFormElement').dispatchEvent(new Event('submit'));
-            }
-        });
-        
-        document.getElementById('regConfirmPassword').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                document.getElementById('registerFormElement').dispatchEvent(new Event('submit'));
-            }
-        });
+        checkReferralCode();
     </script>
 </body>
 </html>
