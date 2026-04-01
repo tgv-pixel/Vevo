@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VEVOBet - Dama International | Multiplayer Live Betting</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .game-container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .game-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 15px 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .back-btn {
+            color: white;
+            text-decoration: none;
+            font-size: 16px;
+            padding: 8px 15px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .game-logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .game-logo i {
+            margin-right: 10px;
+            color: #ffd700;
+        }
+
+        .game-balance {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 8px 20px;
+            border-radius: 25px;
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .game-balance i {
+            color: #ffd700;
+            margin-right: 8px;
+        }
+
+        .stats-badge {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 8px 15px;
+            border-radius: 25px;
+            color: #ffd700;
+            font-size: 14px;
+        }
+
+        /* Main Layout */
+        .main-layout {
+            display: grid;
+            grid-template-columns: 320px 1fr 320px;
+            gap: 20px;
+        }
+
+        /* Side Panels */
+        .side-panel {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 20px;
+            height: fit-content;
+        }
+
+        .panel-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+            border-bottom: 2px solid #ffd700;
+            padding-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Player List */
+        .player-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .player-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            margin: 8px 0;
+            background: #f8f9fa;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-left: 4px solid #48bb78;
+        }
+
+        .player-item:hover {
+            background: #e8f5e9;
+            transform: translateX(5px);
+        }
+
+        .player-item.waiting {
+            border-left-color: #ffd700;
+        }
+
+        .player-info h4 {
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .player-info small {
+            font-size: 11px;
+            color: #666;
+        }
+
+        .player-stats {
+            text-align: right;
+        }
+
+        .player-wins {
+            font-size: 12px;
+            color: #48bb78;
+            font-weight: bold;
+        }
+
+        .invite-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            cursor: pointer;
+        }
+
+        /* Game Board */
+        .game-board-section {
+            background: linear-gradient(135deg, #2d5a2c, #1e3a1e);
+            border-radius: 30px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .game-status {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 15px;
+            color: white;
+        }
+
+        .game-status h3 {
+            font-size: 20px;
+        }
+
+        .game-status p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .players-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            gap: 20px;
+        }
+
+        .player-card {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 15px;
+            padding: 12px;
+            text-align: center;
+            color: white;
+        }
+
+        .player-card.active-turn {
+            background: linear-gradient(135deg, #ffd700, #ff8c00);
+            color: #1a1a2e;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        .player-name {
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .player-bet {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        /* Chess Board */
+        .board {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            aspect-ratio: 1 / 1;
+            background: #c9a87c;
+            border: 3px solid #8b5a2b;
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .square {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 42px;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .square.light {
+            background: #f0d9b5;
+        }
+
+        .square.dark {
+            background: #b58863;
+        }
+
+        .square.valid-move {
+            background: #48bb78;
+            box-shadow: inset 0 0 0 3px #ffd700;
+            cursor: pointer;
+        }
+
+        .square.selected {
+            background: #ffd700;
+            box-shadow: inset 0 0 0 3px #48bb78;
+        }
+
+        .piece {
+            cursor: pointer;
+            transition: transform 0.2s;
+            text-shadow: 2px 2px 2px rgba(0,0,0,0.3);
+        }
+
+        .piece:hover {
+            transform: scale(1.1);
+        }
+
+        .piece.player1 {
+            color: #e74c3c;
+        }
+
+        .piece.player2 {
+            color: #2c3e50;
+        }
+
+        .piece.king::after {
+            content: "👑";
+            font-size: 20px;
+            position: absolute;
+            top: -5px;
+            right: -5px;
+        }
+
+        /* Bet Controls */
+        .bet-section {
+            margin-top: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 15px;
+        }
+
+        .bet-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .bet-controls input {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .create-game-btn {
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .create-game-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+        }
+
+        .modal-content button {
+            background: #48bb78;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            margin-top: 20px;
+            cursor: pointer;
+        }
+
+        /* Notification */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 10px;
+            color: white;
+            z-index: 2000;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @media (max-width: 1024px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+            .side-panel {
+                order: 2;
+            }
+            .game-board-section {
+                order: 1;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .square {
+                font-size: 28px;
+            }
+            .players-info {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <a href="dashboard.html" class="back-btn"><i class="fas fa-arrow-left"></i> Dashboard</a>
+            <div class="game-logo">
+                <i class="fas fa-chess-board"></i> Dama International
+            </div>
+            <div>
+                <span class="stats-badge"><i class="fas fa-trophy"></i> Wins: <span id="userWins">0</span></span>
+                <span class="game-balance"><i class="fas fa-coins"></i> <span id="gameBalance">0</span> VEVO</span>
+            </div>
+        </div>
+
+        <div class="main-layout">
+            <!-- Left Panel - Available Players -->
+            <div class="side-panel">
+                <div class="panel-title">
+                    <i class="fas fa-users"></i> Available Players
+                </div>
+                <div id="availablePlayersList" class="player-list">
+                    <div style="text-align: center; color: #999; padding: 20px;">Loading players...</div>
+                </div>
+                
+                <div class="bet-section">
+                    <div class="panel-title"><i class="fas fa-coins"></i> Create Game</div>
+                    <div class="bet-controls">
+                        <input type="number" id="betAmountGame" placeholder="Bet Amount (VEVO)" min="10" value="50">
+                    </div>
+                    <button class="create-game-btn" id="createGameBtn" onclick="createGame()">
+                        <i class="fas fa-plus-circle"></i> Create Game & Wait for Opponent
+                    </button>
+                </div>
+            </div>
+
+            <!-- Center - Game Board -->
+            <div class="game-board-section">
+                <div class="game-status" id="gameStatus">
+                    <h3>🎲 No Active Game 🎲</h3>
+                    <p>Create a game or join an available player to start playing!</p>
+                </div>
+                <div class="players-info" id="playersInfo">
+                    <div class="player-card">
+                        <div class="player-name">You (Red)</div>
+                        <div class="player-bet">Bet: -</div>
+                    </div>
+                    <div class="player-card">
+                        <div class="player-name">Opponent (Black)</div>
+                        <div class="player-bet">Bet: -</div>
+                    </div>
+                </div>
+                <div class="board" id="board"></div>
+            </div>
+
+            <!-- Right Panel - Invite & Stats -->
+            <div class="side-panel">
+                <div class="panel-title">
+                    <i class="fas fa-envelope"></i> Invite Friends
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <div class="player-item" style="background: #e8f5e9;">
+                        <div class="player-info">
+                            <h4>Your Promo Code</h4>
+                            <small>Share to invite friends</small>
+                        </div>
+                        <div>
+                            <span id="promoCodeDisplay" style="font-family: monospace; font-weight: bold;">------</span>
+                            <button class="invite-btn" onclick="copyPromoCode()"><i class="fas fa-copy"></i></button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel-title">
+                    <i class="fas fa-chart-line"></i> Game History
+                </div>
+                <div id="gameHistory" class="player-list" style="max-height: 300px;">
+                    <div style="text-align: center; color: #999; padding: 20px;">No games yet</div>
+                </div>
+
+                <div class="panel-title">
+                    <i class="fas fa-info-circle"></i> Rules
+                </div>
+                <div style="font-size: 12px; color: #666; line-height: 1.6;">
+                    <p>✓ International Draughts (10x10 board)</p>
+                    <p>✓ Pieces move diagonally forward</p>
+                    <p>✓ Capture by jumping over opponent</p>
+                    <p>✓ Multiple captures in one turn</p>
+                    <p>✓ Pieces become Kings at back row</p>
+                    <p>✓ Kings move any diagonal distance</p>
+                    <p>💰 Winner gets 80% of pot</p>
+                    <p>🏠 House takes 20%</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="inviteModal" class="modal">
+        <div class="modal-content">
+            <i class="fas fa-gift" style="font-size: 48px; color: #ffd700;"></i>
+            <h3>Game Invitation!</h3>
+            <p id="inviteMessage"></p>
+            <button onclick="acceptInvite()">Accept & Join Game</button>
+            <button onclick="closeInviteModal()" style="background: #ccc; margin-top: 10px;">Decline</button>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script>
+        // Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyCAfsKcVP7OUo870TKkBnk4BfDEq9LnAK8",
+            authDomain: "newporoject-c6f66.firebaseapp.com",
+            databaseURL: "https://newporoject-c6f66-default-rtdb.firebaseio.com",
+            projectId: "newporoject-c6f66",
+            storageBucket: "newporoject-c6f66.appspot.com",
+            messagingSenderId: "733557611631",
+            appId: "1:733557611631:web:02c9377f56d614ff3b019a"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.database();
+        
+        let currentUser = null;
+        let userData = null;
+        let currentGame = null;
+        let gameListener = null;
+        let selectedPiece = null;
+        let validMoves = [];
+        let currentTurn = null;
+        
+        // Initialize empty board (10x10)
+        function initBoard() {
+            const board = Array(10).fill().map(() => Array(10).fill(null));
+            // Place black pieces (player 2 - top)
+            for (let row = 0; row < 3; row++) {
+                for (let col = 0; col < 10; col++) {
+                    if ((row + col) % 2 === 1) {
+                        board[row][col] = { type: 'piece', player: 2 };
+                    }
+                }
+            }
+            // Place red pieces (player 1 - bottom)
+            for (let row = 7; row < 10; row++) {
+                for (let col = 0; col < 10; col++) {
+                    if ((row + col) % 2 === 1) {
+                        board[row][col] = { type: 'piece', player: 1 };
+                    }
+                }
+            }
+            return board;
+        }
+        
+        // Get valid moves for a piece
+        function getValidMoves(board, row, col, player) {
+            const piece = board[row][col];
+            if (!piece || piece.player !== player) return [];
+            
+            const moves = [];
+            const isKing = piece.type === 'king';
+            const directions = isKing ? [[-1,-1], [-1,1], [1,-1], [1,1]] : 
+                (player === 1 ? [[-1,-1], [-1,1]] : [[1,-1], [1,1]]);
+            
+            // Check for captures first (mandatory)
+            const captures = [];
+            for (const [dr, dc] of directions) {
+                const newRow = row + dr;
+                const newCol = col + dc;
+                const jumpRow = row + dr * 2;
+                const jumpCol = col + dc * 2;
+                
+                if (newRow >= 0 && newRow < 10 && newCol >= 0 && newCol < 10 && 
+                    jumpRow >= 0 && jumpRow < 10 && jumpCol >= 0 && jumpCol < 10) {
+                    const midPiece = board[newRow][newCol];
+                    const targetPiece = board[jumpRow][jumpCol];
+                    if (midPiece && midPiece.player !== player && !targetPiece) {
+                        captures.push({ row: jumpRow, col: jumpCol, capture: { row: newRow, col: newCol } });
+                    }
+                }
+            }
+            
+            if (captures.length > 0) return captures;
+            
+            // Normal moves
+            for (const [dr, dc] of directions) {
+                const newRow = row + dr;
+                const newCol = col + dc;
+                if (newRow >= 0 && newRow < 10 && newCol >= 0 && newCol < 10 && !board[newRow][newCol]) {
+                    moves.push({ row: newRow, col: newCol });
+                }
+            }
+            
+            // King long moves
+            if (isKing) {
+                for (const [dr, dc] of directions) {
+                    for (let step = 2; step < 10; step++) {
+                        const newRow = row + dr * step;
+                        const newCol = col + dc * step;
+                        if (newRow < 0 || newRow >= 10 || newCol < 0 || newCol >= 10) break;
+                        if (board[newRow][newCol]) break;
+                        moves.push({ row: newRow, col: newCol });
+                    }
+                }
+            }
+            
+            return moves;
+        }
+        
+        // Make move
+        function makeMove(board, fromRow, fromCol, toRow, toCol, capture) {
+            const newBoard = JSON.parse(JSON.stringify(board));
+            const piece = newBoard[fromRow][fromCol];
+            newBoard[toRow][toCol] = piece;
+            newBoard[fromRow][fromCol] = null;
+            
+            if (capture) {
+                newBoard[capture.row][capture.col] = null;
+            }
+            
+            // King promotion
+            if ((piece.player === 1 && toRow === 0) || (piece.player === 2 && toRow === 9)) {
+                newBoard[toRow][toCol].type = 'king';
+            }
+            
+            return newBoard;
+        }
+        
+        // Check winner
+        function checkWinner(board) {
+            let hasPlayer1 = false, hasPlayer2 = false;
+            for (let row = 0; row < 10; row++) {
+                for (let col = 0; col < 10; col++) {
+                    const piece = board[row][col];
+                    if (piece) {
+                        if (piece.player === 1) hasPlayer1 = true;
+                        else hasPlayer2 = true;
+                    }
+                }
+            }
+            if (!hasPlayer1) return 2;
+            if (!hasPlayer2) return 1;
+            
+            // Check if player has any moves
+            let player1HasMoves = false, player2HasMoves = false;
+            for (let row = 0; row < 10; row++) {
+                for (let col = 0; col < 10; col++) {
+                    const piece = board[row][col];
+                    if (piece) {
+                        const moves = getValidMoves(board, row, col, piece.player);
+                        if (moves.length > 0) {
+                            if (piece.player === 1) player1HasMoves = true;
+                            else player2HasMoves = true;
+                        }
+                    }
+                }
+            }
+            if (!player1HasMoves) return 2;
+            if (!player2HasMoves) return 1;
+            return null;
+        }
+        
+        // Render board
+        function renderBoard() {
+            const boardEl = document.getElementById('board');
+            if (!boardEl || !currentGame) return;
+            
+            const board = currentGame.board;
+            boardEl.innerHTML = '';
+            
+            for (let row = 0; row < 10; row++) {
+                for (let col = 0; col < 10; col++) {
+                    const isDark = (row + col) % 2 === 1;
+                    const piece = board[row][col];
+                    const isSelected = selectedPiece && selectedPiece.row === row && selectedPiece.col === col;
+                    const isValidMove = validMoves.some(m => m.row === row && m.col === col);
+                    
+                    const square = document.createElement('div');
+                    square.className = `square ${isDark ? 'dark' : 'light'}`;
+                    if (isSelected) square.classList.add('selected');
+                    if (isValidMove) square.classList.add('valid-move');
+                    
+                    if (piece) {
+                        const icon = piece.type === 'king' ? '👑' : (piece.player === 1 ? '🔴' : '⚫');
+                        const pieceEl = document.createElement('div');
+                        pieceEl.className = `piece player${piece.player}`;
+                        pieceEl.textContent = icon;
+                        pieceEl.style.fontSize = '42px';
+                        pieceEl.style.cursor = 'pointer';
+                        pieceEl.onclick = (e) => {
+                            e.stopPropagation();
+                            if (currentGame && currentGame.currentTurn === currentGame.playerRole && !currentGame.winner) {
+                                selectPiece(row, col);
+                            }
+                        };
+                        square.appendChild(pieceEl);
+                    }
+                    
+                    square.onclick = () => {
+                        if (isValidMove && currentGame && currentGame.currentTurn === currentGame.playerRole && !currentGame.winner) {
+                            makeMoveAction(selectedPiece.row, selectedPiece.col, row, col);
+                        }
+                    };
+                    
+                    boardEl.appendChild(square);
+                }
+            }
+        }
+        
+        function selectPiece(row, col) {
+            const piece = currentGame.board[row][col];
+            if (!piece || piece.player !== currentGame.playerRole) return;
+            
+            const moves = getValidMoves(currentGame.board, row, col, currentGame.playerRole);
+            if (moves.length > 0) {
+                selectedPiece = { row, col };
+                validMoves = moves;
+                renderBoard();
+            }
+        }
+        
+        async function makeMoveAction(fromRow, fromCol, toRow, toCol) {
+            const move = validMoves.find(m => m.row === toRow && m.col === toCol);
+            if (!move) return;
+            
+            const newBoard = makeMove(currentGame.board, fromRow, fromCol, toRow, toCol, move.capture);
+            const winner = checkWinner(newBoard);
+            const nextTurn = currentGame.playerRole === 1 ? 2 : 1;
+            
+            const updates = {
+                board: newBoard,
+                currentTurn: nextTurn,
+                lastMove: { from: { row: fromRow, col: fromCol }, to: { row: toRow, col: toCol } }
+            };
+            
+            if (winner) {
+                updates.winner = winner;
+                updates.completedAt = Date.now();
+                
+                // Calculate winnings (80% to winner, 20% to house)
+                const totalPot = currentGame.betAmount * 2;
+                const winnerAmount = Math.floor(totalPot * 0.8);
+                const houseAmount = totalPot * 0.2;
+                
+                updates.winnerAmount = winnerAmount;
+                
+                // Update balances
+                const winnerId = winner === 1 ? currentGame.player1Id : currentGame.player2Id;
+                const loserId = winner === 1 ? currentGame.player2Id : currentGame.player1Id;
+                
+                const winnerRef = db.ref(`users/${winnerId}`);
+                const winnerSnap = await winnerRef.once('value');
+                const winnerData = winnerSnap.val();
+                await winnerRef.update({ 
+                    balance: (winnerData.balance || 0) + winnerAmount,
+                    damaWins: (winnerData.damaWins || 0) + 1
+                });
+                
+                // Update player stats in current game object
+                if (currentUser.uid === winnerId) {
+                    userData.damaWins = (userData.damaWins || 0) + 1;
+                    document.getElementById('userWins').textContent = userData.damaWins || 0;
+                }
+                
+                showNotification(`🎉 Game Over! Winner gets ${winnerAmount} VEVO!`, 'success');
+            }
+            
+            await db.ref(`games/${currentGame.gameId}`).update(updates);
+            
+            selectedPiece = null;
+            validMoves = [];
+        }
+        
+        function updateUI() {
+            if (!currentGame) {
+                document.getElementById('gameStatus').innerHTML = '<h3>🎲 No Active Game 🎲</h3><p>Create a game or join an available player to start playing!</p>';
+                return;
+            }
+            
+            const isPlayer1 = currentGame.playerRole === 1;
+            const playerName = isPlayer1 ? 'You (Red)' : 'Opponent (Red)';
+            const opponentName = isPlayer1 ? 'Opponent (Black)' : 'You (Black)';
+            const playerBet = currentGame.betAmount;
+            const opponentBet = currentGame.betAmount;
+            
+            document.getElementById('playersInfo').innerHTML = `
+                <div class="player-card ${currentGame.currentTurn === 1 && !currentGame.winner ? 'active-turn' : ''}">
+                    <div class="player-name">${isPlayer1 ? 'You (Red)' : 'Opponent (Red)'}</div>
+                    <div class="player-bet">Bet: ${playerBet} VEVO</div>
+                </div>
+                <div class="player-card ${currentGame.currentTurn === 2 && !currentGame.winner ? 'active-turn' : ''}">
+                    <div class="player-name">${isPlayer1 ? 'Opponent (Black)' : 'You (Black)'}</div>
+                    <div class="player-bet">Bet: ${opponentBet} VEVO</div>
+                </div>
+            `;
+            
+            let statusText = '';
+            if (currentGame.winner) {
+                const winner = currentGame.winner;
+                const won = (winner === 1 && currentGame.playerRole === 1) || (winner === 2 && currentGame.playerRole === 2);
+                statusText = won ? `🎉 YOU WON! Won ${currentGame.winnerAmount} VEVO! 🎉` : `😢 You lost! Better luck next time!`;
+                document.getElementById('gameStatus').innerHTML = `<h3>${statusText}</h3>`;
+            } else if (currentGame.currentTurn === currentGame.playerRole) {
+                statusText = '🟢 Your Turn! Select a piece to move.';
+                document.getElementById('gameStatus').innerHTML = `<h3>${statusText}</h3><p>Click on your pieces, then click on highlighted squares</p>`;
+            } else {
+                statusText = '⏳ Waiting for opponent to move...';
+                document.getElementById('gameStatus').innerHTML = `<h3>${statusText}</h3>`;
+            }
+            
+            renderBoard();
+        }
+        
+        // Firebase functions
+        async function loadUserData() {
+            if (!currentUser) return;
+            const snapshot = await db.ref(`users/${currentUser.uid}`).once('value');
+            userData = snapshot.val() || { balance: 0, damaWins: 0 };
+            document.getElementById('gameBalance').textContent = userData.balance || 0;
+            document.getElementById('userWins').textContent = userData.damaWins || 0;
+            document.getElementById('promoCodeDisplay').textContent = currentUser.uid.substring(0, 8).toUpperCase();
+        }
+        
+        function generatePromoCode() {
+            return currentUser ? currentUser.uid.substring(0, 8).toUpperCase() : '';
+        }
+        
+        function copyPromoCode() {
+            navigator.clipboard.writeText(generatePromoCode());
+            showNotification('Promo code copied!', 'success');
+        }
+        
+        async function createGame() {
+            if (!currentUser) return;
+            const betAmount = parseInt(document.getElementById('betAmountGame').value);
+            if (betAmount < 10) {
+                showNotification('Minimum bet is 10 VEVO', 'error');
+                return;
+            }
+            if (betAmount > (userData.balance || 0)) {
+                showNotification('Insufficient balance!', 'error');
+                return;
+            }
+            
+            const gameId = Date.now().toString();
+            const gameData = {
+                gameId: gameId,
+                player1Id: currentUser.uid,
+                player1Name: userData.name || currentUser.email,
+                player2Id: null,
+                player2Name: null,
+                betAmount: betAmount,
+                board: initBoard(),
+                currentTurn: 1,
+                status: 'waiting',
+                winner: null,
+                createdAt: Date.now(),
+                winnerAmount: null
+            };
+            
+            await db.ref(`games/${gameId}`).set(gameData);
+            await db.ref(`waitingGames/${gameId}`).set({
+                gameId: gameId,
+                creatorId: currentUser.uid,
+                creatorName: userData.name || currentUser.email,
+                betAmount: betAmount,
+                createdAt: Date.now()
+            });
+            
+            showNotification('Game created! Waiting for opponent...', 'success');
+            listenForGame(gameId);
+        }
+        
+        async function joinGame(gameId, creatorId, betAmount) {
+            if (!currentUser) return;
+            if (currentUser.uid === creatorId) {
+                showNotification('You cannot join your own game', 'error');
+                return;
+            }
+            if (betAmount > (userData.balance || 0)) {
+                showNotification(`Insufficient balance! Need ${betAmount} VEVO`, 'error');
+                return;
+            }
+            
+            // Deduct bet from both players
+            await db.ref(`users/${currentUser.uid}`).update({ 
+                balance: (userData.balance || 0) - betAmount 
+            });
+            
+            const creatorRef = db.ref(`users/${creatorId}`);
+            const creatorSnap = await creatorRef.once('value');
+            const creatorData = creatorSnap.val();
+            await creatorRef.update({ 
+                balance: (creatorData.balance || 0) - betAmount 
+            });
+            
+            await db.ref(`games/${gameId}`).update({
+                player2Id: currentUser.uid,
+                player2Name: userData.name || currentUser.email,
+                status: 'active'
+            });
+            
+            await db.ref(`waitingGames/${gameId}`).remove();
+            
+            showNotification('Joined game! Game starting...', 'success');
+            listenForGame(gameId);
+        }
+        
+        function listenForGame(gameId) {
+            if (gameListener) gameListener();
+            gameListener = db.ref(`games/${gameId}`).on('value', (snapshot) => {
+                const game = snapshot.val();
+                if (game) {
+                    currentGame = {
+                        ...game,
+                        playerRole: game.player1Id === currentUser.uid ? 1 : (game.player2Id === currentUser.uid ? 2 : null)
+                    };
+                    if (currentGame.playerRole) {
+                        updateUI();
+                    }
+                } else {
+                    currentGame = null;
+                    updateUI();
+                    loadAvailablePlayers();
+                }
+            });
+        }
+        
+        async function loadAvailablePlayers() {
+            const snapshot = await db.ref('waitingGames').once('value');
+            const games = snapshot.val() || {};
+            const container = document.getElementById('availablePlayersList');
+            
+            if (Object.keys(games).length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: #999; padding: 20px;">No players waiting</div>';
+                return;
+            }
+            
+            container.innerHTML = '';
+            for (const [gameId, game] of Object.entries(games)) {
+                if (game.creatorId !== currentUser?.uid) {
+                    const item = document.createElement('div');
+                    item.className = 'player-item waiting';
+                    item.innerHTML = `
+                        <div class="player-info">
+                            <h4>${game.creatorName}</h4>
+                            <small>Bet: ${game.betAmount} VEVO</small>
+                        </div>
+                        <button class="invite-btn" onclick="joinGame('${gameId}', '${game.creatorId}', ${game.betAmount})">
+                            <i class="fas fa-handshake"></i> Join
+                        </button>
+                    `;
+                    container.appendChild(item);
+                }
+            }
+        }
+        
+        let pendingInvite = null;
+        async function invitePlayer(playerId, playerName) {
+            if (!currentUser) return;
+            pendingInvite = { fromId: currentUser.uid, fromName: userData.name, gameId: null };
+            
+            // Create game first
+            const betAmount = parseInt(document.getElementById('betAmountGame').value);
+            const gameId = Date.now().toString();
+            await db.ref(`games/${gameId}`).set({
+                gameId: gameId,
+                player1Id: currentUser.uid,
+                player1Name: userData.name,
+                player2Id: null,
+                player2Name: null,
+                betAmount: betAmount,
+                board: initBoard(),
+                currentTurn: 1,
+                status: 'waiting',
+                winner: null,
+                createdAt: Date.now()
+            });
+            
+            pendingInvite.gameId = gameId;
+            
+            // Send notification via database
+            await db.ref(`invites/${playerId}`).push({
+                fromId: currentUser.uid,
+                fromName: userData.name,
+                gameId: gameId,
+                betAmount: betAmount,
+                createdAt: Date.now()
+            });
+            
+            showNotification(`Invitation sent to ${playerName}!`, 'success');
+            listenForGame(gameId);
+        }
+        
+        function listenForInvites() {
+            if (!currentUser) return;
+            db.ref(`invites/${currentUser.uid}`).on('child_added', (snapshot) => {
+                const invite = snapshot.val();
+                document.getElementById('inviteMessage').innerHTML = `
+                    <strong>${invite.fromName}</strong> invited you to play Dama!<br>
+                    Bet: ${invite.betAmount} VEVO<br>
+                    Winner gets 80% of pot!
+                `;
+                pendingInvite = invite;
+                document.getElementById('inviteModal').style.display = 'flex';
+            });
+        }
+        
+        async function acceptInvite() {
+            if (pendingInvite) {
+                await joinGame(pendingInvite.gameId, pendingInvite.fromId, pendingInvite.betAmount);
+                closeInviteModal();
+                await db.ref(`invites/${currentUser.uid}`).remove();
+            }
+        }
+        
+        function closeInviteModal() {
+            document.getElementById('inviteModal').style.display = 'none';
+        }
+        
+        function showNotification(msg, type) {
+            const n = document.createElement('div');
+            n.className = 'notification';
+            n.style.background = type === 'success' ? '#48bb78' : type === 'error' ? '#ff4757' : '#667eea';
+            n.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i> ${msg}`;
+            document.body.appendChild(n);
+            setTimeout(() => n.remove(), 3000);
+        }
+        
+        // Auth
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                currentUser = user;
+                await loadUserData();
+                loadAvailablePlayers();
+                listenForInvites();
+                setInterval(loadAvailablePlayers, 5000);
+            } else {
+                window.location.href = 'index.html';
+            }
+        });
+        
+        window.createGame = createGame;
+        window.joinGame = joinGame;
+        window.copyPromoCode = copyPromoCode;
+        window.acceptInvite = acceptInvite;
+        window.closeInviteModal = closeInviteModal;
+        window.invitePlayer = invitePlayer;
+    </script>
+</body>
+</html>
