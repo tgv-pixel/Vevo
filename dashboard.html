@@ -67,6 +67,7 @@
             text-decoration: none;
             border-radius: 10px;
             transition: all 0.3s;
+            cursor: pointer;
         }
 
         .nav-item i {
@@ -439,10 +440,6 @@
             opacity: 0.6;
         }
 
-        .play-btn-disabled:hover {
-            transform: none;
-        }
-
         /* Referral Banner */
         .referral-banner {
             background: linear-gradient(135deg, #667eea, #764ba2);
@@ -489,57 +486,6 @@
         .invite-btn:hover {
             transform: scale(1.05);
             background: #ffed4e;
-        }
-
-        /* Modal */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-        }
-
-        .modal-content {
-            background: white;
-            margin: 10% auto;
-            padding: 30px;
-            border-radius: 20px;
-            width: 90%;
-            max-width: 400px;
-            position: relative;
-        }
-
-        .close-modal {
-            position: absolute;
-            right: 20px;
-            top: 15px;
-            font-size: 28px;
-            cursor: pointer;
-        }
-
-        .settings-section {
-            margin: 20px 0;
-        }
-
-        .settings-section input {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-        }
-
-        .settings-section button {
-            background: #48bb78;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
         }
 
         /* Menu Toggle */
@@ -613,10 +559,10 @@
                 <span>VEVOBet</span>
             </div>
             <nav class="nav-menu">
-                <a href="#" class="nav-item active" data-page="dashboard">
+                <a href="dashboard.html" class="nav-item active" data-page="dashboard">
                     <i class="fas fa-tachometer-alt"></i> Dashboard
                 </a>
-                <a href="#" class="nav-item" data-page="games">
+                <a href="games.html" class="nav-item" data-page="games">
                     <i class="fas fa-gamepad"></i> Games
                 </a>
                 <a href="deposit-withdraw.html" class="nav-item">
@@ -625,7 +571,7 @@
                 <a href="refferal.html" class="nav-item">
                     <i class="fas fa-users"></i> Referral
                 </a>
-                <a href="#" class="nav-item" data-page="settings">
+                <a href="settings.html" class="nav-item" data-page="settings">
                     <i class="fas fa-cog"></i> Settings
                 </a>
             </nav>
@@ -657,42 +603,24 @@
                 </div>
             </header>
 
-            <div id="pageContent"></div>
+            <div id="pageContent">
+                <!-- Dashboard Content will be loaded here -->
+            </div>
         </main>
     </div>
 
     <!-- Login Modal -->
-    <div id="loginModal" class="modal">
-        <div class="modal-content">
-            <span class="close-modal">&times;</span>
+    <div id="loginModal" class="modal" style="display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7);">
+        <div class="modal-content" style="background: white; margin: 10% auto; padding: 30px; border-radius: 20px; width: 90%; max-width: 400px;">
+            <span class="close-modal" onclick="closeModal()" style="float: right; font-size: 28px; cursor: pointer;">&times;</span>
             <h2>Login / Register</h2>
             <form id="authForm">
-                <input type="text" id="authName" placeholder="Full Name" required>
-                <input type="email" id="authEmail" placeholder="Email Address" required>
-                <input type="password" id="authPassword" placeholder="Password (min 6 chars)" required>
-                <button type="submit" id="authSubmitBtn">Login / Register</button>
-                <p class="form-switch">New user? Account will be created automatically.</p>
+                <input type="text" id="authName" placeholder="Full Name" required style="width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px;">
+                <input type="email" id="authEmail" placeholder="Email Address" required style="width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px;">
+                <input type="password" id="authPassword" placeholder="Password (min 6 chars)" required style="width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px;">
+                <button type="submit" style="width: 100%; padding: 12px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer;">Login / Register</button>
+                <p class="form-switch" style="text-align: center; margin-top: 15px; font-size: 12px;">New user? Account will be created automatically.</p>
             </form>
-        </div>
-    </div>
-
-    <!-- Settings Modal -->
-    <div id="settingsModal" class="modal">
-        <div class="modal-content">
-            <span class="close-modal">&times;</span>
-            <h3>Account Settings</h3>
-            <div class="settings-section">
-                <h4>Withdrawal Security Code</h4>
-                <input type="password" id="settingsWithdrawCode" placeholder="4-digit code" maxlength="4">
-                <button id="saveWithdrawCodeBtn">Save Code</button>
-            </div>
-            <div class="settings-section">
-                <h4>Account Info</h4>
-                <p><strong>Name:</strong> <span id="settingsName"></span></p>
-                <p><strong>Email:</strong> <span id="settingsEmail"></span></p>
-                <p><strong>Invites:</strong> <span id="settingsInviteCount">0</span></p>
-                <p><strong>Rewards:</strong> <span id="settingsRewards">0</span> VEVO</p>
-            </div>
         </div>
     </div>
 
@@ -716,7 +644,6 @@
         
         let currentUser = null;
         let userData = null;
-        let currentPage = 'dashboard';
         
         function showNotification(msg, type) {
             const n = document.createElement('div');
@@ -727,7 +654,13 @@
             setTimeout(() => n.remove(), 3000);
         }
         
-        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); }
+        function toggleSidebar() { 
+            document.getElementById('sidebar').classList.toggle('open'); 
+        }
+        
+        function closeModal() {
+            document.getElementById('loginModal').style.display = 'none';
+        }
         
         function updateUserUI() {
             if (currentUser && userData) {
@@ -748,7 +681,7 @@
                 userData = { 
                     email: currentUser.email, 
                     name: currentUser.displayName || currentUser.email.split('@')[0], 
-                    balance: 0,
+                    balance: 100,
                     withdrawCode: null, 
                     inviteCount: 0, 
                     inviteRewards: 0, 
@@ -760,7 +693,9 @@
             updateUserUI();
         }
         
-        function generatePromoCode(uid) { return uid ? uid.substring(0, 8).toUpperCase() : ''; }
+        function generatePromoCode(uid) { 
+            return uid ? uid.substring(0, 8).toUpperCase() : ''; 
+        }
         
         function renderDashboard() {
             const promo = generatePromoCode(currentUser?.uid);
@@ -775,7 +710,6 @@
                 </div>
             `;
             
-            // Zero Balance Banner
             if (!hasBalance) {
                 html += `
                     <div class="zero-balance-banner">
@@ -794,35 +728,43 @@
                     <a href="refferal.html" class="action-card"><i class="fas fa-user-plus"></i><h3>Invite Friends</h3><p>Earn 10 VEVO per 5 invites</p></a>
                 </div>
                 
-                <h2 class="section-title"><i class="fas fa-gamepad"></i> All Games</h2>
+                <h2 class="section-title"><i class="fas fa-gamepad"></i> Popular Games</h2>
                 <div class="games-grid">
-                    <a href="${hasBalance ? 'game1.html' : '#'}" class="game-card" onclick="${!hasBalance ? 'showNotification(\'Please deposit first to play games!\', \'error\'); return false;' : ''}">
+                    <a href="dama-game.html" class="game-card">
+                        <div class="game-card-image"><i class="fas fa-chess-board"></i></div>
+                        <div class="game-card-info"><h3>🎲 Dama - Ethiopian Checkers</h3><p>Traditional 8x8 checkers! Challenge players 1v1!</p><button class="play-btn">Play Now →</button></div>
+                    </a>
+                    <a href="duel-arena.html" class="game-card">
+                        <div class="game-card-image"><i class="fas fa-swords"></i></div>
+                        <div class="game-card-info"><h3>⚔️ Duel Arena</h3><p>Multiplayer 1v1 dice battle! Winner takes 80%!</p><button class="play-btn">Play Now →</button></div>
+                    </a>
+                    <a href="game1.html" class="game-card">
                         <div class="game-card-image"><i class="fas fa-sync-alt"></i></div>
-                        <div class="game-card-info"><h3>🎡 Lucky Spin</h3><p>Spin the wheel and win up to 10x your bet!</p><button class="play-btn ${!hasBalance ? 'play-btn-disabled' : ''}">Play Now →</button></div>
+                        <div class="game-card-info"><h3>🎡 Lucky Spin</h3><p>Spin the wheel and win up to 10x your bet!</p><button class="play-btn">Play Now →</button></div>
                     </a>
-                    <a href="${hasBalance ? 'Dice-dual.html' : '#'}" class="game-card" onclick="${!hasBalance ? 'showNotification(\'Please deposit first to play games!\', \'error\'); return false;' : ''}">
+                    <a href="Dice-dual.html" class="game-card">
                         <div class="game-card-image"><i class="fas fa-dice"></i></div>
-                        <div class="game-card-info"><h3>🎲 Dice Duel</h3><p>Predict over or under 50 for 1.95x payout!</p><button class="play-btn ${!hasBalance ? 'play-btn-disabled' : ''}">Play Now →</button></div>
+                        <div class="game-card-info"><h3>🎲 Dice Duel</h3><p>Predict over or under 50 for 1.95x payout!</p><button class="play-btn">Play Now →</button></div>
                     </a>
-                    <a href="${hasBalance ? 'Coin-clash.html' : '#'}" class="game-card" onclick="${!hasBalance ? 'showNotification(\'Please deposit first to play games!\', \'error\'); return false;' : ''}">
+                    <a href="Coin-clash.html" class="game-card">
                         <div class="game-card-image"><i class="fas fa-coins"></i></div>
-                        <div class="game-card-info"><h3>🪙 Coin Clash</h3><p>Heads or tails? Build your win streak!</p><button class="play-btn ${!hasBalance ? 'play-btn-disabled' : ''}">Play Now →</button></div>
+                        <div class="game-card-info"><h3>🪙 Coin Clash</h3><p>Heads or tails? Build your win streak!</p><button class="play-btn">Play Now →</button></div>
                     </a>
-                    <a href="${hasBalance ? 'Number-ninja.html' : '#'}" class="game-card" onclick="${!hasBalance ? 'showNotification(\'Please deposit first to play games!\', \'error\'); return false;' : ''}">
+                    <a href="Number-ninja.html" class="game-card">
                         <div class="game-card-image"><i class="fas fa-calculator"></i></div>
-                        <div class="game-card-info"><h3>🔢 Number Ninja</h3><p>Guess the number, closer = higher multiplier!</p><button class="play-btn ${!hasBalance ? 'play-btn-disabled' : ''}">Play Now →</button></div>
+                        <div class="game-card-info"><h3>🔢 Number Ninja</h3><p>Guess the number, closer = higher multiplier!</p><button class="play-btn">Play Now →</button></div>
                     </a>
-                    <a href="${hasBalance ? 'Card-clash.html' : '#'}" class="game-card" onclick="${!hasBalance ? 'showNotification(\'Please deposit first to play games!\', \'error\'); return false;' : ''}">
+                    <a href="Card-clash.html" class="game-card">
                         <div class="game-card-image"><i class="fas fa-club"></i></div>
-                        <div class="game-card-info"><h3>🃏 Card Clash</h3><p>Beat the dealer in this Blackjack-style game!</p><button class="play-btn ${!hasBalance ? 'play-btn-disabled' : ''}">Play Now →</button></div>
+                        <div class="game-card-info"><h3>🃏 Card Clash</h3><p>Beat the dealer in this Blackjack-style game!</p><button class="play-btn">Play Now →</button></div>
                     </a>
-                    <a href="${hasBalance ? 'Royal.html' : '#'}" class="game-card" onclick="${!hasBalance ? 'showNotification(\'Please deposit first to play games!\', \'error\'); return false;' : ''}">
+                    <a href="Royal.html" class="game-card">
                         <div class="game-card-image"><i class="fas fa-circle"></i></div>
-                        <div class="game-card-info"><h3>🎰 Roulette Royale</h3><p>Classic European roulette with multiple bets!</p><button class="play-btn ${!hasBalance ? 'play-btn-disabled' : ''}">Play Now →</button></div>
+                        <div class="game-card-info"><h3>🎰 Roulette Royale</h3><p>Classic European roulette with multiple bets!</p><button class="play-btn">Play Now →</button></div>
                     </a>
-                    <a href="${hasBalance ? 'solt-main.html' : '#'}" class="game-card" onclick="${!hasBalance ? 'showNotification(\'Please deposit first to play games!\', \'error\'); return false;' : ''}">
+                    <a href="solt-main.html" class="game-card">
                         <div class="game-card-image"><i class="fas fa-slot-machine"></i></div>
-                        <div class="game-card-info"><h3>🎰 Slot Mania</h3><p>3-reel slots with progressive jackpot!</p><button class="play-btn ${!hasBalance ? 'play-btn-disabled' : ''}">Play Now →</button></div>
+                        <div class="game-card-info"><h3>🎰 Slot Mania</h3><p>3-reel slots with progressive jackpot!</p><button class="play-btn">Play Now →</button></div>
                     </a>
                 </div>
                 
@@ -835,82 +777,13 @@
             return html;
         }
         
-        function renderGamesPage() {
-            const userBalance = userData?.balance || 0;
-            const hasBalance = userBalance > 0;
-            
-            return `
-                <h2 class="section-title"><i class="fas fa-gamepad"></i> All Games</h2>
-                ${!hasBalance ? '<div style="background:#ff4757; color:white; padding:15px; border-radius:10px; margin-bottom:20px;"><i class="fas fa-exclamation-triangle"></i> Your balance is 0. Please deposit first to play games!</div>' : ''}
-                <div class="games-grid">
-                    <a href="${hasBalance ? 'game1.html' : '#'}" class="game-card" onclick="${!hasBalance ? 'showNotification(\'Please deposit first to play games!\', \'error\'); return false;' : ''}">
-                        <div class="game-card-image"><i class="fas fa-sync-alt"></i></div><div class="game-card-info"><h3>🎡 Lucky Spin</h3><p>Spin the wheel, win up to 10x!</p><button class="play-btn ${!hasBalance ? 'play-btn-disabled' : ''}">Play</button></div>
-                    </a>
-                    <a href="${hasBalance ? 'Dice-dual.html' : '#'}" class="game-card" onclick="${!hasBalance ? 'showNotification(\'Please deposit first to play games!\', \'error\'); return false;' : ''}">
-                        <div class="game-card-image"><i class="fas fa-dice"></i></div><div class="game-card-info"><h3>🎲 Dice Duel</h3><p>Over/Under 50 - 1.95x payout</p><button class="play-btn ${!hasBalance ? 'play-btn-disabled' : ''}">Play</button></div>
-                    </a>
-                    <a href="${hasBalance ? 'Coin-clash.html' : '#'}" class="game-card" onclick="${!hasBalance ? 'showNotification(\'Please deposit first to play games!\', \'error\'); return false;' : ''}">
-                        <div class="game-card-image"><i class="fas fa-coins"></i></div><div class="game-card-info"><h3>🪙 Coin Clash</h3><p>Heads or Tails with streak bonus</p><button class="play-btn ${!hasBalance ? 'play-btn-disabled' : ''}">Play</button></div>
-                    </a>
-                    <a href="${hasBalance ? 'Number-ninja.html' : '#'}" class="game-card" onclick="${!hasBalance ? 'showNotification(\'Please deposit first to play games!\', \'error\'); return false;' : ''}">
-                        <div class="game-card-image"><i class="fas fa-calculator"></i></div><div class="game-card-info"><h3>🔢 Number Ninja</h3><p>Guess the number, up to 10x!</p><button class="play-btn ${!hasBalance ? 'play-btn-disabled' : ''}">Play</button></div>
-                    </a>
-                    <a href="${hasBalance ? 'Card-clash.html' : '#'}" class="game-card" onclick="${!hasBalance ? 'showNotification(\'Please deposit first to play games!\', \'error\'); return false;' : ''}">
-                        <div class="game-card-image"><i class="fas fa-club"></i></div><div class="game-card-info"><h3>🃏 Card Clash</h3><p>Blackjack-style card game</p><button class="play-btn ${!hasBalance ? 'play-btn-disabled' : ''}">Play</button></div>
-                    </a>
-                    <a href="${hasBalance ? 'Royal.html' : '#'}" class="game-card" onclick="${!hasBalance ? 'showNotification(\'Please deposit first to play games!\', \'error\'); return false;' : ''}">
-                        <div class="game-card-image"><i class="fas fa-circle"></i></div><div class="game-card-info"><h3>🎰 Roulette Royale</h3><p>European roulette, multiple bets</p><button class="play-btn ${!hasBalance ? 'play-btn-disabled' : ''}">Play</button></div>
-                    </a>
-                    <a href="${hasBalance ? 'solt-main.html' : '#'}" class="game-card" onclick="${!hasBalance ? 'showNotification(\'Please deposit first to play games!\', \'error\'); return false;' : ''}">
-                        <div class="game-card-image"><i class="fas fa-slot-machine"></i></div><div class="game-card-info"><h3>🎰 Slot Mania</h3><p>3-reel slots + progressive jackpot!</p><button class="play-btn ${!hasBalance ? 'play-btn-disabled' : ''}">Play</button></div>
-                    </a>
-                </div>
-            `;
-        }
-        
-        function renderSettingsPage() {
-            return `
-                <div style="background: white; border-radius: 20px; padding: 30px;">
-                    <h2><i class="fas fa-cog"></i> Account Settings</h2>
-                    <div class="settings-section"><h3>Withdrawal Security Code</h3><input type="password" id="settingsCodePage" maxlength="4" placeholder="4-digit code"><button onclick="saveCode()">Save Code</button>${userData?.withdrawCode ? '<p style="color:green">✓ Code set</p>' : '<p style="color:red">✗ No code set</p>'}</div>
-                    <div class="settings-section"><h3>Account Info</h3><p><strong>Name:</strong> ${userData?.name || '-'}</p><p><strong>Email:</strong> ${currentUser?.email || '-'}</p><p><strong>Invites:</strong> ${userData?.inviteCount || 0}</p><p><strong>Rewards:</strong> ${userData?.inviteRewards || 0} VEVO</p></div>
-                </div>
-            `;
-        }
-        
-        async function saveCode() {
-            const code = document.getElementById('settingsCodePage').value;
-            if (!code || code.length !== 4 || isNaN(code)) { showNotification('Enter 4-digit code', 'error'); return; }
-            await db.ref(`users/${currentUser.uid}`).update({ withdrawCode: code });
-            userData.withdrawCode = code;
-            showNotification('Code saved!', 'success');
-            loadPage('settings');
-        }
-        
-        async function loadPage(page) {
-            currentPage = page;
-            document.querySelectorAll('.nav-item').forEach(item => {
-                if (item.dataset.page === page) item.classList.add('active');
-                else item.classList.remove('active');
-            });
-            if (!currentUser) {
-                document.getElementById('pageContent').innerHTML = `<div style="text-align:center;padding:60px"><i class="fas fa-user-lock" style="font-size:80px;color:white"></i><h2 style="color:white">Please Login</h2><button onclick="showModal(loginModal)" style="background:#ffd700;padding:12px 30px;border:none;border-radius:25px">Login</button></div>`;
-                return;
-            }
-            const content = document.getElementById('pageContent');
-            if (page === 'dashboard') content.innerHTML = renderDashboard();
-            else if (page === 'games') content.innerHTML = renderGamesPage();
-            else if (page === 'settings') content.innerHTML = renderSettingsPage();
-            else content.innerHTML = renderDashboard();
-        }
-        
         async function handleAuth(email, password, name) {
             try {
                 let cred = await auth.signInWithEmailAndPassword(email, password);
                 currentUser = cred.user;
                 await loadUserData();
-                hideModal(loginModal);
-                loadPage(currentPage);
+                closeModal();
+                renderDashboardContent();
                 showNotification('Welcome back!', 'success');
             } catch (err) {
                 if (err.code === 'auth/user-not-found') {
@@ -918,33 +791,62 @@
                     await cred.user.updateProfile({ displayName: name });
                     currentUser = cred.user;
                     await loadUserData();
-                    hideModal(loginModal);
-                    loadPage(currentPage);
-                    showNotification('Account created! Please deposit to start playing.', 'success');
+                    closeModal();
+                    renderDashboardContent();
+                    showNotification('Account created! You have 100 VEVO!', 'success');
                 } else showNotification(err.message, 'error');
             }
         }
         
-        function showModal(modal) { modal.style.display = 'block'; }
-        function hideModal(modal) { modal.style.display = 'none'; }
+        function renderDashboardContent() {
+            if (!currentUser) {
+                document.getElementById('pageContent').innerHTML = `
+                    <div style="text-align:center;padding:60px; background: rgba(255,255,255,0.1); border-radius: 20px;">
+                        <i class="fas fa-user-lock" style="font-size:80px;color:white"></i>
+                        <h2 style="color:white; margin-top:20px;">Please Login</h2>
+                        <p style="color:white; margin:20px 0;">Login or register to start playing and winning!</p>
+                        <button onclick="document.getElementById('loginModal').style.display='block'" style="background:#ffd700;padding:12px 30px;border:none;border-radius:25px; font-weight:bold; cursor:pointer;">Login / Register</button>
+                    </div>
+                `;
+                return;
+            }
+            document.getElementById('pageContent').innerHTML = renderDashboard();
+        }
         
         document.getElementById('authForm')?.addEventListener('submit', async (e) => {
             e.preventDefault();
-            await handleAuth(document.getElementById('authEmail').value, document.getElementById('authPassword').value, document.getElementById('authName').value);
+            await handleAuth(
+                document.getElementById('authEmail').value, 
+                document.getElementById('authPassword').value, 
+                document.getElementById('authName').value
+            );
         });
-        document.getElementById('saveWithdrawCodeBtn')?.addEventListener('click', saveCode);
-        document.getElementById('logoutBtnSidebar')?.addEventListener('click', async () => { await auth.signOut(); currentUser = null; userData = null; loadPage('dashboard'); showNotification('Logged out', 'info'); });
-        document.querySelectorAll('.close-modal').forEach(btn => btn.addEventListener('click', () => document.querySelectorAll('.modal').forEach(m => m.style.display = 'none')));
-        window.onclick = (e) => { if (e.target.classList.contains('modal')) hideModal(e.target); };
+        
+        document.getElementById('logoutBtnSidebar')?.addEventListener('click', async () => { 
+            await auth.signOut(); 
+            currentUser = null; 
+            userData = null; 
+            renderDashboardContent();
+            showNotification('Logged out', 'info'); 
+        });
+        
+        window.onclick = (e) => { 
+            if (e.target.classList.contains('modal')) closeModal(); 
+        };
         
         auth.onAuthStateChanged(async (user) => {
-            if (user) { currentUser = user; await loadUserData(); loadPage(currentPage); }
-            else { currentUser = null; userData = null; loadPage('dashboard'); }
+            if (user) { 
+                currentUser = user; 
+                await loadUserData(); 
+            } else { 
+                currentUser = null; 
+                userData = null; 
+            }
+            renderDashboardContent();
         });
         
         window.toggleSidebar = toggleSidebar;
-        window.saveCode = saveCode;
-        window.showModal = showModal;
+        window.closeModal = closeModal;
     </script>
 </body>
 </html>
