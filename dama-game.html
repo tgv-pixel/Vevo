@@ -95,7 +95,6 @@
             font-size: 18px;
         }
 
-        /* Main Game Layout */
         .game-layout {
             display: grid;
             grid-template-columns: 1fr 350px;
@@ -108,7 +107,6 @@
             }
         }
 
-        /* Board Section */
         .board-section {
             background: linear-gradient(135deg, #2c3e50, #1a1a2e);
             border-radius: 30px;
@@ -141,7 +139,6 @@
             border-radius: 15px;
             padding: 15px;
             text-align: center;
-            cursor: pointer;
             transition: all 0.3s;
         }
 
@@ -193,7 +190,6 @@
         .turn-red { background: #e74c3c; color: white; }
         .turn-black { background: #2c3e50; color: white; }
 
-        /* Board */
         .board-container {
             display: flex;
             justify-content: center;
@@ -301,13 +297,45 @@
             right: -8px;
         }
 
-        /* Chat Section */
+        .countdown-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            flex-direction: column;
+        }
+
+        .countdown-number {
+            font-size: 120px;
+            font-weight: bold;
+            color: #ffd700;
+            font-family: monospace;
+            animation: pulse 0.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+
+        .countdown-text {
+            font-size: 24px;
+            color: white;
+            margin-top: 20px;
+        }
+
         .chat-section {
             background: rgba(255,255,255,0.95);
             border-radius: 20px;
             display: flex;
             flex-direction: column;
-            height: 100%;
+            height: 450px;
         }
 
         .chat-header {
@@ -345,14 +373,8 @@
             50% { box-shadow: 0 0 0 10px rgba(255,71,87,0); }
         }
 
-        .voice-btn:hover {
-            background: rgba(255,255,255,0.3);
-            transform: scale(1.05);
-        }
-
         .chat-messages {
             flex: 1;
-            height: 400px;
             overflow-y: auto;
             padding: 15px;
             display: flex;
@@ -365,6 +387,7 @@
             padding: 8px 12px;
             border-radius: 15px;
             font-size: 13px;
+            word-wrap: break-word;
         }
 
         .message.sent {
@@ -379,6 +402,15 @@
             background: #f0f0f0;
             color: #333;
             border-bottom-left-radius: 5px;
+        }
+
+        .message.system {
+            align-self: center;
+            background: #ffd700;
+            color: #333;
+            text-align: center;
+            max-width: 90%;
+            font-size: 11px;
         }
 
         .message .sender {
@@ -412,7 +444,6 @@
             cursor: pointer;
         }
 
-        /* Online Players */
         .online-players {
             background: rgba(255,255,255,0.95);
             border-radius: 20px;
@@ -510,6 +541,14 @@
             margin-top: 10px;
         }
 
+        .bet-input input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 14px;
+        }
+
         .notification {
             position: fixed;
             top: 20px;
@@ -535,7 +574,7 @@
             padding: 30px 50px;
             border-radius: 20px;
             text-align: center;
-            z-index: 1000;
+            z-index: 1001;
             animation: popIn 0.3s ease;
             border: 3px solid #ffd700;
         }
@@ -549,18 +588,10 @@
         .result-loss { color: #ff4757; font-size: 32px; font-weight: bold; }
         .result-amount { font-size: 24px; margin-top: 10px; color: #ffd700; }
 
-        .loading {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 2px solid rgba(255,255,255,0.3);
-            border-top-color: white;
-            border-radius: 50%;
-            animation: spin 0.6s linear infinite;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+        .empty-state {
+            text-align: center;
+            color: #999;
+            padding: 20px;
         }
     </style>
 </head>
@@ -577,8 +608,8 @@
         </div>
 
         <div class="game-title">
-            <h1><i class="fas fa-chess-board"></i> DAMA - Ethiopian Checkers <i class="fas fa-crown"></i></h1>
-            <p>Traditional 8x8 Checkers | 12 pieces each | Game creator plays first | Winner takes 80% of pot!</p>
+            <h1><i class="fas fa-chess-board"></i> DAMA - Ethiopian Checkers</h1>
+            <p>8x8 Board | 12 Pieces Each | Creator (RED) Plays First | Winner Takes 80%</p>
         </div>
 
         <div class="game-layout">
@@ -592,7 +623,7 @@
                         <div class="player-color red">🔴 RED PLAYER</div>
                         <div class="player-name-display" id="redPlayerName">Waiting...</div>
                         <div class="pieces-count" id="redPiecesCount">Pieces: 12</div>
-                        <div class="turn-indicator turn-red" id="redTurnIndicator">⬅️ Your Turn</div>
+                        <div class="turn-indicator turn-red" id="redTurnIndicator">Your Turn</div>
                     </div>
                     <div class="player-info-card" id="blackPlayerCard">
                         <div class="player-color black">⚫ BLACK PLAYER</div>
@@ -607,12 +638,11 @@
                 </div>
 
                 <div class="game-controls">
-                    <button class="control-btn" id="resetGameBtn" onclick="resetLocalGame()">🔄 New Game</button>
                     <button class="control-btn surrender" id="surrenderBtn" onclick="surrenderGame()">🏳️ Surrender</button>
                 </div>
 
                 <div class="game-status" id="gameStatus">
-                    <i class="fas fa-info-circle"></i> Select an opponent to start playing
+                    <i class="fas fa-info-circle"></i> Create a game or click Auto Match to find opponent
                 </div>
             </div>
 
@@ -624,14 +654,10 @@
                             <button class="voice-btn" id="voiceChatBtn" onclick="toggleVoiceChat()">
                                 <i class="fas fa-microphone"></i>
                             </button>
-                            <button class="voice-btn" id="speakerBtn" onclick="toggleSpeaker()">
-                                <i class="fas fa-volume-up"></i>
-                            </button>
                         </div>
                     </div>
                     <div class="chat-messages" id="chatMessages">
-                        <div class="message received">
-                            <div class="sender">System</div>
+                        <div class="message system">
                             Welcome to Dama! Chat with your opponent here.
                         </div>
                     </div>
@@ -646,15 +672,18 @@
                     <div class="player-list" id="onlinePlayersList">
                         <div class="empty-state">Loading players...</div>
                     </div>
-                    <button class="auto-match-btn" onclick="autoMatch()">
-                        <i class="fas fa-magic"></i> Auto Match - Find Opponent
-                    </button>
+                    
                     <div class="bet-input" style="margin-top: 15px;">
                         <label style="display: block; margin-bottom: 5px; font-weight: bold;">💰 Bet Amount (VEVO)</label>
-                        <input type="number" id="challengeBet" value="50" min="10" step="10" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 10px;">
+                        <input type="number" id="challengeBet" value="50" min="10" step="10">
                     </div>
+                    
+                    <button class="auto-match-btn" onclick="autoMatch()">
+                        <i class="fas fa-magic"></i> Auto Match
+                    </button>
+                    
                     <button class="auto-match-btn" onclick="createGame()" style="background: #667eea; margin-top: 10px;">
-                        <i class="fas fa-plus-circle"></i> Create Game (Play First)
+                        <i class="fas fa-plus-circle"></i> Create Game (Play as RED)
                     </button>
                 </div>
             </div>
@@ -691,13 +720,7 @@
         let gameListener = null;
         let onlineListener = null;
         let chatListener = null;
-        let onlineUsers = {};
-        
-        // Voice chat variables
-        let mediaStream = null;
-        let peerConnection = null;
-        let isVoiceActive = false;
-        let audioContext = null;
+        let countdownInterval = null;
         
         // Dama Game State
         let board = [];
@@ -706,9 +729,9 @@
         let selectedCol = null;
         let redPieces = 12;
         let blackPieces = 12;
-        let gameActive = true;
+        let gameActive = false;
         let myColor = null;
-        let isCreator = false;
+        let waitingForOpponent = false;
         
         function showNotification(msg, type) {
             const n = document.createElement('div');
@@ -926,7 +949,7 @@
             }
             
             if (currentPlayer !== myColor) {
-                showNotification(`❌ Not your turn! It's ${currentPlayer === 'red' ? '🔴 RED' : '⚫ BLACK'}'s turn`, "error");
+                showNotification(`❌ Not your turn! Waiting for ${currentPlayer === 'red' ? '🔴 RED' : '⚫ BLACK'} player`, "error");
                 return;
             }
             
@@ -1027,22 +1050,12 @@
             }
             
             if (currentPlayer === myColor) {
-                statusDiv.innerHTML = '<i class="fas fa-hourglass-half"></i> 🎯 YOUR TURN - Make a move!';
+                statusDiv.innerHTML = '<i class="fas fa-hourglass-half"></i> 🎯 YOUR TURN - Click on your piece then on highlighted square';
                 statusDiv.style.background = 'rgba(72,187,120,0.3)';
             } else {
                 statusDiv.innerHTML = `<i class="fas fa-hourglass-half"></i> Waiting for ${currentPlayer === 'red' ? '🔴 RED' : '⚫ BLACK'} player to move...`;
                 statusDiv.style.background = 'rgba(0,0,0,0.7)';
             }
-        }
-        
-        function resetLocalGame() {
-            initBoard();
-            renderBoard();
-            gameActive = true;
-            if (myColor === 'red') {
-                currentPlayer = 'red';
-            }
-            updateGameStatus();
         }
         
         function showResult(isWinner, amount) {
@@ -1071,8 +1084,8 @@
         async function surrenderGame() {
             if (!currentGameId || !gameActive) return;
             if (confirm("Are you sure you want to surrender? You will lose your bet!")) {
-                await endGame(currentPlayer === 'red' ? 'black' : 'red');
                 addChatMessage('System', `${userData?.name} surrendered!`, true);
+                await endGame(currentPlayer === 'red' ? 'black' : 'red');
             }
         }
         
@@ -1080,19 +1093,18 @@
         function addChatMessage(sender, message, isSystem = false) {
             const chatDiv = document.getElementById('chatMessages');
             const msgDiv = document.createElement('div');
-            msgDiv.className = `message ${sender === currentUser?.uid ? 'sent' : 'received'}`;
             
             if (isSystem) {
-                msgDiv.style.background = '#ffd700';
-                msgDiv.style.color = '#333';
-                msgDiv.style.textAlign = 'center';
-                msgDiv.style.maxWidth = '100%';
+                msgDiv.className = 'message system';
+                msgDiv.innerHTML = `<div>${message}</div>`;
+            } else if (sender === currentUser?.uid) {
+                msgDiv.className = 'message sent';
+                msgDiv.innerHTML = `<div>${message}</div>`;
+            } else {
+                msgDiv.className = 'message received';
+                msgDiv.innerHTML = `<div class="sender">${sender}</div><div>${message}</div>`;
             }
             
-            msgDiv.innerHTML = `
-                <div class="sender">${isSystem ? '📢 System' : (sender === currentUser?.uid ? 'You' : sender)}</div>
-                <div>${message}</div>
-            `;
             chatDiv.appendChild(msgDiv);
             chatDiv.scrollTop = chatDiv.scrollHeight;
         }
@@ -1110,39 +1122,82 @@
             };
             
             await db.ref(`damaGames/${currentGameId}/chat`).push(chatMessage);
+            addChatMessage(currentUser.uid, message, false);
             input.value = '';
         }
         
-        // Voice Chat (WebRTC Simulation)
+        // Voice Chat (WebRTC ready)
+        let localStream = null;
+        let peerConnection = null;
+        
         function toggleVoiceChat() {
-            isVoiceActive = !isVoiceActive;
             const btn = document.getElementById('voiceChatBtn');
             
-            if (isVoiceActive) {
-                btn.classList.add('active');
-                btn.innerHTML = '<i class="fas fa-microphone-slash"></i>';
-                showNotification('Voice chat enabled! Speak now.', 'success');
-                // In production, implement actual WebRTC here
-            } else {
+            if (localStream) {
+                // Disable voice chat
+                if (localStream) {
+                    localStream.getTracks().forEach(track => track.stop());
+                    localStream = null;
+                }
+                if (peerConnection) {
+                    peerConnection.close();
+                    peerConnection = null;
+                }
                 btn.classList.remove('active');
                 btn.innerHTML = '<i class="fas fa-microphone"></i>';
                 showNotification('Voice chat disabled', 'info');
+            } else {
+                // Enable voice chat
+                navigator.mediaDevices.getUserMedia({ audio: true })
+                    .then(stream => {
+                        localStream = stream;
+                        btn.classList.add('active');
+                        btn.innerHTML = '<i class="fas fa-microphone-slash"></i>';
+                        showNotification('Voice chat enabled! Speak now.', 'success');
+                        
+                        // Setup WebRTC with opponent
+                        if (currentGameId && myColor) {
+                            setupWebRTC(stream);
+                        }
+                    })
+                    .catch(err => {
+                        showNotification('Could not access microphone: ' + err.message, 'error');
+                    });
             }
         }
         
-        function toggleSpeaker() {
-            const btn = document.getElementById('speakerBtn');
-            btn.classList.toggle('active');
-            if (btn.classList.contains('active')) {
-                btn.innerHTML = '<i class="fas fa-volume-mute"></i>';
-                showNotification('Speaker muted', 'info');
-            } else {
-                btn.innerHTML = '<i class="fas fa-volume-up"></i>';
-                showNotification('Speaker enabled', 'success');
-            }
+        function setupWebRTC(stream) {
+            // WebRTC signaling would go here
+            // For now, just show that it's ready
+            console.log('WebRTC ready for voice chat');
         }
         
         // Game Functions
+        function startCountdown(gameId, callback) {
+            let count = 5;
+            const overlay = document.createElement('div');
+            overlay.className = 'countdown-overlay';
+            overlay.innerHTML = `
+                <div class="countdown-number" id="countdownNumber">5</div>
+                <div class="countdown-text">Game starting in...</div>
+            `;
+            document.body.appendChild(overlay);
+            
+            if (countdownInterval) clearInterval(countdownInterval);
+            
+            countdownInterval = setInterval(() => {
+                count--;
+                const numDiv = document.getElementById('countdownNumber');
+                if (numDiv) numDiv.textContent = count;
+                
+                if (count <= 0) {
+                    clearInterval(countdownInterval);
+                    overlay.remove();
+                    callback();
+                }
+            }, 1000);
+        }
+        
         async function createGame() {
             if (!currentUser) return;
             
@@ -1158,6 +1213,8 @@
             }
             
             const gameId = Date.now().toString();
+            initBoard();
+            
             const game = {
                 id: gameId,
                 redPlayerId: currentUser.uid,
@@ -1169,7 +1226,7 @@
                 winnerPayout: Math.floor(betAmount * 2 * 0.8),
                 houseFee: Math.floor(betAmount * 2 * 0.2),
                 status: 'waiting',
-                boardState: null,
+                boardState: board,
                 currentPlayer: 'red',
                 redPieces: 12,
                 blackPieces: 12,
@@ -1177,9 +1234,22 @@
             };
             
             await db.ref(`damaGames/${gameId}`).set(game);
-            showNotification('Game created! You play as RED and go first!', 'success');
-            loadOnlinePlayers();
-            joinGame(gameId);
+            showNotification('Game created! Waiting for opponent to join...', 'success');
+            waitingForOpponent = true;
+            
+            // Listen for opponent joining
+            const gameRef = db.ref(`damaGames/${gameId}`);
+            const joinListener = gameRef.on('value', (snapshot) => {
+                const updatedGame = snapshot.val();
+                if (updatedGame && updatedGame.blackPlayerId && updatedGame.status === 'waiting') {
+                    // Opponent joined, start countdown
+                    gameRef.off('value', joinListener);
+                    startCountdown(gameId, () => {
+                        db.ref(`damaGames/${gameId}`).update({ status: 'active' });
+                        joinGame(gameId);
+                    });
+                }
+            });
         }
         
         async function autoMatch() {
@@ -1208,7 +1278,17 @@
             }
             
             if (foundGame) {
-                await joinGame(foundGame);
+                showNotification('Opponent found! Starting game...', 'success');
+                const gameRef = db.ref(`damaGames/${foundGame}`);
+                await gameRef.update({
+                    blackPlayerId: currentUser.uid,
+                    blackPlayerName: userData?.name || currentUser.email.split('@')[0]
+                });
+                
+                startCountdown(foundGame, () => {
+                    db.ref(`damaGames/${foundGame}`).update({ status: 'active' });
+                    joinGame(foundGame);
+                });
             } else {
                 await createGame();
             }
@@ -1220,69 +1300,67 @@
             
             if (!game) return;
             
-            if (game.blackPlayerId === null && game.redPlayerId !== currentUser?.uid) {
-                const betAmount = game.betAmount;
-                if (betAmount > userBalance) {
-                    showNotification(`Insufficient balance! Need ${betAmount} VEVO`, 'error');
-                    return;
-                }
-                
-                await updateUserBalance(userBalance - betAmount);
-                
-                await db.ref(`damaGames/${gameId}`).update({
-                    blackPlayerId: currentUser.uid,
-                    blackPlayerName: userData?.name || currentUser.email.split('@')[0],
-                    status: 'active'
-                });
-                
-                showNotification(`Joined game against ${game.redPlayerName}! You play as BLACK.`, 'success');
-                addChatMessage('System', `Game started! ${game.redPlayerName} (RED) plays first.`, true);
-            }
-            
             currentGameId = gameId;
             myColor = game.redPlayerId === currentUser?.uid ? 'red' : 'black';
-            isCreator = game.redPlayerId === currentUser?.uid;
             
+            // Deduct bet if not already deducted
+            if (game.blackPlayerId === currentUser?.uid && !game.betDeducted) {
+                await updateUserBalance(userBalance - game.betAmount);
+                await db.ref(`damaGames/${gameId}`).update({ betDeducted: true });
+            } else if (game.redPlayerId === currentUser?.uid && !game.betDeducted && game.blackPlayerId) {
+                await updateUserBalance(userBalance - game.betAmount);
+                await db.ref(`damaGames/${gameId}`).update({ betDeducted: true });
+            }
+            
+            if (game.boardState) {
+                board = game.boardState;
+                currentPlayer = game.currentPlayer;
+                redPieces = game.redPieces;
+                blackPieces = game.blackPieces;
+            } else {
+                initBoard();
+            }
+            
+            gameActive = true;
+            renderBoard();
+            updateGameStatus();
+            
+            // Set up game listener
             if (gameListener) gameListener.off();
-            if (chatListener) chatListener.off();
-            
             gameListener = db.ref(`damaGames/${gameId}`).on('value', (snapshot) => {
                 const updatedGame = snapshot.val();
                 if (updatedGame) {
                     if (updatedGame.status === 'active') {
-                        if (!updatedGame.boardState) {
-                            initBoard();
-                            if (myColor !== 'red') {
-                                currentPlayer = 'red';
-                            }
-                        } else {
+                        if (updatedGame.boardState) {
                             board = updatedGame.boardState;
                             currentPlayer = updatedGame.currentPlayer;
                             redPieces = updatedGame.redPieces;
                             blackPieces = updatedGame.blackPieces;
-                            gameActive = true;
+                            renderBoard();
+                            updateGameStatus();
                         }
-                        renderBoard();
-                        updateGameStatus();
-                    }
-                    
-                    document.getElementById('redPlayerName').innerHTML = `<i class="fas fa-user"></i> ${updatedGame.redPlayerName}`;
-                    document.getElementById('blackPlayerName').innerHTML = `<i class="fas fa-user"></i> ${updatedGame.blackPlayerName || 'Waiting...'}`;
-                    
-                    if (updatedGame.status === 'completed') {
+                    } else if (updatedGame.status === 'completed') {
                         gameActive = false;
                         updateGameStatus();
                     }
                 }
             });
             
-            // Chat listener
+            // Set up chat listener
+            if (chatListener) chatListener.off();
             chatListener = db.ref(`damaGames/${gameId}/chat`).on('child_added', (snapshot) => {
                 const msg = snapshot.val();
                 if (msg.senderId !== currentUser?.uid) {
                     addChatMessage(msg.senderName, msg.message, false);
                 }
             });
+            
+            // Update player names
+            document.getElementById('redPlayerName').innerHTML = `<i class="fas fa-user"></i> ${game.redPlayerName}`;
+            document.getElementById('blackPlayerName').innerHTML = `<i class="fas fa-user"></i> ${game.blackPlayerName || 'Waiting...'}`;
+            
+            showNotification(`Joined game! You are ${myColor === 'red' ? '🔴 RED' : '⚫ BLACK'}`, 'success');
+            addChatMessage('System', `Game started! ${myColor === 'red' ? 'You are RED and play first!' : 'You are BLACK, waiting for RED to move'}`, true);
         }
         
         function loadOnlinePlayers() {
@@ -1323,6 +1401,8 @@
             }
             
             const gameId = Date.now().toString();
+            initBoard();
+            
             const game = {
                 id: gameId,
                 redPlayerId: currentUser.uid,
@@ -1334,7 +1414,7 @@
                 winnerPayout: Math.floor(betAmount * 2 * 0.8),
                 houseFee: Math.floor(betAmount * 2 * 0.2),
                 status: 'waiting',
-                boardState: null,
+                boardState: board,
                 currentPlayer: 'red',
                 redPieces: 12,
                 blackPieces: 12,
@@ -1342,17 +1422,27 @@
             };
             
             await db.ref(`damaGames/${gameId}`).set(game);
-            showNotification(`Challenge sent to ${playerName}!`, 'success');
-            joinGame(gameId);
+            showNotification(`Challenge sent to ${playerName}! Waiting for them to accept...`, 'success');
+            
+            // Listen for game acceptance
+            const gameRef = db.ref(`damaGames/${gameId}`);
+            const acceptListener = gameRef.on('value', (snapshot) => {
+                const updatedGame = snapshot.val();
+                if (updatedGame && updatedGame.status === 'active') {
+                    gameRef.off('value', acceptListener);
+                    startCountdown(gameId, () => {
+                        joinGame(gameId);
+                    });
+                }
+            });
         }
         
-        // Set user online periodically
+        // Set up periodic updates
         setInterval(() => {
-            if (currentUser) setUserOnline();
-        }, 30000);
-        
-        setInterval(() => {
-            if (currentUser) loadOnlinePlayers();
+            if (currentUser) {
+                setUserOnline();
+                loadOnlinePlayers();
+            }
         }, 5000);
         
         // Auth state
@@ -1372,13 +1462,11 @@
         // Make functions global
         window.sendMessage = sendMessage;
         window.toggleVoiceChat = toggleVoiceChat;
-        window.toggleSpeaker = toggleSpeaker;
         window.autoMatch = autoMatch;
         window.createGame = createGame;
         window.challengePlayer = challengePlayer;
         window.joinGame = joinGame;
         window.surrenderGame = surrenderGame;
-        window.resetLocalGame = resetLocalGame;
     </script>
 </body>
 </html>
