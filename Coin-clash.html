@@ -23,7 +23,6 @@
             margin: 0 auto;
         }
 
-        /* Header */
         .game-header {
             display: flex;
             justify-content: space-between;
@@ -74,7 +73,6 @@
             margin-right: 8px;
         }
 
-        /* Game Title */
         .game-title {
             text-align: center;
             color: white;
@@ -91,7 +89,6 @@
             opacity: 0.9;
         }
 
-        /* Coin Container */
         .coin-container {
             text-align: center;
             margin-bottom: 40px;
@@ -154,7 +151,6 @@
             color: white;
         }
 
-        /* Betting Options */
         .betting-options {
             display: flex;
             justify-content: center;
@@ -199,16 +195,35 @@
         .bet-odds {
             font-size: 18px;
             font-weight: bold;
-            color: #48bb78;
+            color: #e74c3c;
         }
 
-        .special-bonus {
+        .house-edge {
             font-size: 12px;
-            color: #ff6b6b;
+            color: #666;
             margin-top: 5px;
         }
 
-        /* Bet Controls */
+        .streak-section {
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 15px;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: center;
+            color: white;
+        }
+
+        .streak-badge {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .streak-count {
+            font-size: 28px;
+            color: #ffd700;
+            font-weight: bold;
+        }
+
         .bet-controls {
             background: rgba(255, 255, 255, 0.95);
             border-radius: 20px;
@@ -295,28 +310,6 @@
             cursor: not-allowed;
         }
 
-        /* Streak Bonus */
-        .streak-section {
-            background: rgba(0, 0, 0, 0.5);
-            border-radius: 15px;
-            padding: 15px;
-            margin: 20px 0;
-            text-align: center;
-            color: white;
-        }
-
-        .streak-badge {
-            font-size: 18px;
-            font-weight: bold;
-        }
-
-        .streak-count {
-            font-size: 28px;
-            color: #ffd700;
-            font-weight: bold;
-        }
-
-        /* Result Display */
         .result-display {
             background: rgba(0, 0, 0, 0.7);
             border-radius: 15px;
@@ -338,7 +331,6 @@
             color: #ff4757;
         }
 
-        /* History */
         .history-section {
             background: rgba(255, 255, 255, 0.95);
             border-radius: 20px;
@@ -408,7 +400,7 @@
 <body>
     <div class="game-container">
         <div class="game-header">
-            <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i> Back</a>
+            <a href="dashboard.html" class="back-btn"><i class="fas fa-arrow-left"></i> Back</a>
             <div class="game-logo">
                 <i class="fas fa-dice-d6"></i> VEVOBet
             </div>
@@ -419,7 +411,7 @@
 
         <div class="game-title">
             <h1><i class="fas fa-coins"></i> Coin Clash</h1>
-            <p>Flip the coin! Get 3 wins in a row for a bonus multiplier!</p>
+            <p>Flip the coin! Heads or Tails - House Edge: 7.5%</p>
         </div>
 
         <div class="coin-container">
@@ -439,21 +431,21 @@
                 🔥 Win Streak Bonus 🔥
             </div>
             <div class="streak-count" id="streakCount">0</div>
-            <div class="streak-bonus" id="streakBonus">Next bonus at 3 wins: +0.5x multiplier</div>
+            <div class="streak-bonus" id="streakBonus">Win 3 in a row for +0.1x bonus (max 0.5x)</div>
         </div>
 
         <div class="betting-options">
             <div class="bet-option" data-bet="heads">
                 <h3>👑 HEADS</h3>
                 <p>Choose Heads</p>
-                <div class="bet-odds">Base Multiplier: 1.95x</div>
-                <div class="special-bonus">Streak Bonus: Up to 2.5x</div>
+                <div class="bet-odds">Base Multiplier: 1.85x</div>
+                <div class="house-edge">House Edge: 7.5%</div>
             </div>
             <div class="bet-option" data-bet="tails">
                 <h3>🪶 TAILS</h3>
                 <p>Choose Tails</p>
-                <div class="bet-odds">Base Multiplier: 1.95x</div>
-                <div class="special-bonus">Streak Bonus: Up to 2.5x</div>
+                <div class="bet-odds">Base Multiplier: 1.85x</div>
+                <div class="house-edge">House Edge: 7.5%</div>
             </div>
         </div>
 
@@ -491,7 +483,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script>
-        // Firebase Config
         const firebaseConfig = {
             apiKey: "AIzaSyCAfsKcVP7OUo870TKkBnk4BfDEq9LnAK8",
             authDomain: "newporoject-c6f66.firebaseapp.com",
@@ -507,12 +498,24 @@
         const auth = firebase.auth();
         const db = firebase.database();
         
-        // Game Variables
         let currentUser = null;
         let userBalance = 0;
         let selectedBet = null;
         let isFlipping = false;
         let winStreak = 0;
+        
+        // FIXED: Lower base multiplier for house edge (1.85x instead of 1.95x)
+        const BASE_MULTIPLIER = 1.85;
+        const MAX_STREAK_BONUS = 0.5;
+        
+        function calculateMultiplier() {
+            let multiplier = BASE_MULTIPLIER;
+            if (winStreak >= 3) {
+                let bonus = Math.min(0.1 * Math.floor(winStreak / 3), MAX_STREAK_BONUS);
+                multiplier += bonus;
+            }
+            return multiplier;
+        }
         
         function updateBalanceDisplay() {
             document.getElementById('gameBalance').textContent = userBalance;
@@ -520,20 +523,12 @@
         
         function updateStreakDisplay() {
             document.getElementById('streakCount').textContent = winStreak;
-            let bonusText = 'Next bonus at 3 wins: +0.5x multiplier';
+            let bonusText = 'Win 3 in a row for +0.1x bonus (max 0.5x)';
             if (winStreak >= 3) {
-                bonusText = `🔥 Active bonus! +${Math.min(0.5 * Math.floor(winStreak / 3), 0.5)}x multiplier 🔥`;
+                let currentBonus = Math.min(0.1 * Math.floor(winStreak / 3), MAX_STREAK_BONUS);
+                bonusText = `🔥 Active bonus! +${currentBonus.toFixed(1)}x multiplier (Total: ${calculateMultiplier().toFixed(2)}x) 🔥`;
             }
             document.getElementById('streakBonus').textContent = bonusText;
-        }
-        
-        function calculateMultiplier() {
-            let multiplier = 1.95;
-            if (winStreak >= 3) {
-                let bonus = Math.min(0.5 * Math.floor(winStreak / 3), 0.5);
-                multiplier += bonus;
-            }
-            return multiplier;
         }
         
         async function loadUserBalance() {
@@ -693,7 +688,6 @@
             });
         }
         
-        // Event Listeners
         document.getElementById('flipBtn').addEventListener('click', flipCoin);
         
         document.querySelectorAll('.bet-option').forEach(option => {
