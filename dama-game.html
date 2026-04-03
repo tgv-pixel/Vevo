@@ -339,13 +339,65 @@
             font-weight: bold;
         }
 
-        .online-players {
+        .online-players, .available-games {
             background: rgba(0,0,0,0.7);
             backdrop-filter: blur(8px);
             border-radius: 28px;
             padding: 18px;
             margin-top: 20px;
             border: 1px solid #ffd70066;
+        }
+
+        .available-games {
+            margin-top: 15px;
+        }
+
+        .games-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .game-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #1e293b;
+            margin: 8px 0;
+            padding: 12px 15px;
+            border-radius: 60px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid #ffd70033;
+        }
+
+        .game-item:hover {
+            background: #2d3a4e;
+            transform: translateX(5px);
+            border-color: #ffd700;
+        }
+
+        .game-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .game-creator {
+            font-weight: bold;
+            color: #ffd700;
+        }
+
+        .game-bet {
+            font-size: 12px;
+            color: #aaa;
+        }
+
+        .join-badge {
+            background: #e67e22;
+            padding: 5px 15px;
+            border-radius: 30px;
+            font-size: 12px;
+            font-weight: bold;
         }
 
         .auto-match-btn {
@@ -420,6 +472,21 @@
             cursor: pointer;
             margin-top: 10px;
         }
+
+        .section-title {
+            color: #ffd700;
+            font-size: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 20px;
+            color: #888;
+        }
     </style>
 </head>
 <body>
@@ -431,7 +498,7 @@
     </div>
     <div class="game-title">
         <h1><i class="fas fa-chess-board"></i> ETHIOPIAN DAMA</h1>
-        <p>Classic 8x8 Checkers | Bet & Win 80% of Pot | Voice + Chat</p>
+        <p>Classic 8x8 Checkers | Bet & Win 80% of Pot | Click any game to join with 5s countdown</p>
     </div>
     <div class="game-layout">
         <div class="board-section">
@@ -441,20 +508,29 @@
             </div>
             <div class="board-container"><div class="board" id="board"></div></div>
             <button class="control-btn surrender" id="surrenderBtn" onclick="window.surrenderGame?.()">🏳️ Surrender</button>
-            <div class="game-status" id="gameStatus">⚡ Create or Auto Match to play for VEVO</div>
+            <div class="game-status" id="gameStatus">⚡ Click on any game below to join!</div>
         </div>
         <div>
             <div class="chat-section">
                 <div class="chat-header"><span><i class="fas fa-comment-dots"></i> Live Chat</span><button class="voice-btn" id="voiceChatBtn" onclick="window.toggleVoiceChat?.()"><i class="fas fa-microphone"></i></button></div>
-                <div class="chat-messages" id="chatMessages"><div class="message system">🎙️ Welcome! Challenge others or auto-match.</div></div>
+                <div class="chat-messages" id="chatMessages"><div class="message system">🎙️ Welcome! Click on any available game to join.</div></div>
                 <div class="chat-input-area"><input type="text" id="chatInput" placeholder="Message..."><button onclick="window.sendMessage?.()">Send</button></div>
             </div>
+            
+            <!-- AVAILABLE GAMES LIST - NEW SECTION -->
+            <div class="available-games">
+                <div class="section-title"><i class="fas fa-gamepad"></i> 🎮 Available Games to Join</div>
+                <div class="games-list" id="availableGamesList">
+                    <div class="empty-state">Loading games...</div>
+                </div>
+            </div>
+            
             <div class="online-players">
-                <h4><i class="fas fa-users"></i> Online <span id="onlineCount">0</span></h4>
+                <div class="section-title"><i class="fas fa-users"></i> Online Players <span id="onlineCount">0</span></div>
                 <div class="player-list" id="onlinePlayersList">Loading...</div>
-                <div class="bet-input"><label>💰 BET AMOUNT</label><input type="number" id="challengeBet" value="50" min="10" step="10"></div>
+                <div class="bet-input"><label>💰 YOUR BET AMOUNT (when creating)</label><input type="number" id="challengeBet" value="50" min="10" step="10"></div>
                 <button class="auto-match-btn" onclick="window.autoMatch?.()"><i class="fas fa-meteor"></i> AUTO MATCH</button>
-                <button class="auto-match-btn" style="background:#2c3e50; margin-top:8px" onclick="window.createGame?.()"><i class="fas fa-plus-circle"></i> CREATE GAME (RED)</button>
+                <button class="auto-match-btn" style="background:#2c3e50; margin-top:8px" onclick="window.createGame?.()"><i class="fas fa-plus-circle"></i> CREATE NEW GAME (Play as RED)</button>
             </div>
         </div>
     </div>
@@ -469,10 +545,10 @@
     const auth = firebase.auth(), db = firebase.database();
     let currentUser=null, userBalance=0, currentGameId=null, myColor=null, gameActive=false;
     let board=[], currentPlayer='red', selectedRow=null, selectedCol=null, redPieces=12, blackPieces=12;
-    let gameListener=null, chatListener=null, onlineListener=null, countdownInterval=null;
+    let gameListener=null, chatListener=null, onlineListener=null, gamesListener=null, countdownInterval=null;
     let localStream=null;
 
-    function showNotification(msg,type){ const n=document.createElement('div'); n.className='notification'; n.style.position='fixed'; n.style.top='20px'; n.style.right='20px'; n.style.background=type==='success'?'#27ae60':'#e67e22'; n.style.color='white'; n.style.padding='12px 20px'; n.style.borderRadius='30px'; n.style.zIndex=9999; n.innerHTML=msg; document.body.appendChild(n); setTimeout(()=>n.remove(),2800);}
+    function showNotification(msg,type){ const n=document.createElement('div'); n.className='notification'; n.style.position='fixed'; n.style.top='20px'; n.style.right='20px'; n.style.background=type==='success'?'#27ae60':type==='error'?'#e74c3c':'#e67e22'; n.style.color='white'; n.style.padding='12px 20px'; n.style.borderRadius='30px'; n.style.zIndex=9999; n.innerHTML=msg; document.body.appendChild(n); setTimeout(()=>n.remove(),2800);}
     function updateBalanceDisplay(){ document.getElementById('gameBalance').innerText=userBalance; }
     async function loadUserData(){ if(!currentUser)return; const snap=await db.ref(`users/${currentUser.uid}`).once('value'); if(snap.exists()){ userBalance=snap.val().balance||100; }else{ await db.ref(`users/${currentUser.uid}`).set({email:currentUser.email,name:currentUser.displayName||currentUser.email.split('@')[0],balance:100,createdAt:Date.now()}); userBalance=100; } updateBalanceDisplay();}
     async function updateUserBalance(newBalance){ await db.ref(`users/${currentUser.uid}`).update({balance:newBalance}); userBalance=newBalance; updateBalanceDisplay();}
@@ -516,6 +592,9 @@
             }
         }
         updateGameStatusMsg();
+        currentGameId = null;
+        myColor = null;
+        loadAvailableGames(); // Refresh games list
     }
     function renderBoard(){
         const container=document.getElementById('board'); const table=document.createElement('table');
@@ -532,7 +611,7 @@
         else{ document.getElementById('redTurnIndicator').style.display='none'; document.getElementById('blackTurnIndicator').style.display='inline-block'; document.getElementById('redPlayerCard').classList.remove('red-turn'); document.getElementById('blackPlayerCard').classList.add('black-turn');}
     }
     function handleCellClick(row,col){
-        if(!gameActive||!currentGameId){ showNotification("No active game!","error"); return; }
+        if(!gameActive||!currentGameId){ showNotification("No active game! Join a game first.","error"); return; }
         if(currentPlayer!==myColor){ showNotification(`Not your turn!`, "error"); return; }
         let piece=board[row][col];
         if(selectedRow!==null){
@@ -542,21 +621,213 @@
             } else { selectedRow=null; handleCellClick(row,col); }
         } else if(piece&&piece.color===currentPlayer){ let moves=getValidMoves(row,col); if(moves.length){ selectedRow=row; selectedCol=col; renderBoard(); } }
     }
-    function updateGameStatusMsg(){ const div=document.getElementById('gameStatus'); if(!gameActive){ div.innerHTML='🏁 Game Over'; return; } if(currentPlayer===myColor) div.innerHTML='🎯 YOUR TURN — click your piece then target'; else div.innerHTML=`⏳ Waiting for ${currentPlayer==='red'?'🔴 RED':'⚫ BLACK'} ...`; }
+    function updateGameStatusMsg(){ const div=document.getElementById('gameStatus'); if(!gameActive){ div.innerHTML='🏁 Game Over. Create or join a new game!'; return; } if(currentPlayer===myColor) div.innerHTML='🎯 YOUR TURN — click your piece then target'; else div.innerHTML=`⏳ Waiting for ${currentPlayer==='red'?'🔴 RED':'⚫ BLACK'} ...`; }
     function showResult(win,amount){ const modal=document.getElementById('resultModal'); const cont=document.getElementById('resultContent'); cont.innerHTML=win?`<div class="result-win">🏆 WINNER 🏆</div><div>+${amount} VEVO</div>`:`<div class="result-loss">💀 DEFEAT 💀</div><div>Better luck next time</div>`; modal.style.display='block'; setTimeout(()=>modal.style.display='none',3500);}
     function addChatMessage(sender,msg,system){ const chatDiv=document.getElementById('chatMessages'); const d=document.createElement('div'); d.className=system?'message system':(sender===currentUser?.uid?'message sent':'message received'); d.innerHTML=system?`<div>${msg}</div>`:(sender===currentUser?.uid?`<div>${msg}</div>`:`<div class="sender">${sender}</div><div>${msg}</div>`); chatDiv.appendChild(d); chatDiv.scrollTop=chatDiv.scrollHeight; }
     async function sendMessage(){ const inp=document.getElementById('chatInput'); const txt=inp.value.trim(); if(!txt||!currentGameId)return; await db.ref(`damaGames/${currentGameId}/chat`).push({senderId:currentUser.uid,senderName:currentUser.displayName||'user',message:txt,timestamp:Date.now()}); addChatMessage(currentUser.uid,txt,false); inp.value=''; }
     function toggleVoiceChat(){ const btn=document.getElementById('voiceChatBtn'); if(localStream){ localStream.getTracks().forEach(t=>t.stop()); localStream=null; btn.classList.remove('active'); btn.innerHTML='<i class="fas fa-microphone"></i>'; showNotification("Voice off",'info'); } else{ navigator.mediaDevices.getUserMedia({audio:true}).then(stream=>{ localStream=stream; btn.classList.add('active'); btn.innerHTML='<i class="fas fa-microphone-slash"></i>'; showNotification("Voice active! (WebRTC ready)",'success'); }).catch(e=>showNotification("Mic error","error")); } }
-    async function createGame(){ if(!currentUser)return; let bet=parseInt(document.getElementById('challengeBet').value); if(bet<10||bet>userBalance){ showNotification(`Invalid bet / balance: ${userBalance} VEVO`,'error'); return; } const gid=Date.now().toString(); initBoard(); const game={id:gid,redPlayerId:currentUser.uid,redPlayerName:currentUser.displayName||currentUser.email.split('@')[0],blackPlayerId:null,blackPlayerName:'Waiting...',betAmount:bet,totalPot:bet*2,winnerPayout:Math.floor(bet*2*0.8),houseFee:Math.floor(bet*2*0.2),status:'waiting',boardState:board,currentPlayer:'red',redPieces:12,blackPieces:12,createdAt:Date.now()}; await db.ref(`damaGames/${gid}`).set(game); showNotification("Game created! Waiting for opponent...",'success'); waitingForOpponent=true; db.ref(`damaGames/${gid}`).on('value',async (snap)=>{ const g=snap.val(); if(g&&g.blackPlayerId&&g.status==='waiting'){ db.ref(`damaGames/${gid}`).off(); startCountdown(gid,()=>{ db.ref(`damaGames/${gid}`).update({status:'active'}); joinGame(gid); }); } }); }
-    async function autoMatch(){ let bet=parseInt(document.getElementById('challengeBet').value); if(bet<10){ showNotification("Min bet 10",'error'); return; } showNotification("Searching...",'info'); const snap=await db.ref('damaGames').orderByChild('status').equalTo('waiting').once('value'); let found=null; if(snap.val()) for(let [id,g] of Object.entries(snap.val())) if(g.redPlayerId!==currentUser.uid && !g.blackPlayerId && g.betAmount===bet){ found=id; break; } if(found){ await db.ref(`damaGames/${found}`).update({blackPlayerId:currentUser.uid,blackPlayerName:currentUser.displayName||currentUser.email.split('@')[0]}); startCountdown(found,()=>{ db.ref(`damaGames/${found}`).update({status:'active'}); joinGame(found); }); } else await createGame(); }
-    async function joinGame(gid){ const snap=await db.ref(`damaGames/${gid}`).once('value'); const game=snap.val(); if(!game) return; currentGameId=gid; myColor=game.redPlayerId===currentUser.uid?'red':'black'; if(game.blackPlayerId===currentUser.uid && !game.betDeducted){ await updateUserBalance(userBalance-game.betAmount); await db.ref(`damaGames/${gid}`).update({betDeducted:true}); } else if(game.redPlayerId===currentUser.uid && game.blackPlayerId && !game.betDeducted){ await updateUserBalance(userBalance-game.betAmount); await db.ref(`damaGames/${gid}`).update({betDeducted:true}); } board=game.boardState||board; currentPlayer=game.currentPlayer; redPieces=game.redPieces; blackPieces=game.blackPieces; gameActive=true; renderBoard(); updateGameStatusMsg(); if(gameListener) gameListener.off(); gameListener=db.ref(`damaGames/${gid}`).on('value',(snapshot)=>{ let upd=snapshot.val(); if(upd&&upd.status==='active'){ if(upd.boardState){ board=upd.boardState; currentPlayer=upd.currentPlayer; redPieces=upd.redPieces; blackPieces=upd.blackPieces; renderBoard(); updateGameStatusMsg(); } } else if(upd?.status==='completed'){ gameActive=false; updateGameStatusMsg(); } }); if(chatListener) chatListener.off(); chatListener=db.ref(`damaGames/${gid}/chat`).on('child_added',(snap)=>{ let msg=snap.val(); if(msg.senderId!==currentUser?.uid) addChatMessage(msg.senderName,msg.message,false); }); document.getElementById('redPlayerName').innerHTML=`👤 ${game.redPlayerName}`; document.getElementById('blackPlayerName').innerHTML=`👤 ${game.blackPlayerName||'Waiting...'}`; addChatMessage('System',`⚔️ Game started! You are ${myColor==='red'?'RED (first)':'BLACK'}`,true); }
-    function startCountdown(gid,cb){ let count=3; const ov=document.createElement('div'); ov.className='countdown-overlay'; ov.innerHTML=`<div class="countdown-number" id="cdNum">3</div><div>Match starting...</div>`; document.body.appendChild(ov); let iv=setInterval(()=>{ count--; const nd=document.getElementById('cdNum'); if(nd) nd.innerText=count; if(count<=0){ clearInterval(iv); ov.remove(); cb(); } },1000); }
-    function loadOnlinePlayers(){ if(onlineListener) onlineListener.off(); onlineListener=db.ref('onlineUsers').on('value',(snap)=>{ const users=snap.val()||{}; const listDiv=document.getElementById('onlinePlayersList'); const filtered=Object.values(users).filter(u=>u.uid!==currentUser?.uid); if(!filtered.length){ listDiv.innerHTML='<div class="empty-state">✨ No one online</div>'; } else{ listDiv.innerHTML=filtered.map(u=>`<div class="online-player" style="display:flex; justify-content:space-between; background:#1e293b; margin:6px 0; padding:8px 12px; border-radius:60px;"><div><span class="player-status" style="background:#2ecc71; display:inline-block; width:8px; height:8px; border-radius:50%;"></span> <strong>${u.name}</strong> (${u.balance||100} VEVO)</div><button class="challenge-btn-small" style="background:#f39c12; border:none; border-radius:30px; padding:4px 12px;" onclick="window.challengePlayer('${u.uid}','${u.name}')">Challenge</button></div>`).join(''); } document.getElementById('onlineCount').innerText=Object.keys(users).length; }); }
-    window.challengePlayer=async function(pid,pname){ let bet=parseInt(document.getElementById('challengeBet').value); if(bet<10){ showNotification("Min bet 10",'error'); return; } const gid=Date.now().toString(); initBoard(); const game={id:gid,redPlayerId:currentUser.uid,redPlayerName:currentUser.displayName||currentUser.email.split('@')[0],blackPlayerId:pid,blackPlayerName:pname,betAmount:bet,totalPot:bet*2,winnerPayout:Math.floor(bet*2*0.8),status:'waiting',boardState:board,currentPlayer:'red',redPieces:12,blackPieces:12}; await db.ref(`damaGames/${gid}`).set(game); showNotification(`Challenge sent to ${pname}!`,'success'); db.ref(`damaGames/${gid}`).on('value',(snap)=>{ if(snap.val()?.status==='active'){ db.ref(`damaGames/${gid}`).off(); startCountdown(gid,()=>joinGame(gid)); } }); };
+    
+    // NEW: Load available waiting games
+    function loadAvailableGames(){
+        if(gamesListener) gamesListener.off();
+        gamesListener = db.ref('damaGames').orderByChild('status').equalTo('waiting').on('value', (snapshot) => {
+            const games = snapshot.val() || {};
+            const container = document.getElementById('availableGamesList');
+            const gameList = Object.entries(games).filter(([id, game]) => game.redPlayerId !== currentUser?.uid && !game.blackPlayerId);
+            
+            if(gameList.length === 0){
+                container.innerHTML = '<div class="empty-state">✨ No games available. Create one!</div>';
+                return;
+            }
+            
+            container.innerHTML = gameList.map(([id, game]) => `
+                <div class="game-item" onclick="window.joinSpecificGame('${id}', ${game.betAmount}, '${game.redPlayerName}')">
+                    <div class="game-info">
+                        <div class="game-creator"><i class="fas fa-user"></i> ${game.redPlayerName}</div>
+                        <div class="game-bet"><i class="fas fa-coins"></i> Bet: ${game.betAmount} VEVO | Pot: ${game.totalPot} VEVO</div>
+                    </div>
+                    <div class="join-badge">JOIN →</div>
+                </div>
+            `).join('');
+        });
+    }
+    
+    // Join a specific game with 5 second countdown
+    window.joinSpecificGame = async function(gameId, betAmount, creatorName){
+        if(!currentUser){
+            showNotification("Please login first", "error");
+            return;
+        }
+        
+        if(userBalance < betAmount){
+            showNotification(`Insufficient balance! Need ${betAmount} VEVO`, "error");
+            return;
+        }
+        
+        showNotification(`Joining ${creatorName}'s game... Starting in 5 seconds!`, "success");
+        
+        // Update the game with black player
+        await db.ref(`damaGames/${gameId}`).update({
+            blackPlayerId: currentUser.uid,
+            blackPlayerName: currentUser.displayName || currentUser.email.split('@')[0]
+        });
+        
+        // Start 5 second countdown
+        startCountdown(gameId, async () => {
+            // Deduct bet from both players (creator already deducted when creating)
+            const gameSnap = await db.ref(`damaGames/${gameId}`).once('value');
+            const game = gameSnap.val();
+            
+            if(game && !game.betDeducted){
+                // Deduct bet from joining player
+                await updateUserBalance(userBalance - game.betAmount);
+                await db.ref(`damaGames/${gameId}`).update({ betDeducted: true });
+            }
+            
+            await db.ref(`damaGames/${gameId}`).update({ status: 'active' });
+            await joinGame(gameId);
+        });
+    };
+    
+    async function createGame(){
+        if(!currentUser)return;
+        let bet=parseInt(document.getElementById('challengeBet').value);
+        if(bet<10||bet>userBalance){ showNotification(`Invalid bet / balance: ${userBalance} VEVO`,'error'); return; }
+        const gid=Date.now().toString();
+        initBoard();
+        const game={id:gid,redPlayerId:currentUser.uid,redPlayerName:currentUser.displayName||currentUser.email.split('@')[0],blackPlayerId:null,blackPlayerName:'Waiting...',betAmount:bet,totalPot:bet*2,winnerPayout:Math.floor(bet*2*0.8),houseFee:Math.floor(bet*2*0.2),status:'waiting',boardState:board,currentPlayer:'red',redPieces:12,blackPieces:12,createdAt:Date.now(),betDeducted:false};
+        await db.ref(`damaGames/${gid}`).set(game);
+        showNotification("Game created! Waiting for opponent to join...",'success');
+        
+        // Listen for opponent joining
+        const gameRef = db.ref(`damaGames/${gid}`);
+        const joinListener = gameRef.on('value', async (snap) => {
+            const g = snap.val();
+            if(g && g.blackPlayerId && g.status === 'waiting'){
+                gameRef.off('value', joinListener);
+                showNotification("Opponent joined! Starting in 5 seconds...", "success");
+                startCountdown(gid, async () => {
+                    // Deduct creator's bet
+                    await updateUserBalance(userBalance - g.betAmount);
+                    await db.ref(`damaGames/${gid}`).update({ betDeducted: true, status: 'active' });
+                    await joinGame(gid);
+                });
+            }
+        });
+    }
+    
+    async function autoMatch(){
+        let bet=parseInt(document.getElementById('challengeBet').value);
+        if(bet<10){ showNotification("Min bet 10",'error'); return; }
+        showNotification("Searching for available game...",'info');
+        const snap=await db.ref('damaGames').orderByChild('status').equalTo('waiting').once('value');
+        let found=null;
+        if(snap.val()) for(let [id,g] of Object.entries(snap.val())) if(g.redPlayerId!==currentUser.uid && !g.blackPlayerId && g.betAmount===bet){ found=id; break; }
+        if(found){
+            showNotification("Game found! Joining...",'success');
+            await joinSpecificGame(found, bet, "opponent");
+        } else {
+            showNotification("No games found. Creating new game...",'info');
+            await createGame();
+        }
+    }
+    
+    async function joinGame(gid){
+        const snap=await db.ref(`damaGames/${gid}`).once('value');
+        const game=snap.val();
+        if(!game) return;
+        if(currentGameId && gameListener) gameListener.off();
+        currentGameId=gid;
+        myColor=game.redPlayerId===currentUser.uid?'red':'black';
+        
+        board=game.boardState || (()=>{ let b=Array(8).fill().map(()=>Array(8).fill(null));
+            for(let r=0;r<3;r++) for(let c=0;c<8;c++) if((r+c)%2===1) b[r][c]={color:'red',king:false};
+            for(let r=5;r<8;r++) for(let c=0;c<8;c++) if((r+c)%2===1) b[r][c]={color:'black',king:false};
+            return b;
+        })();
+        currentPlayer=game.currentPlayer;
+        redPieces=game.redPieces;
+        blackPieces=game.blackPieces;
+        gameActive=true;
+        renderBoard();
+        updateGameStatusMsg();
+        
+        if(gameListener) gameListener.off();
+        gameListener=db.ref(`damaGames/${gid}`).on('value',(snapshot)=>{
+            let upd=snapshot.val();
+            if(upd && upd.status==='active'){
+                if(upd.boardState){ board=upd.boardState; currentPlayer=upd.currentPlayer; redPieces=upd.redPieces; blackPieces=upd.blackPieces; renderBoard(); updateGameStatusMsg(); }
+            } else if(upd?.status==='completed'){ gameActive=false; updateGameStatusMsg(); currentGameId=null; loadAvailableGames(); }
+        });
+        
+        if(chatListener) chatListener.off();
+        chatListener=db.ref(`damaGames/${gid}/chat`).on('child_added',(snap)=>{
+            let msg=snap.val();
+            if(msg.senderId!==currentUser?.uid) addChatMessage(msg.senderName,msg.message,false);
+        });
+        
+        document.getElementById('redPlayerName').innerHTML=`👤 ${game.redPlayerName}`;
+        document.getElementById('blackPlayerName').innerHTML=`👤 ${game.blackPlayerName || 'Waiting...'}`;
+        addChatMessage('System',`⚔️ Game started! You are ${myColor==='red'?'RED (plays first)':'BLACK'}`,true);
+        loadAvailableGames(); // Refresh list to remove this game
+    }
+    
+    function startCountdown(gid,cb){
+        let count=5;
+        const ov=document.createElement('div');
+        ov.className='countdown-overlay';
+        ov.innerHTML=`<div class="countdown-number" id="cdNum">5</div><div>Game starting in...</div>`;
+        document.body.appendChild(ov);
+        if(countdownInterval) clearInterval(countdownInterval);
+        countdownInterval = setInterval(()=>{
+            count--;
+            const nd=document.getElementById('cdNum');
+            if(nd) nd.innerText=count;
+            if(count<=0){
+                clearInterval(countdownInterval);
+                ov.remove();
+                cb();
+            }
+        },1000);
+    }
+    
+    function loadOnlinePlayers(){
+        if(onlineListener) onlineListener.off();
+        onlineListener=db.ref('onlineUsers').on('value',(snap)=>{
+            const users=snap.val()||{};
+            const listDiv=document.getElementById('onlinePlayersList');
+            const filtered=Object.values(users).filter(u=>u.uid!==currentUser?.uid);
+            if(!filtered.length){ listDiv.innerHTML='<div class="empty-state">✨ No one online</div>'; }
+            else{ listDiv.innerHTML=filtered.map(u=>`<div style="display:flex; justify-content:space-between; background:#1e293b; margin:6px 0; padding:8px 12px; border-radius:60px;"><div><span style="background:#2ecc71; display:inline-block; width:8px; height:8px; border-radius:50%;"></span> <strong>${u.name}</strong> (${u.balance||100} VEVO)</div><button style="background:#f39c12; border:none; border-radius:30px; padding:4px 12px; cursor:pointer;" onclick="window.challengePlayerDirect('${u.uid}','${u.name}')">Challenge</button></div>`).join(''); }
+            document.getElementById('onlineCount').innerText=Object.keys(users).length;
+        });
+    }
+    
+    window.challengePlayerDirect = async function(pid, pname){
+        let bet=parseInt(document.getElementById('challengeBet').value);
+        if(bet<10){ showNotification("Min bet 10",'error'); return; }
+        const gid=Date.now().toString();
+        initBoard();
+        const game={id:gid,redPlayerId:currentUser.uid,redPlayerName:currentUser.displayName||currentUser.email.split('@')[0],blackPlayerId:pid,blackPlayerName:pname,betAmount:bet,totalPot:bet*2,winnerPayout:Math.floor(bet*2*0.8),status:'waiting',boardState:board,currentPlayer:'red',redPieces:12,blackPieces:12,createdAt:Date.now()};
+        await db.ref(`damaGames/${gid}`).set(game);
+        showNotification(`Challenge sent to ${pname}! Waiting for response...`,'success');
+        db.ref(`damaGames/${gid}`).on('value',(snap)=>{
+            if(snap.val()?.status==='active'){
+                db.ref(`damaGames/${gid}`).off();
+                startCountdown(gid,()=>joinGame(gid));
+            }
+        });
+    };
+    
     window.surrenderGame=async function(){ if(!gameActive||!currentGameId)return; if(confirm("Surrender and lose bet?")){ await endGame(currentPlayer==='red'?'black':'red'); } };
-    auth.onAuthStateChanged(async(user)=>{ if(user){ currentUser=user; await loadUserData(); setUserOnline(); loadOnlinePlayers(); initBoard(); renderBoard(); } else window.location.href='index.html'; });
-    window.sendMessage=sendMessage; window.toggleVoiceChat=toggleVoiceChat; window.autoMatch=autoMatch; window.createGame=createGame; window.joinGame=joinGame; window.surrenderGame=surrenderGame; window.challengePlayer=window.challengePlayer;
-    setInterval(()=>{ if(currentUser) setUserOnline(); },8000);
+    
+    auth.onAuthStateChanged(async(user)=>{
+        if(user){ currentUser=user; await loadUserData(); setUserOnline(); loadOnlinePlayers(); loadAvailableGames(); initBoard(); renderBoard(); }
+        else window.location.href='index.html';
+    });
+    
+    window.sendMessage=sendMessage; window.toggleVoiceChat=toggleVoiceChat; window.autoMatch=autoMatch; window.createGame=createGame; window.joinGame=joinGame; window.surrenderGame=surrenderGame;
+    setInterval(()=>{ if(currentUser) setUserOnline(); if(currentUser) loadAvailableGames(); },5000);
 </script>
 </body>
 </html>
