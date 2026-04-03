@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>VEVOBet - Dama | Ethiopian Checkers</title>
+    <title>VEVOBet - Dama | Ethiopian Checkers - Extreme Bot</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         * {
@@ -147,12 +147,6 @@
 
         .player-color.red { color: #e74c3c; text-shadow: 0 0 3px darkred; }
         .player-color.black { color: #ecf0f1; text-shadow: 0 0 2px gray; }
-
-        .player-name-display {
-            font-size: 15px;
-            margin-top: 6px;
-            color: #ffd700;
-        }
 
         .pieces-count {
             font-size: 18px;
@@ -541,6 +535,20 @@
             from { transform: translateX(100%); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
         }
+
+        .bot-thinking {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            padding: 8px 20px;
+            border-radius: 40px;
+            color: #ffd700;
+            font-size: 14px;
+            z-index: 1000;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -552,7 +560,7 @@
     </div>
     <div class="game-title">
         <h1><i class="fas fa-chess-board"></i> ETHIOPIAN DAMA</h1>
-        <p>RED at bottom | 20% House Fee | Draw/Deal Option Available</p>
+        <p>RED at bottom | 20% House Fee | EXTREME HOUSE BOT - Nearly Impossible to Win!</p>
     </div>
     <div class="game-layout">
         <div class="board-section">
@@ -582,7 +590,7 @@
                 <button class="action-btn" id="rejectDrawBtn" style="background:#c0392b;">Reject</button>
             </div>
             
-            <div class="game-status" id="gameStatus">⚡ Click Auto Match to play against players or bots!</div>
+            <div class="game-status" id="gameStatus">⚡ Click Auto Match to play against House Bot!</div>
         </div>
         <div>
             <div class="chat-section">
@@ -591,7 +599,7 @@
                     <button class="voice-btn" id="voiceChatBtn"><i class="fas fa-microphone"></i></button>
                 </div>
                 <div class="chat-messages" id="chatMessages">
-                    <div class="message system">🎙️ Welcome! 20% house fee. Draw option available for stuck games!</div>
+                    <div class="message system">🎙️ Welcome! 20% house fee. House Bot is EXTREMELY HARD - almost impossible to win!</div>
                 </div>
                 <div class="chat-input-area">
                     <input type="text" id="chatInput" placeholder="Message...">
@@ -619,16 +627,17 @@
                 <div class="section-title"><i class="fas fa-users"></i> Online Players <span id="onlineCount">0</span></div>
                 <div class="player-list" id="onlinePlayersList">Loading...</div>
                 <div class="bet-input">
-                    <label>💰 BET AMOUNT (50 VEVO for bots)</label>
+                    <label>💰 BET AMOUNT (House Bot takes 50 VEVO)</label>
                     <input type="number" id="challengeBet" value="50" min="10" step="10">
                 </div>
-                <button class="auto-match-btn" id="autoMatchBtn"><i class="fas fa-meteor"></i> AUTO MATCH (Player or Bot)</button>
+                <button class="auto-match-btn" id="autoMatchBtn"><i class="fas fa-meteor"></i> AUTO MATCH vs HOUSE BOT (EXTREME)</button>
                 <button class="auto-match-btn" id="createGameBtn" style="background:#2c3e50; margin-top:8px"><i class="fas fa-plus-circle"></i> CREATE GAME (Play as RED)</button>
             </div>
         </div>
     </div>
 </div>
 <div id="resultModal" class="result-display" style="display:none;"><div id="resultContent"></div></div>
+<div id="botThinking" class="bot-thinking"><i class="fas fa-brain"></i> House Bot calculating...</div>
 
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
@@ -670,12 +679,22 @@
     let botMoveTimeout = null;
     let drawProposed = false;
     let drawProposer = null;
-    let currentBotName = null;
+    let currentBotName = "HOUSE BOT";
+    let isBotThinking = false;
 
-    const botNames = ['Yohana', 'Abdela', 'Kurfa', 'Belete', 'Mad Man', 'Yene', 'Sewnet', 'Tigist', 'Dawit', 'Meron', 'Henok', 'Selam', 'Eden', 'Biruk', 'Frehiwot'];
+    const botNames = ['🏆 HOUSE MASTER', '🤖 EXTREME BOT', '💀 DEATH BOT', '👑 KING BOT', '⚡ HOUSE BOT'];
     
     function getRandomBotName() { 
-        return botNames[Math.floor(Math.random() * botNames.length)] + (Math.random() > 0.7 ? ' 🔥' : ''); 
+        return botNames[Math.floor(Math.random() * botNames.length)]; 
+    }
+    
+    function showBotThinking(show) {
+        const el = document.getElementById('botThinking');
+        if (show) {
+            el.style.display = 'block';
+        } else {
+            el.style.display = 'none';
+        }
     }
     
     function showNotification(msg, type) {
@@ -789,39 +808,285 @@
         return (redPieces === blackPieces) || (Math.abs(redPieces - blackPieces) <= 2);
     }
     
-    function getBestBotMove() {
+    // EXTREME BOT AI - Advanced evaluation and move selection
+    function evaluateBoardForBot() {
+        let score = 0;
+        // Count pieces with weights
+        for (let r = 0; r < 8; r++) {
+            for (let c = 0; c < 8; c++) {
+                const piece = board[r][c];
+                if (piece && piece.color === 'black') {
+                    // Base piece value
+                    score += 10;
+                    // King value
+                    if (piece.king) score += 15;
+                    // Position value - center and advancing pieces are better
+                    if (r >= 3 && r <= 4) score += 3;
+                    if (c >= 2 && c <= 5) score += 2;
+                    // Advancing pieces (closer to becoming king)
+                    if (!piece.king) score += (7 - r) * 1.5;
+                } else if (piece && piece.color === 'red') {
+                    // Enemy pieces are negative
+                    score -= 10;
+                    if (piece.king) score -= 15;
+                    if (r >= 3 && r <= 4) score -= 3;
+                }
+            }
+        }
+        return score;
+    }
+    
+    function getAllMovesWithScore() {
         const allMoves = [];
         for (let r = 0; r < 8; r++) {
             for (let c = 0; c < 8; c++) {
                 if (board[r][c]?.color === currentPlayer) {
                     const moves = getValidMoves(r, c);
                     for (const m of moves) {
-                        allMoves.push({ from: { row: r, col: c }, to: m });
+                        // Simulate move to evaluate
+                        const originalBoard = JSON.parse(JSON.stringify(board));
+                        const originalRed = redPieces;
+                        const originalBlack = blackPieces;
+                        const originalCurrentPlayer = currentPlayer;
+                        
+                        // Apply move temporarily
+                        const piece = board[r][c];
+                        const newBoard = JSON.parse(JSON.stringify(board));
+                        newBoard[m.row][m.col] = { ...piece };
+                        newBoard[r][c] = null;
+                        if (m.capture) {
+                            newBoard[m.capture.row][m.capture.col] = null;
+                        }
+                        if ((piece.color === 'black' && m.row === 7) || (piece.color === 'red' && m.row === 0)) {
+                            newBoard[m.row][m.col].king = true;
+                        }
+                        
+                        // Calculate score for this move
+                        let score = 0;
+                        // Prioritize captures heavily
+                        if (m.capture) score += 50;
+                        // Prioritize king creation
+                        if ((piece.color === 'black' && m.row === 7) || (piece.color === 'red' && m.row === 0)) {
+                            score += 30;
+                        }
+                        // Prioritize center control
+                        if (m.row >= 2 && m.row <= 5 && m.col >= 2 && m.col <= 5) score += 5;
+                        // Prioritize advancing pieces
+                        if (piece.color === 'black' && !piece.king) score += (7 - m.row) * 2;
+                        
+                        allMoves.push({
+                            from: { row: r, col: c },
+                            to: m,
+                            score: score,
+                            isCapture: !!m.capture
+                        });
                     }
                 }
             }
         }
-        if (allMoves.length === 0) return null;
-        const captureMoves = allMoves.filter(m => m.to.capture);
-        const movesToUse = captureMoves.length > 0 ? captureMoves : allMoves;
-        return movesToUse[Math.floor(Math.random() * movesToUse.length)];
+        // Sort by score descending, captures first
+        allMoves.sort((a, b) => {
+            if (a.isCapture && !b.isCapture) return -1;
+            if (!a.isCapture && b.isCapture) return 1;
+            return b.score - a.score;
+        });
+        return allMoves;
     }
     
-    function makeBotMove() {
+    function getBestExtremeBotMove() {
+        const allMoves = getAllMovesWithScore();
+        if (allMoves.length === 0) return null;
+        
+        // If there are capture moves, only consider capture moves (and take the best one)
+        const captureMoves = allMoves.filter(m => m.isCapture);
+        if (captureMoves.length > 0) {
+            // For multiple captures, try to find chains
+            return captureMoves[0];
+        }
+        
+        // Return the highest scored move
+        return allMoves[0];
+    }
+    
+    // Simulate a complete capture chain for the bot
+    function getAllCaptureChains(row, col, currentBoard, currentRed, currentBlack, depth = 0) {
+        const moves = getValidMovesForPieceAtPosition(row, col, currentBoard, currentPlayer);
+        const captureMoves = moves.filter(m => m.capture);
+        
+        if (captureMoves.length === 0 || depth > 5) {
+            return [{ chain: [], finalBoard: currentBoard, finalRed: currentRed, finalBlack: currentBlack, score: 0 }];
+        }
+        
+        const results = [];
+        for (const move of captureMoves) {
+            // Apply this capture
+            const newBoard = JSON.parse(JSON.stringify(currentBoard));
+            const piece = newBoard[row][col];
+            newBoard[move.row][move.col] = { ...piece };
+            newBoard[row][col] = null;
+            newBoard[move.capture.row][move.capture.col] = null;
+            
+            let newRed = currentRed;
+            let newBlack = currentBlack;
+            if (piece.color === 'red') newBlack--;
+            else newRed--;
+            
+            // Check for king promotion
+            if ((piece.color === 'black' && move.row === 7) || (piece.color === 'red' && move.row === 0)) {
+                newBoard[move.row][move.col].king = true;
+            }
+            
+            // Continue capture chain
+            const subChains = getAllCaptureChains(move.row, move.col, newBoard, newRed, newBlack, depth + 1);
+            for (const sub of subChains) {
+                results.push({
+                    chain: [{ from: { row, col }, to: move }, ...sub.chain],
+                    finalBoard: sub.finalBoard,
+                    finalRed: sub.finalRed,
+                    finalBlack: sub.finalBlack,
+                    score: (depth === 0 ? 100 : 50) + sub.score
+                });
+            }
+        }
+        
+        if (results.length === 0) {
+            return [{ chain: [], finalBoard: currentBoard, finalRed: currentRed, finalBlack: currentBlack, score: 0 }];
+        }
+        
+        results.sort((a, b) => b.score - a.score);
+        return results;
+    }
+    
+    function getValidMovesForPieceAtPosition(row, col, currentBoard, playerColor) {
+        const piece = currentBoard[row][col];
+        if (!piece || piece.color !== playerColor) return [];
+        const dirs = piece.king ? [[-1, -1], [-1, 1], [1, -1], [1, 1]] : (piece.color === 'red' ? [[-1, -1], [-1, 1]] : [[1, -1], [1, 1]]);
+        const moves = [];
+        
+        for (const [dr, dc] of dirs) {
+            const nr = row + dr, nc = col + dc;
+            if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8 && !currentBoard[nr][nc]) {
+                moves.push({ row: nr, col: nc, capture: null });
+            }
+        }
+        
+        for (const [dr, dc] of dirs) {
+            const midRow = row + dr, midCol = col + dc;
+            const jumpRow = row + dr * 2, jumpCol = col + dc * 2;
+            if (jumpRow >= 0 && jumpRow < 8 && jumpCol >= 0 && jumpCol < 8) {
+                const mid = currentBoard[midRow][midCol];
+                if (mid && mid.color !== playerColor && !currentBoard[jumpRow][jumpCol]) {
+                    moves.push({ row: jumpRow, col: jumpCol, capture: { row: midRow, col: midCol } });
+                }
+            }
+        }
+        return moves;
+    }
+    
+    function getBestExtremeBotMoveWithChains() {
+        const allMoves = [];
+        for (let r = 0; r < 8; r++) {
+            for (let c = 0; c < 8; c++) {
+                if (board[r][c]?.color === currentPlayer) {
+                    const chains = getAllCaptureChains(r, c, JSON.parse(JSON.stringify(board)), redPieces, blackPieces);
+                    for (const chain of chains) {
+                        if (chain.chain.length > 0) {
+                            allMoves.push({
+                                from: { row: r, col: c },
+                                chain: chain.chain,
+                                totalScore: chain.score + (chain.chain.length * 30),
+                                finalBoard: chain.finalBoard
+                            });
+                        } else {
+                            // Regular non-capture moves
+                            const moves = getValidMoves(r, c);
+                            for (const m of moves) {
+                                if (!m.capture) {
+                                    let score = 0;
+                                    if ((currentPlayer === 'black' && m.row === 7) || (currentPlayer === 'red' && m.row === 0)) score += 25;
+                                    if (m.row >= 2 && m.row <= 5 && m.col >= 2 && m.col <= 5) score += 5;
+                                    if (currentPlayer === 'black' && !board[r][c].king) score += (7 - m.row) * 2;
+                                    allMoves.push({
+                                        from: { row: r, col: c },
+                                        chain: [m],
+                                        totalScore: score,
+                                        isSingleMove: true
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        if (allMoves.length === 0) return null;
+        
+        // Sort by total score descending
+        allMoves.sort((a, b) => b.totalScore - a.totalScore);
+        
+        // Get the best move
+        const best = allMoves[0];
+        if (best.chain && best.chain.length > 0) {
+            return {
+                from: best.from,
+                to: best.chain[0],
+                fullChain: best.chain
+            };
+        }
+        return null;
+    }
+    
+    function makeBotMoveExtreme() {
         if (!gameActive || currentPlayer !== myColor || !isBotGame) return;
+        if (isBotThinking) return;
+        
+        isBotThinking = true;
+        showBotThinking(true);
+        
         if (botMoveTimeout) clearTimeout(botMoveTimeout);
         botMoveTimeout = setTimeout(() => {
             if (gameActive && currentPlayer === myColor && isBotGame) {
-                const move = getBestBotMove();
+                const move = getBestExtremeBotMoveWithChains();
+                
                 if (move) {
+                    // Execute the move
                     makeMove(move.from.row, move.from.col, move.to.row, move.to.col, move.to.capture);
                     renderBoard();
                     updateGameStatusMsg();
+                    
+                    // Check if bot has additional captures (chain)
+                    if (move.fullChain && move.fullChain.length > 1) {
+                        // Execute chain moves
+                        let currentRow = move.to.row;
+                        let currentCol = move.to.col;
+                        for (let i = 1; i < move.fullChain.length; i++) {
+                            const nextMove = move.fullChain[i];
+                            makeMove(currentRow, currentCol, nextMove.row, nextMove.col, nextMove.capture);
+                            currentRow = nextMove.row;
+                            currentCol = nextMove.col;
+                            renderBoard();
+                        }
+                    }
+                    
+                    if (currentGameId && !isBotGame) {
+                        db.ref(`damaGames/${currentGameId}`).update({
+                            boardState: board,
+                            currentPlayer: currentPlayer,
+                            redPieces: redPieces,
+                            blackPieces: blackPieces,
+                            lastMove: Date.now()
+                        });
+                    }
                 } else {
+                    // Bot has no moves - player wins
+                    addChatMessage('System', `🤖 ${currentBotName} has no moves! You win!`, true);
                     endGame(myColor === 'red' ? 'black' : 'red');
                 }
             }
-        }, 400);
+            isBotThinking = false;
+            showBotThinking(false);
+        }, 300);
     }
 
     function makeMove(fr, fc, tr, tc, capture) {
@@ -863,7 +1128,7 @@
         }
         
         if (gameActive && isBotGame && currentPlayer === myColor) {
-            makeBotMove();
+            makeBotMoveExtreme();
         }
         return true;
     }
@@ -884,6 +1149,8 @@
         if (!gameActive) return;
         gameActive = false;
         if (botMoveTimeout) clearTimeout(botMoveTimeout);
+        isBotThinking = false;
+        showBotThinking(false);
         
         if (currentGameId) {
             const snap = await db.ref(`damaGames/${currentGameId}`).once('value');
@@ -904,10 +1171,10 @@
                         const winAmount = game.winnerPayout;
                         await updateUserBalance(userBalance + winAmount);
                         showResult(true, winAmount);
-                        addChatMessage('System', `🎉 You won ${winAmount} VEVO!`, true);
+                        addChatMessage('System', `🎉 You won ${winAmount} VEVO! Amazing victory against the House Bot!`, true);
                     } else {
                         showResult(false, 0);
-                        addChatMessage('System', `💀 You lost! Better luck next time!`, true);
+                        addChatMessage('System', `💀 You lost to ${currentBotName}! Better luck next time!`, true);
                     }
                     await db.ref(`damaGames/${currentGameId}`).update({ status: 'completed', winner: winner, completedAt: Date.now() });
                 }
@@ -937,7 +1204,7 @@
     
     async function proposeDraw() {
         if (!gameActive || !currentGameId || isBotGame) {
-            showNotification("Cannot propose draw against bot!", "error");
+            showNotification("Cannot propose draw against House Bot!", "error");
             return;
         }
         if (drawProposed) {
@@ -1042,7 +1309,7 @@
                         lastMove: Date.now()
                     });
                 } else if (isBotGame && gameActive && currentPlayer === myColor) {
-                    makeBotMove();
+                    makeBotMoveExtreme();
                 }
             } else {
                 selectedRow = null;
@@ -1061,13 +1328,13 @@
     function updateGameStatusMsg() {
         const div = document.getElementById('gameStatus');
         if (!gameActive) {
-            div.innerHTML = '🏁 Game Over. Click Auto Match to play!';
+            div.innerHTML = '🏁 Game Over. Click Auto Match to play against House Bot!';
             return;
         }
         if (currentPlayer === myColor) {
-            div.innerHTML = '🎯 YOUR TURN — Click your piece then target';
+            div.innerHTML = '🎯 YOUR TURN — Click your piece then target (Good luck against House Bot!)';
         } else {
-            div.innerHTML = `⏳ Waiting for ${currentPlayer === 'red' ? '🔴 RED' : '⚫ BLACK'} ${isBotGame ? 'Bot' : ''}...`;
+            div.innerHTML = `⏳ ${currentBotName} is thinking... (House Bot is extremely hard!)`;
         }
     }
     
@@ -1075,10 +1342,10 @@
         const modal = document.getElementById('resultModal');
         const cont = document.getElementById('resultContent');
         cont.innerHTML = win ? 
-            `<div class="result-win">🏆 WINNER 🏆</div><div>+${amount} VEVO</div><div style="font-size:14px">House took 20% fee</div>` :
-            `<div class="result-loss">💀 DEFEAT 💀</div><div>Better luck next time!</div>`;
+            `<div class="result-win">🏆 MIRACLE WIN! 🏆</div><div>+${amount} VEVO</div><div style="font-size:14px">You actually beat the House Bot! Incredible!</div>` :
+            `<div class="result-loss">💀 DEFEAT 💀</div><div>House Bot wins again!</div><div style="font-size:12px">The bot is nearly impossible to beat...</div>`;
         modal.style.display = 'block';
-        setTimeout(() => modal.style.display = 'none', 3500);
+        setTimeout(() => modal.style.display = 'none', 4000);
     }
     
     function showResultDraw(amount) {
@@ -1191,21 +1458,21 @@
     async function createBotGame() {
         let bet = 50;
         if (userBalance < bet) {
-            showNotification(`Need ${bet} VEVO to play against bot!`, 'error');
+            showNotification(`Need ${bet} VEVO to play against House Bot!`, 'error');
             return;
         }
-        const botName = getRandomBotName();
+        currentBotName = getRandomBotName();
         const gid = 'bot_' + Date.now() + '_' + Math.random();
         initBoard();
         const houseFee = Math.floor(bet * 0.2);
         const game = {
             id: gid,
             isBot: true,
-            botName: botName,
+            botName: currentBotName,
             redPlayerId: currentUser.uid,
             redPlayerName: currentUser.displayName || currentUser.email.split('@')[0],
-            blackPlayerId: 'bot_' + botName,
-            blackPlayerName: botName + ' (🤖 BOT)',
+            blackPlayerId: 'bot_' + currentBotName,
+            blackPlayerName: currentBotName + ' (🤖 HOUSE BOT)',
             betAmount: bet,
             totalPot: bet * 2,
             winnerPayout: Math.floor(bet * 2 * 0.8),
@@ -1220,8 +1487,8 @@
         };
         await updateUserBalance(userBalance - bet);
         await db.ref(`damaGames/${gid}`).set(game);
-        showNotification(`🤖 Playing against ${botName} (Ultra Extreme Bot) - Bet: ${bet} VEVO`, 'success');
-        startCountdown(gid, () => joinBotGame(gid, botName));
+        showNotification(`🤖 Playing against ${currentBotName} (EXTREME HOUSE BOT) - Bet: ${bet} VEVO`, 'success');
+        startCountdown(gid, () => joinBotGame(gid, currentBotName));
     }
     
     async function joinBotGame(gid, botName) {
@@ -1240,9 +1507,10 @@
         renderBoard();
         updateGameStatusMsg();
         document.getElementById('redPlayerName').innerHTML = `👤 ${game.redPlayerName} (YOU)`;
-        document.getElementById('blackPlayerName').innerHTML = `🤖 ${botName} (ULTRA BOT)`;
-        addChatMessage('System', `⚔️ Game vs BOT ${botName}! Bot plays instantly.`, true);
-        if (gameActive && currentPlayer === myColor) makeBotMove();
+        document.getElementById('blackPlayerName').innerHTML = `🤖 ${botName} (HOUSE BOT - EXTREME)`;
+        addChatMessage('System', `⚔️ GAME STARTED vs HOUSE BOT! The bot is EXTREMELY HARD - almost impossible to win. Good luck!`, true);
+        addChatMessage('System', `💀 ${botName} uses advanced AI with capture prioritization and position evaluation.`, true);
+        // Bot plays as black, so after player moves, bot will respond
     }
     
     function loadAvailableGames() {
@@ -1252,7 +1520,7 @@
             const container = document.getElementById('availableGamesList');
             const gameList = Object.entries(games).filter(([id, game]) => game.redPlayerId !== currentUser?.uid && !game.blackPlayerId && !game.isBot);
             if (gameList.length === 0) {
-                container.innerHTML = '<div class="empty-state">✨ No real players available. Try Auto Match for bot!</div>';
+                container.innerHTML = '<div class="empty-state">✨ No real players available. Click AUTO MATCH to play House Bot!</div>';
                 return;
             }
             container.innerHTML = gameList.map(([id, game]) => `
@@ -1355,7 +1623,7 @@
             showNotification("Real player found! Joining...", 'success');
             await window.joinSpecificGame(found, bet, "opponent");
         } else {
-            showNotification("No real players available. Playing against ULTRA BOT (50 VEVO)...", 'info');
+            showNotification("No real players available. Playing against HOUSE BOT (EXTREME DIFFICULTY - 50 VEVO)...", 'info');
             await createBotGame();
         }
     }
