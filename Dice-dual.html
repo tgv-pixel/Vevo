@@ -23,7 +23,6 @@
             margin: 0 auto;
         }
 
-        /* Header */
         .game-header {
             display: flex;
             justify-content: space-between;
@@ -74,7 +73,6 @@
             margin-right: 8px;
         }
 
-        /* Game Title */
         .game-title {
             text-align: center;
             color: white;
@@ -91,7 +89,6 @@
             opacity: 0.9;
         }
 
-        /* Dice Display */
         .dice-container {
             text-align: center;
             margin-bottom: 40px;
@@ -133,7 +130,6 @@
             font-weight: bold;
         }
 
-        /* Betting Options */
         .betting-options {
             display: flex;
             justify-content: center;
@@ -179,10 +175,15 @@
         .bet-odds {
             font-size: 20px;
             font-weight: bold;
-            color: #48bb78;
+            color: #e74c3c;
         }
 
-        /* Bet Controls */
+        .house-edge {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+
         .bet-controls {
             background: rgba(255, 255, 255, 0.95);
             border-radius: 20px;
@@ -269,7 +270,6 @@
             cursor: not-allowed;
         }
 
-        /* Result Display */
         .result-display {
             background: rgba(0, 0, 0, 0.7);
             border-radius: 15px;
@@ -292,7 +292,6 @@
             color: #ff4757;
         }
 
-        /* History */
         .history-section {
             background: rgba(255, 255, 255, 0.95);
             border-radius: 20px;
@@ -362,7 +361,7 @@
 <body>
     <div class="game-container">
         <div class="game-header">
-            <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i> Back</a>
+            <a href="dashboard.html" class="back-btn"><i class="fas fa-arrow-left"></i> Back</a>
             <div class="game-logo">
                 <i class="fas fa-dice-d6"></i> VEVOBet
             </div>
@@ -373,7 +372,7 @@
 
         <div class="game-title">
             <h1><i class="fas fa-dice"></i> Dice Duel</h1>
-            <p>Predict if the dice will roll OVER or UNDER the target number!</p>
+            <p>Predict if the dice will roll OVER or UNDER 50 - House Edge: 7.5%</p>
         </div>
 
         <div class="dice-container">
@@ -387,12 +386,14 @@
             <div class="bet-option" data-bet="over">
                 <h3>🎲 OVER 50</h3>
                 <p>Roll 51-100</p>
-                <div class="bet-odds">Multiplier: 1.95x</div>
+                <div class="bet-odds">Multiplier: 1.85x</div>
+                <div class="house-edge">House Edge: 7.5%</div>
             </div>
             <div class="bet-option" data-bet="under">
                 <h3>🎲 UNDER 50</h3>
                 <p>Roll 1-49</p>
-                <div class="bet-odds">Multiplier: 1.95x</div>
+                <div class="bet-odds">Multiplier: 1.85x</div>
+                <div class="house-edge">House Edge: 7.5%</div>
             </div>
         </div>
 
@@ -430,7 +431,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script>
-        // Firebase Config
         const firebaseConfig = {
             apiKey: "AIzaSyCAfsKcVP7OUo870TKkBnk4BfDEq9LnAK8",
             authDomain: "newporoject-c6f66.firebaseapp.com",
@@ -446,11 +446,14 @@
         const auth = firebase.auth();
         const db = firebase.database();
         
-        // Game Variables
         let currentUser = null;
         let userBalance = 0;
         let selectedBet = null;
         let isRolling = false;
+        
+        // FIXED: Lower multiplier for house edge (1.85x instead of 1.95x)
+        // True odds are 1.96x for 49/51 split, so 1.85x gives ~7.5% house edge
+        const WIN_MULTIPLIER = 1.85;
         
         function updateBalanceDisplay() {
             document.getElementById('gameBalance').textContent = userBalance;
@@ -575,12 +578,11 @@
             const won = (selectedBet === 'over' && isOver) || (selectedBet === 'under' && !isOver);
             
             let winAmount = 0;
-            let multiplier = 1.95;
             let resultMessage = '';
             
             if (won) {
-                winAmount = Math.floor(betAmount * multiplier);
-                resultMessage = `🎉 WIN! Rolled ${roll}. You won ${winAmount} VEVO! 🎉`;
+                winAmount = Math.floor(betAmount * WIN_MULTIPLIER);
+                resultMessage = `🎉 WIN! Rolled ${roll}. You won ${winAmount} VEVO! (${WIN_MULTIPLIER}x) 🎉`;
                 document.getElementById('resultMessage').className = 'result-message result-win';
             } else {
                 winAmount = 0;
@@ -593,7 +595,7 @@
                     await updateUserBalance(userBalance + winAmount);
                 }
                 
-                await addGameHistory(betAmount, roll, winAmount, won ? 'win' : 'loss', multiplier);
+                await addGameHistory(betAmount, roll, winAmount, won ? 'win' : 'loss', WIN_MULTIPLIER);
                 await loadUserBalance();
                 
                 document.getElementById('resultDisplay').style.display = 'block';
@@ -608,7 +610,6 @@
             });
         }
         
-        // Event Listeners
         document.getElementById('rollBtn').addEventListener('click', rollDice);
         
         document.querySelectorAll('.bet-option').forEach(option => {
