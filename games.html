@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>VEVOBet - Games</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+            transition: all 0.3s;
+            z-index: 100;
+        }
+
+        .logo-area {
+            padding: 25px 20px;
+            text-align: center;
+            font-size: 28px;
+            font-weight: bold;
+            border-bottom: 2px solid rgba(255, 215, 0, 0.3);
+        }
+
+        .logo-area i {
+            color: #ffd700;
+            margin-right: 10px;
+        }
+
+        .nav-menu {
+            padding: 0 15px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 15px;
+            margin: 5px 0;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            border-radius: 10px;
+            transition: all 0.3s;
+        }
+
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            transform: translateX(5px);
+        }
+
+        .nav-item.active {
+            background: linear-gradient(135deg, #ffd700, #ff8c00);
+            color: #1a1a2e;
+            font-weight: bold;
+        }
+
+        .user-info-sidebar {
+            padding: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            position absolute;
+            bottom: 0;
+            width: 100%;
+        }
+
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .dashboard-header {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px 25px;
+            margin-bottom: 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .balance-box {
+            background: linear-gradient(135deg, #ffd700, #ff8c00);
+            padding: 8px 20px;
+            border-radius: 25px;
+            color: #1a1a2e;
+            font-weight: bold;
+            font-size: 20px;
+        }
+
+        .section-title {
+            color: white;
+            margin: 30px 0 20px 0;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+        }
+
+        .game-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .game-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .game-card-image {
+            height: 160px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 64px;
+            color: white;
+        }
+
+        .game-card-info {
+            padding: 20px;
+        }
+
+        .game-card-info h3 {
+            font-size: 20px;
+            margin-bottom: 8px;
+            color: #333;
+        }
+
+        .game-card-info p {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .play-btn {
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            display: inline-block;
+        }
+
+        .menu-toggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 101;
+            background: #ffd700;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            .menu-toggle {
+                display: block;
+            }
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            .main-content {
+                margin-left: 0;
+                padding-top: 60px;
+            }
+            .games-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="menu-toggle" onclick="toggleSidebar()">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <div class="app-container">
+        <aside class="sidebar" id="sidebar">
+            <div class="logo-area">
+                <i class="fas fa-dice-d6"></i>
+                <span>VEVOBet</span>
+            </div>
+            <nav class="nav-menu">
+                <a href="dashboard.html" class="nav-item">📊 Dashboard</a>
+                <a href="games.html" class="nav-item active">🎮 Games</a>
+                <a href="deposit-withdraw.html" class="nav-item">💰 Deposit/Withdraw</a>
+                <a href="refferal.html" class="nav-item">👥 Referral</a>
+                <a href="settings.html" class="nav-item">⚙️ Settings</a>
+            </nav>
+            <div class="user-info-sidebar">
+                <i class="fas fa-user-circle" style="font-size: 40px;"></i>
+                <div>
+                    <div id="sidebarUserName">Loading...</div>
+                    <div id="sidebarUserEmail" style="font-size: 12px;"></div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="dashboard-header">
+                <h1 style="color: white;"><i class="fas fa-gamepad"></i> All Games</h1>
+                <div class="balance-box">
+                    <i class="fas fa-coins"></i>
+                    <span id="userBalance">0</span> VEVO
+                </div>
+            </header>
+
+            <h2 class="section-title"><i class="fas fa-users"></i> Multiplayer Games</h2>
+            <div class="games-grid">
+                <a href="dama-game.html" class="game-card">
+                    <div class="game-card-image"><i class="fas fa-chess-board"></i></div>
+                    <div class="game-card-info">
+                        <h3>🎲 Dama - Ethiopian Checkers</h3>
+                        <p>Traditional 8x8 checkers! Challenge players 1v1! 12 pieces each.</p>
+                        <button class="play-btn">Play Now →</button>
+                    </div>
+                </a>
+                <a href="duel-arena.html" class="game-card">
+                    <div class="game-card-image"><i class="fas fa-swords"></i></div>
+                    <div class="game-card-info">
+                        <h3>⚔️ Duel Arena</h3>
+                        <p>Multiplayer 1v1 dice battle! Winner takes 80% of the pot!</p>
+                        <button class="play-btn">Play Now →</button>
+                    </div>
+                </a>
+            </div>
+
+            <h2 class="section-title"><i class="fas fa-dice"></i> Single Player Games</h2>
+            <div class="games-grid">
+                <a href="game1.html" class="game-card">
+                    <div class="game-card-image"><i class="fas fa-sync-alt"></i></div>
+                    <div class="game-card-info">
+                        <h3>🎡 Lucky Spin</h3>
+                        <p>Spin the wheel and win up to 10x your bet!</p>
+                        <button class="play-btn">Play Now →</button>
+                    </div>
+                </a>
+                <a href="Dice-dual.html" class="game-card">
+                    <div class="game-card-image"><i class="fas fa-dice"></i></div>
+                    <div class="game-card-info">
+                        <h3>🎲 Dice Duel</h3>
+                        <p>Predict over or under 50 for 1.95x payout!</p>
+                        <button class="play-btn">Play Now →</button>
+                    </div>
+                </a>
+                <a href="Coin-clash.html" class="game-card">
+                    <div class="game-card-image"><i class="fas fa-coins"></i></div>
+                    <div class="game-card-info">
+                        <h3>🪙 Coin Clash</h3>
+                        <p>Heads or tails? Build your win streak!</p>
+                        <button class="play-btn">Play Now →</button>
+                    </div>
+                </a>
+                <a href="Number-ninja.html" class="game-card">
+                    <div class="game-card-image"><i class="fas fa-calculator"></i></div>
+                    <div class="game-card-info">
+                        <h3>🔢 Number Ninja</h3>
+                        <p>Guess the number, closer = higher multiplier!</p>
+                        <button class="play-btn">Play Now →</button>
+                    </div>
+                </a>
+                <a href="Card-clash.html" class="game-card">
+                    <div class="game-card-image"><i class="fas fa-club"></i></div>
+                    <div class="game-card-info">
+                        <h3>🃏 Card Clash</h3>
+                        <p>Beat the dealer in this Blackjack-style game!</p>
+                        <button class="play-btn">Play Now →</button>
+                    </div>
+                </a>
+                <a href="Royal.html" class="game-card">
+                    <div class="game-card-image"><i class="fas fa-circle"></i></div>
+                    <div class="game-card-info">
+                        <h3>🎰 Roulette Royale</h3>
+                        <p>Classic European roulette with multiple bets!</p>
+                        <button class="play-btn">Play Now →</button>
+                    </div>
+                </a>
+                <a href="solt-main.html" class="game-card">
+                    <div class="game-card-image"><i class="fas fa-slot-machine"></i></div>
+                    <div class="game-card-info">
+                        <h3>🎰 Slot Mania</h3>
+                        <p>3-reel slots with progressive jackpot!</p>
+                        <button class="play-btn">Play Now →</button>
+                    </div>
+                </a>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCAfsKcVP7OUo870TKkBnk4BfDEq9LnAK8",
+            authDomain: "newporoject-c6f66.firebaseapp.com",
+            databaseURL: "https://newporoject-c6f66-default-rtdb.firebaseio.com",
+            projectId: "newporoject-c6f66",
+            storageBucket: "newporoject-c6f66.appspot.com",
+            messagingSenderId: "733557611631",
+            appId: "1:733557611631:web:02c9377f56d614ff3b019a"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.database();
+        
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+        }
+        
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                const snapshot = await db.ref(`users/${user.uid}`).once('value');
+                const userData = snapshot.val();
+                document.getElementById('sidebarUserName').textContent = userData?.name || user.email.split('@')[0];
+                document.getElementById('sidebarUserEmail').textContent = user.email;
+                document.getElementById('userBalance').textContent = userData?.balance || 0;
+            } else {
+                window.location.href = 'index.html';
+            }
+        });
+        
+        window.toggleSidebar = toggleSidebar;
+    </script>
+</body>
+</html>
