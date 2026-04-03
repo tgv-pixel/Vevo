@@ -684,71 +684,6 @@
     let pendingChainMoves = false;
     let waitingForBotResponse = false;
 
-    const botNames = ['🏆 HOUSE MASTER', '🤖 EXTREME BOT', '💀 DEATH BOT', '👑 KING BOT', '⚡ HOUSE BOT'];
-    
-    function getRandomBotName() { 
-        return botNames[Math.floor(Math.random() * botNames.length)]; 
-    }
-    
-    function showBotThinking(show) {
-        const el = document.getElementById('botThinking');
-        if (show) {
-            el.style.display = 'block';
-        } else {
-            el.style.display = 'none';
-        }
-    }
-    
-    function showNotification(msg, type) {
-        const notification = document.createElement('div');
-        notification.className = 'notification';
-        notification.style.background = type === 'success' ? '#27ae60' : type === 'error' ? '#e74c3c' : '#e67e22';
-        notification.style.color = 'white';
-        notification.innerHTML = msg;
-        document.body.appendChild(notification);
-        setTimeout(() => notification.remove(), 2800);
-    }
-    
-    function updateBalanceDisplay() { 
-        document.getElementById('gameBalance').innerText = userBalance; 
-    }
-    
-    async function loadUserData() {
-        if (!currentUser) return;
-        const snap = await db.ref(`users/${currentUser.uid}`).once('value');
-        if (snap.exists()) {
-            userBalance = snap.val().balance || 100;
-        } else {
-            await db.ref(`users/${currentUser.uid}`).set({
-                email: currentUser.email,
-                name: currentUser.displayName || currentUser.email.split('@')[0],
-                balance: 100,
-                createdAt: Date.now()
-            });
-            userBalance = 100;
-        }
-        updateBalanceDisplay();
-    }
-    
-    async function updateUserBalance(newBalance) {
-        if (newBalance < 0) newBalance = 0;
-        await db.ref(`users/${currentUser.uid}`).update({ balance: newBalance });
-        userBalance = newBalance;
-        updateBalanceDisplay();
-    }
-    
-    function setUserOnline() {
-        if (!currentUser) return;
-        db.ref(`onlineUsers/${currentUser.uid}`).set({
-            uid: currentUser.uid,
-            name: currentUser.displayName || currentUser.email.split('@')[0],
-            email: currentUser.email,
-            balance: userBalance,
-            inGame: !!currentGameId,
-            lastSeen: Date.now()
-        }).onDisconnect().remove();
-    }
-
     function initBoard() {
         board = Array(8).fill().map(() => Array(8).fill(null));
         for (let r = 5; r < 8; r++) {
@@ -769,435 +704,9 @@
         pendingChainMoves = false;
     }
 
-    function updatePieceCounts() {
-        let red = 0, black = 0;
-        for (let r = 0; r < 8; r++) {
-            for (let c = 0; c < 8; c++) {
-                if (board[r][c]) {
-                    if (board[r][c].color === 'red') red++;
-                    else black++;
-                }
-            }
-        }
-        redPieces = red;
-        blackPieces = black;
-    }
-
-    function getValidMoves(row, col) {
-        const piece = board[row][col];
-        if (!piece) return [];
-        
-        // Check if it's the current player's turn
-        if (piece.color !== currentPlayer) return [];
-        
-        const dirs = piece.king ? [[-1, -1], [-1, 1], [1, -1], [1, 1]] : (piece.color === 'red' ? [[-1, -1], [-1, 1]] : [[1, -1], [1, 1]]);
-        const moves = [];
-        
-        // Check for captures first (mandatory in checkers)
-        for (const [dr, dc] of dirs) {
-            const midRow = row + dr, midCol = col + dc;
-            const jumpRow = row + dr * 2, jumpCol = col + dc * 2;
-            if (jumpRow >= 0 && jumpRow < 8 && jumpCol >= 0 && jumpCol < 8) {
-                const mid = board[midRow][midCol];
-                if (mid && mid.color !== piece.color && !board[jumpRow][jumpCol]) {
-                    moves.push({ row: jumpRow, col: jumpCol, capture: { row: midRow, col: midCol } });
-                }
-            }
-        }
-        
-        // If there are captures, only return captures (mandatory capture rule)
-        if (moves.length > 0) return moves;
-        
-        // Otherwise return normal moves
-        for (const [dr, dc] of dirs) {
-            const nr = row + dr, nc = col + dc;
-            if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8 && !board[nr][nc]) {
-                moves.push({ row: nr, col: nc, capture: null });
-            }
-        }
-        
-        return moves;
-    }
-    
-    function hasAnyValidMoves(color) {
-        for (let i = 0; i < 8; i++) {
-            for (let j = 0; j < 8; j++) {
-                if (board[i][j]?.color === color) {
-                    const moves = getValidMoves(i, j);
-                    if (moves.length > 0) return true;
-                }
-            }
-        }
-        return false;
-    }
-    
-    function isGameStuck() {
-        return !hasAnyValidMoves('red') && !hasAnyValidMoves('black');
-    }
-    
-    function isEqualSituation() {
-        return (redPieces === blackPieces) || (Math.abs(redPieces - blackPieces) <= 2);
-    }
-    
-    // EXTREME BOT AI - Advanced evaluation and move selection
-    function evaluateBoardForBot() {
-        let score = 0;
-        for (let r = 0; r < 8; r++) {
-            for (let c = 0; c < 8; c++) {
-                const piece = board[r][c];
-                if (piece && piece.color === 'black') {
-                    score += 10;
-                    if (piece.king) score += 15;
-                    if (r >= 3 && r <= 4) score += 3;
-                    if (c >= 2 && c <= 5) score += 2;
-                    if (!piece.king) score += (7 - r) * 1.5;
-                } else if (piece && piece.color === 'red') {
-                    score -= 10;
-                    if (piece.king) score -= 15;
-                    if (r >= 3 && r <= 4) score -= 3;
-                }
-            }
-        }
-        return score;
-    }
-    
-    function getAllMovesWithScore() {
-        const allMoves = [];
-        for (let r = 0; r < 8; r++) {
-            for (let c = 0; c < 8; c++) {
-                if (board[r][c]?.color === currentPlayer) {
-                    const moves = getValidMoves(r, c);
-                    for (const m of moves) {
-                        let score = 0;
-                        if (m.capture) score += 50;
-                        if ((currentPlayer === 'black' && m.row === 7) || (currentPlayer === 'red' && m.row === 0)) {
-                            score += 30;
-                        }
-                        if (m.row >= 2 && m.row <= 5 && m.col >= 2 && m.col <= 5) score += 5;
-                        if (currentPlayer === 'black' && !board[r][c].king) score += (7 - m.row) * 2;
-                        
-                        allMoves.push({
-                            from: { row: r, col: c },
-                            to: m,
-                            score: score,
-                            isCapture: !!m.capture
-                        });
-                    }
-                }
-            }
-        }
-        allMoves.sort((a, b) => {
-            if (a.isCapture && !b.isCapture) return -1;
-            if (!a.isCapture && b.isCapture) return 1;
-            return b.score - a.score;
-        });
-        return allMoves;
-    }
-    
-    function getBestExtremeBotMove() {
-        const allMoves = getAllMovesWithScore();
-        if (allMoves.length === 0) return null;
-        
-        const captureMoves = allMoves.filter(m => m.isCapture);
-        if (captureMoves.length > 0) {
-            return captureMoves[0];
-        }
-        
-        return allMoves[0];
-    }
-    
-    async function executeBotMove(move) {
-        if (!move) return false;
-        
-        // Apply the move
-        const piece = board[move.from.row][move.from.col];
-        board[move.to.row][move.to.col] = { ...piece };
-        board[move.from.row][move.from.col] = null;
-        
-        if (move.to.capture) {
-            board[move.to.capture.row][move.to.capture.col] = null;
-            updatePieceCounts();
-        }
-        
-        // Check for king promotion
-        if ((piece.color === 'black' && move.to.row === 7) || (piece.color === 'red' && move.to.row === 0)) {
-            board[move.to.row][move.to.col].king = true;
-        }
-        
-        renderBoard();
-        
-        // Check for additional captures
-        const additionalMoves = getValidMoves(move.to.row, move.to.col);
-        const additionalCaptures = additionalMoves.filter(m => m.capture);
-        
-        if (additionalCaptures.length > 0 && move.to.capture) {
-            // Bot has another capture - continue the chain
-            const nextMove = {
-                from: { row: move.to.row, col: move.to.col },
-                to: additionalCaptures[0]
-            };
-            await executeBotMove(nextMove);
-            return true;
-        }
-        
-        // Switch turn
-        currentPlayer = currentPlayer === 'red' ? 'black' : 'red';
-        renderBoard();
-        updateGameStatusMsg();
-        
-        // Update Firebase for multiplayer games
-        if (currentGameId && !isBotGame) {
-            await db.ref(`damaGames/${currentGameId}`).update({
-                boardState: board,
-                currentPlayer: currentPlayer,
-                redPieces: redPieces,
-                blackPieces: blackPieces,
-                lastMove: Date.now()
-            });
-        }
-        
-        return true;
-    }
-    
-    async function makeBotMoveExtreme() {
-        if (!gameActive || currentPlayer !== myColor || !isBotGame) return;
-        if (isBotThinking || waitingForBotResponse) return;
-        
-        waitingForBotResponse = true;
-        isBotThinking = true;
-        showBotThinking(true);
-        
-        if (botMoveTimeout) clearTimeout(botMoveTimeout);
-        
-        // Add delay to simulate thinking
-        await new Promise(resolve => setTimeout(resolve, 400));
-        
-        if (gameActive && currentPlayer === myColor && isBotGame) {
-            const move = getBestExtremeBotMove();
-            
-            if (move) {
-                await executeBotMove(move);
-                
-                // Check game over conditions
-                if (!hasAnyValidMoves(currentPlayer)) {
-                    const winner = currentPlayer === 'red' ? 'black' : 'red';
-                    await endGame(winner);
-                } else if (isGameStuck()) {
-                    await handleStuckGame();
-                }
-            } else {
-                // Bot has no moves - player wins
-                addChatMessage('System', `🤖 ${currentBotName} has no moves! You win!`, true);
-                await endGame(myColor === 'red' ? 'black' : 'red');
-            }
-        }
-        
-        isBotThinking = false;
-        waitingForBotResponse = false;
-        showBotThinking(false);
-    }
-
-    async function makeMove(fr, fc, tr, tc, capture) {
-        const piece = board[fr][fc];
-        board[tr][tc] = { ...piece };
-        board[fr][fc] = null;
-        
-        if (capture) {
-            board[capture.row][capture.col] = null;
-            updatePieceCounts();
-        }
-        
-        if ((piece.color === 'red' && tr === 0) || (piece.color === 'black' && tr === 7)) {
-            board[tr][tc].king = true;
-        }
-        
-        renderBoard();
-        
-        // Check for additional captures
-        const additionalMoves = getValidMoves(tr, tc);
-        const additionalCaptures = additionalMoves.filter(m => m.capture);
-        
-        if (additionalCaptures.length > 0 && capture) {
-            // Player has another capture - keep turn
-            selectedRow = tr;
-            selectedCol = tc;
-            pendingChainMoves = true;
-            renderBoard();
-            return false;
-        }
-        
-        // Switch turn
-        currentPlayer = currentPlayer === 'red' ? 'black' : 'red';
-        selectedRow = null;
-        selectedCol = null;
-        pendingChainMoves = false;
-        renderBoard();
-        updateGameStatusMsg();
-        
-        // Check game over conditions
-        if (!hasAnyValidMoves(currentPlayer)) {
-            const winner = currentPlayer === 'red' ? 'black' : 'red';
-            await endGame(winner);
-            return true;
-        }
-        
-        if (isGameStuck()) {
-            await handleStuckGame();
-            return true;
-        }
-        
-        // Update Firebase for multiplayer games
-        if (currentGameId && !isBotGame) {
-            await db.ref(`damaGames/${currentGameId}`).update({
-                boardState: board,
-                currentPlayer: currentPlayer,
-                redPieces: redPieces,
-                blackPieces: blackPieces,
-                lastMove: Date.now()
-            });
-        }
-        
-        // Bot move if it's bot game and now bot's turn
-        if (gameActive && isBotGame && currentPlayer === myColor && !waitingForBotResponse) {
-            await makeBotMoveExtreme();
-        }
-        
-        return true;
-    }
-    
-    async function handleStuckGame() {
-        if (!gameActive) return;
-        
-        if (isEqualSituation()) {
-            addChatMessage('System', `🤝 Equal situation! Draw proposed automatically.`, true);
-            await endGame(null, true);
-        } else {
-            const winner = redPieces > blackPieces ? 'red' : 'black';
-            addChatMessage('System', `🏆 ${winner.toUpperCase()} has more pieces! Game ends.`, true);
-            await endGame(winner);
-        }
-    }
-    
-    async function endGame(winner, isDraw = false) {
-        if (!gameActive) return;
-        gameActive = false;
-        
-        if (botMoveTimeout) clearTimeout(botMoveTimeout);
-        isBotThinking = false;
-        waitingForBotResponse = false;
-        showBotThinking(false);
-        
-        if (currentGameId) {
-            const snap = await db.ref(`damaGames/${currentGameId}`).once('value');
-            const game = snap.val();
-            
-            if (game && (game.status === 'active' || game.status === 'waiting')) {
-                if (isDraw) {
-                    const refundAmount = Math.floor(game.betAmount * 0.9);
-                    const isPlayer = (game.redPlayerId === currentUser?.uid) || (game.blackPlayerId === currentUser?.uid);
-                    
-                    if (isPlayer) {
-                        const newBalance = userBalance + refundAmount;
-                        await updateUserBalance(newBalance);
-                        showResultDraw(refundAmount);
-                        addChatMessage('System', `🤝 Draw! You received ${refundAmount} VEVO (10% house fee deducted)`, true);
-                    }
-                    await db.ref(`damaGames/${currentGameId}`).update({ status: 'draw', winner: null, completedAt: Date.now() });
-                } else if (winner) {
-                    const isWinner = (winner === 'red' && game.redPlayerId === currentUser?.uid) || (winner === 'black' && game.blackPlayerId === currentUser?.uid);
-                    
-                    if (isWinner) {
-                        const winAmount = game.winnerPayout || Math.floor(game.totalPot * 0.8);
-                        const newBalance = userBalance + winAmount;
-                        await updateUserBalance(newBalance);
-                        showResult(true, winAmount);
-                        addChatMessage('System', `🎉 You won ${winAmount} VEVO! Amazing victory against the House Bot!`, true);
-                    } else if (game.redPlayerId === currentUser?.uid || game.blackPlayerId === currentUser?.uid) {
-                        showResult(false, 0);
-                        addChatMessage('System', `💀 You lost to ${currentBotName || game.blackPlayerName || 'opponent'}! Better luck next time!`, true);
-                    }
-                    await db.ref(`damaGames/${currentGameId}`).update({ status: 'completed', winner: winner, completedAt: Date.now() });
-                }
-            }
-        }
-        
-        updateGameStatusMsg();
-        
-        // Clean up listeners
-        if (gameListener) {
-            gameListener.off();
-            gameListener = null;
-        }
-        if (chatListener) {
-            chatListener.off();
-            chatListener = null;
-        }
-        
-        currentGameId = null;
-        myColor = null;
-        isBotGame = false;
-        drawProposed = false;
-        drawProposer = null;
-        pendingChainMoves = false;
-        
-        loadAvailableGames();
-        setUserOnline();
-    }
-    
-    async function cancelGame() {
-        if (!gameActive || !currentGameId) {
-            showNotification("No active game!", "error");
-            return;
-        }
-        
-        if (confirm("Cancel game and lose your bet? Opponent will win!")) {
-            addChatMessage('System', `${currentUser.displayName || 'Player'} cancelled the game!`, true);
-            const winner = myColor === 'red' ? 'black' : 'red';
-            await endGame(winner);
-        }
-    }
-    
-    async function proposeDraw() {
-        if (!gameActive || !currentGameId) {
-            showNotification("No active game!", "error");
-            return;
-        }
-        
-        if (isBotGame) {
-            showNotification("Cannot propose draw against House Bot!", "error");
-            return;
-        }
-        
-        if (drawProposed) {
-            showNotification("Draw already proposed!", "error");
-            return;
-        }
-        
-        drawProposed = true;
-        drawProposer = currentUser.uid;
-        await db.ref(`damaGames/${currentGameId}`).update({ drawProposed: true, drawProposer: currentUser.uid });
-        addChatMessage('System', `${currentUser.displayName || 'Player'} proposed a draw! Both get 90% of bet back.`, true);
-        showNotification("Draw proposed! Waiting for opponent...", "info");
-    }
-    
-    async function acceptDraw() {
-        if (!gameActive || !currentGameId || !drawProposed) return;
-        await endGame(null, true);
-        drawProposed = false;
-        document.getElementById('drawRequestDiv').style.display = 'none';
-    }
-    
-    async function rejectDraw() {
-        if (!gameActive || !currentGameId) return;
-        drawProposed = false;
-        drawProposer = null;
-        await db.ref(`damaGames/${currentGameId}`).update({ drawProposed: false, drawProposer: null });
-        addChatMessage('System', `Opponent rejected the draw. Game continues!`, true);
-        document.getElementById('drawRequestDiv').style.display = 'none';
-    }
-    
     function renderBoard() {
         const container = document.getElementById('board');
+        if (!container) return;
         const table = document.createElement('table');
         
         for (let r = 0; r < 8; r++) {
@@ -1241,40 +750,58 @@
         const blackCard = document.getElementById('blackPlayerCard');
         
         if (currentPlayer === 'red') {
-            redTurnIndicator.style.display = 'inline-block';
-            blackTurnIndicator.style.display = 'none';
-            redCard.classList.add('red-turn');
-            blackCard.classList.remove('black-turn');
+            if(redTurnIndicator) redTurnIndicator.style.display = 'inline-block';
+            if(blackTurnIndicator) blackTurnIndicator.style.display = 'none';
+            if(redCard) redCard.classList.add('red-turn');
+            if(blackCard) blackCard.classList.remove('black-turn');
         } else {
-            redTurnIndicator.style.display = 'none';
-            blackTurnIndicator.style.display = 'inline-block';
-            redCard.classList.remove('red-turn');
-            blackCard.classList.add('black-turn');
+            if(redTurnIndicator) redTurnIndicator.style.display = 'none';
+            if(blackTurnIndicator) blackTurnIndicator.style.display = 'inline-block';
+            if(redCard) redCard.classList.remove('red-turn');
+            if(blackCard) blackCard.classList.add('black-turn');
         }
     }
-    
+
+    function getValidMoves(row, col) {
+        const piece = board[row][col];
+        if (!piece) return [];
+        if (piece.color !== currentPlayer) return [];
+        
+        const dirs = piece.king ? [[-1, -1], [-1, 1], [1, -1], [1, 1]] : (piece.color === 'red' ? [[-1, -1], [-1, 1]] : [[1, -1], [1, 1]]);
+        const moves = [];
+        
+        for (const [dr, dc] of dirs) {
+            const midRow = row + dr, midCol = col + dc;
+            const jumpRow = row + dr * 2, jumpCol = col + dc * 2;
+            if (jumpRow >= 0 && jumpRow < 8 && jumpCol >= 0 && jumpCol < 8) {
+                const mid = board[midRow][midCol];
+                if (mid && mid.color !== piece.color && !board[jumpRow][jumpCol]) {
+                    moves.push({ row: jumpRow, col: jumpCol, capture: { row: midRow, col: midCol } });
+                }
+            }
+        }
+        
+        if (moves.length > 0) return moves;
+        
+        for (const [dr, dc] of dirs) {
+            const nr = row + dr, nc = col + dc;
+            if (nr >= 0 && nr < 8 && nc >= 0 && nc < 8 && !board[nr][nc]) {
+                moves.push({ row: nr, col: nc, capture: null });
+            }
+        }
+        return moves;
+    }
+
     function handleCellClick(row, col) {
-        if (!gameActive || !currentGameId) {
-            showNotification("No active game!", "error");
-            return;
-        }
-        
-        if (currentPlayer !== myColor) {
-            showNotification(`Not your turn!`, "error");
-            return;
-        }
-        
-        if (isBotGame && waitingForBotResponse) {
-            showNotification("Please wait for bot to move...", "error");
-            return;
-        }
+        if (!gameActive || !currentGameId) return;
+        if (currentPlayer !== myColor) return;
+        if (isBotGame && waitingForBotResponse) return;
         
         const piece = board[row][col];
         
         if (selectedRow !== null) {
             const moves = getValidMoves(selectedRow, selectedCol);
             const valid = moves.find(m => m.row === row && m.col === col);
-            
             if (valid) {
                 makeMove(selectedRow, selectedCol, row, col, valid.capture);
             } else {
@@ -1289,598 +816,234 @@
                 selectedRow = row;
                 selectedCol = col;
                 renderBoard();
-            } else {
-                showNotification("No valid moves for this piece!", "error");
             }
         }
     }
-    
-    function updateGameStatusMsg() {
-        const div = document.getElementById('gameStatus');
-        if (!gameActive) {
-            div.innerHTML = '🏁 Game Over. Click Auto Match to play against House Bot!';
-            return;
+
+    async function makeMove(fr, fc, tr, tc, capture) {
+        const piece = board[fr][fc];
+        board[tr][tc] = { ...piece };
+        board[fr][fc] = null;
+        if (capture) {
+            board[capture.row][capture.col] = null;
         }
-        
-        if (currentPlayer === myColor) {
-            if (pendingChainMoves) {
-                div.innerHTML = '🎯 Additional capture available! Continue your move.';
-            } else {
-                div.innerHTML = '🎯 YOUR TURN — Click your piece then target (Good luck against House Bot!)';
-            }
-        } else {
-            if (isBotGame && waitingForBotResponse) {
-                div.innerHTML = `⏳ ${currentBotName} is thinking... (House Bot is extremely hard!)`;
-            } else {
-                div.innerHTML = `⏳ Waiting for opponent...`;
-            }
-        }
-    }
-    
-    function showResult(win, amount) {
-        const modal = document.getElementById('resultModal');
-        const cont = document.getElementById('resultContent');
-        cont.innerHTML = win ? 
-            `<div class="result-win">🏆 MIRACLE WIN! 🏆</div><div>+${amount} VEVO</div><div style="font-size:14px">You actually beat the House Bot! Incredible!</div>` :
-            `<div class="result-loss">💀 DEFEAT 💀</div><div>House Bot wins again!</div><div style="font-size:12px">The bot is nearly impossible to beat...</div>`;
-        modal.style.display = 'block';
-        setTimeout(() => modal.style.display = 'none', 4000);
-    }
-    
-    function showResultDraw(amount) {
-        const modal = document.getElementById('resultModal');
-        const cont = document.getElementById('resultContent');
-        cont.innerHTML = `<div class="result-draw">🤝 DRAW 🤝</div><div>You received ${amount} VEVO</div><div style="font-size:14px">10% house fee deducted from your bet</div>`;
-        modal.style.display = 'block';
-        setTimeout(() => modal.style.display = 'none', 3500);
-    }
-    
-    function addChatMessage(sender, msg, system) {
-        const chatDiv = document.getElementById('chatMessages');
-        const d = document.createElement('div');
-        d.className = system ? 'message system' : (sender === currentUser?.uid ? 'message sent' : 'message received');
-        
-        if (system) {
-            d.innerHTML = `<div>${msg}</div>`;
-        } else if (sender === currentUser?.uid) {
-            d.innerHTML = `<div>${msg}</div>`;
-        } else {
-            d.innerHTML = `<div class="sender" style="font-size:11px; color:#ffd700;">${sender}</div><div>${msg}</div>`;
-        }
-        
-        chatDiv.appendChild(d);
-        chatDiv.scrollTop = chatDiv.scrollHeight;
-        
-        // Limit chat messages to 100
-        while (chatDiv.children.length > 100) {
-            chatDiv.removeChild(chatDiv.firstChild);
-        }
-    }
-    
-    async function sendMessage() {
-        const inp = document.getElementById('chatInput');
-        const txt = inp.value.trim();
-        if (!txt || !currentGameId || isBotGame) {
-            if (isBotGame) showNotification("Chat disabled in bot games", "error");
-            return;
-        }
-        
-        await db.ref(`damaGames/${currentGameId}/chat`).push({
-            senderId: currentUser.uid,
-            senderName: currentUser.displayName || currentUser.email.split('@')[0],
-            message: txt,
-            timestamp: Date.now()
-        });
-        addChatMessage(currentUser.uid, txt, false);
-        inp.value = '';
-    }
-    
-    function toggleVoiceChat() {
-        const btn = document.getElementById('voiceChatBtn');
-        if (localStream) {
-            if (localStream.getTracks) {
-                localStream.getTracks().forEach(t => {
-                    t.stop();
-                    t.enabled = false;
-                });
-            }
-            localStream = null;
-            btn.classList.remove('active');
-            btn.innerHTML = '<i class="fas fa-microphone"></i>';
-            showNotification("Voice chat disabled", 'info');
-        } else {
-            navigator.mediaDevices.getUserMedia({ audio: true })
-                .then(stream => {
-                    localStream = stream;
-                    btn.classList.add('active');
-                    btn.innerHTML = '<i class="fas fa-microphone-slash"></i>';
-                    showNotification("Voice chat enabled! Speak with your opponent.", 'success');
-                })
-                .catch(e => {
-                    console.error("Mic error:", e);
-                    showNotification("Could not access microphone", "error");
-                });
-        }
-    }
-    
-    async function searchAndChallenge() {
-        const email = document.getElementById('searchEmail').value.trim();
-        if (!email) {
-            showNotification("Enter email address", "error");
-            return;
-        }
-        
-        const usersSnap = await db.ref('onlineUsers').orderByChild('email').equalTo(email).once('value');
-        const users = usersSnap.val();
-        
-        if (users) {
-            const userId = Object.keys(users)[0];
-            const user = users[userId];
-            
-            if (user.uid === currentUser.uid) {
-                showNotification("Cannot challenge yourself", "error");
-                return;
-            }
-            
-            document.getElementById('searchResult').innerHTML = `✅ Found! Challenging ${user.name}...`;
-            await challengePlayerDirect(user.uid, user.name);
-        } else {
-            document.getElementById('searchResult').innerHTML = `❌ User not online`;
-            setTimeout(() => document.getElementById('searchResult').innerHTML = '', 3000);
-        }
-    }
-    
-    async function challengePlayerDirect(pid, pname) {
-        let bet = parseInt(document.getElementById('challengeBet').value);
-        if (bet < 10) {
-            showNotification("Min bet 10", 'error');
-            return;
-        }
-        if (bet > userBalance) {
-            showNotification("Insufficient balance", 'error');
-            return;
-        }
-        
-        const gid = Date.now().toString() + '_' + Math.random();
-        initBoard();
-        
-        const game = {
-            id: gid,
-            redPlayerId: currentUser.uid,
-            redPlayerName: currentUser.displayName || currentUser.email.split('@')[0],
-            blackPlayerId: pid,
-            blackPlayerName: pname,
-            betAmount: bet,
-            totalPot: bet * 2,
-            winnerPayout: Math.floor(bet * 2 * 0.8),
-            houseFee: Math.floor(bet * 2 * 0.2),
-            status: 'waiting',
-            boardState: board,
-            currentPlayer: 'red',
-            redPieces: 12,
-            blackPieces: 12,
-            createdAt: Date.now(),
-            betDeducted: false
-        };
-        
-        await db.ref(`damaGames/${gid}`).set(game);
-        showNotification(`Challenge sent to ${pname}!`, 'success');
-        
-        // Listen for opponent joining
-        const gameRef = db.ref(`damaGames/${gid}`);
-        const joinListener = gameRef.on('value', async (snap) => {
-            const g = snap.val();
-            if (g && g.blackPlayerId && g.status === 'waiting') {
-                gameRef.off('value', joinListener);
-                startCountdown(gid, async () => {
-                    await updateUserBalance(userBalance - g.betAmount);
-                    await db.ref(`damaGames/${gid}`).update({ betDeducted: true, status: 'active' });
-                    await joinGame(gid);
-                });
-            }
-        });
-    }
-    
-    async function createBotGame() {
-        let bet = 50;
-        if (userBalance < bet) {
-            showNotification(`Need ${bet} VEVO to play against House Bot!`, 'error');
-            return;
-        }
-        
-        currentBotName = getRandomBotName();
-        const gid = 'bot_' + Date.now() + '_' + Math.random();
-        initBoard();
-        
-        const houseFee = Math.floor(bet * 0.2);
-        const winnerPayout = Math.floor(bet * 2 * 0.8);
-        
-        const game = {
-            id: gid,
-            isBot: true,
-            botName: currentBotName,
-            redPlayerId: currentUser.uid,
-            redPlayerName: currentUser.displayName || currentUser.email.split('@')[0],
-            blackPlayerId: 'bot_' + currentBotName,
-            blackPlayerName: currentBotName + ' (🤖 HOUSE BOT)',
-            betAmount: bet,
-            totalPot: bet * 2,
-            winnerPayout: winnerPayout,
-            houseFee: houseFee,
-            status: 'active',
-            boardState: board,
-            currentPlayer: 'red',
-            redPieces: 12,
-            blackPieces: 12,
-            createdAt: Date.now(),
-            betDeducted: true
-        };
-        
-        // Deduct bet immediately
-        await updateUserBalance(userBalance - bet);
-        await db.ref(`damaGames/${gid}`).set(game);
-        
-        showNotification(`🤖 Playing against ${currentBotName} (EXTREME HOUSE BOT) - Bet: ${bet} VEVO`, 'success');
-        await joinBotGame(gid, currentBotName);
-    }
-    
-    async function joinBotGame(gid, botName) {
-        currentGameId = gid;
-        myColor = 'red';
-        isBotGame = true;
-        gameActive = true;
-        currentBotName = botName;
-        waitingForBotResponse = false;
-        pendingChainMoves = false;
-        
-        const snap = await db.ref(`damaGames/${gid}`).once('value');
-        const game = snap.val();
-        
-        if (game && game.boardState) {
-            board = game.boardState;
-            currentPlayer = game.currentPlayer || 'red';
-            redPieces = game.redPieces || 12;
-            blackPieces = game.blackPieces || 12;
-        } else {
-            initBoard();
+        if ((piece.color === 'red' && tr === 0) || (piece.color === 'black' && tr === 7)) {
+            board[tr][tc].king = true;
         }
         
         renderBoard();
+        
+        const additionalMoves = getValidMoves(tr, tc);
+        const additionalCaptures = additionalMoves.filter(m => m.capture);
+        if (additionalCaptures.length > 0 && capture) {
+            selectedRow = tr;
+            selectedCol = tc;
+            pendingChainMoves = true;
+            renderBoard();
+            return;
+        }
+        
+        currentPlayer = currentPlayer === 'red' ? 'black' : 'red';
+        selectedRow = null;
+        selectedCol = null;
+        pendingChainMoves = false;
+        renderBoard();
         updateGameStatusMsg();
         
-        document.getElementById('redPlayerName').innerHTML = `👤 ${game.redPlayerName} (YOU)`;
-        document.getElementById('blackPlayerName').innerHTML = `🤖 ${botName} (HOUSE BOT - EXTREME)`;
-        
-        addChatMessage('System', `⚔️ GAME STARTED vs HOUSE BOT! The bot is EXTREMELY HARD - almost impossible to win. Good luck!`, true);
-        addChatMessage('System', `💀 ${botName} uses advanced AI with capture prioritization and position evaluation.`, true);
-    }
-    
-    function loadAvailableGames() {
-        if (gamesListener) gamesListener.off();
-        
-        gamesListener = db.ref('damaGames').orderByChild('status').equalTo('waiting').on('value', (snapshot) => {
-            const games = snapshot.val() || {};
-            const container = document.getElementById('availableGamesList');
-            
-            const gameList = Object.entries(games).filter(([id, game]) => {
-                return game.redPlayerId !== currentUser?.uid && !game.blackPlayerId && !game.isBot;
+        if (currentGameId && !isBotGame) {
+            await db.ref(`damaGames/${currentGameId}`).update({
+                boardState: board,
+                currentPlayer: currentPlayer,
+                redPieces: redPieces,
+                blackPieces: blackPieces,
+                lastMove: Date.now()
             });
-            
-            if (gameList.length === 0) {
-                container.innerHTML = '<div class="empty-state">✨ No real players available. Click AUTO MATCH to play House Bot!</div>';
-                return;
-            }
-            
-            container.innerHTML = gameList.map(([id, game]) => `
-                <div class="game-item" onclick="window.joinSpecificGame('${id}', ${game.betAmount}, '${game.redPlayerName.replace(/'/g, "\\'")}')">
-                    <div>
-                        <div class="game-creator"><i class="fas fa-user"></i> ${game.redPlayerName}</div>
-                        <div class="game-bet"><i class="fas fa-coins"></i> Bet: ${game.betAmount} VEVO | Win: ${game.winnerPayout}</div>
-                    </div>
-                    <div class="join-badge">JOIN →</div>
-                </div>
-            `).join('');
-        });
+        }
+        
+        if (gameActive && isBotGame && currentPlayer === myColor && !waitingForBotResponse) {
+            await makeBotMoveExtreme();
+        }
     }
-    
-    window.joinSpecificGame = async function(gameId, betAmount, creatorName) {
-        if (!currentUser) return;
+
+    async function makeBotMoveExtreme() {
+        if (!gameActive || currentPlayer !== myColor || !isBotGame) return;
+        if (isBotThinking || waitingForBotResponse) return;
+        waitingForBotResponse = true;
+        isBotThinking = true;
+        showBotThinking(true);
+        await new Promise(resolve => setTimeout(resolve, 500));
         
-        if (userBalance < betAmount) {
-            showNotification(`Insufficient balance! Need ${betAmount} VEVO`, "error");
-            return;
-        }
-        
-        showNotification(`Joining ${creatorName}'s game...`, "success");
-        
-        await db.ref(`damaGames/${gameId}`).update({
-            blackPlayerId: currentUser.uid,
-            blackPlayerName: currentUser.displayName || currentUser.email.split('@')[0]
-        });
-        
-        startCountdown(gameId, async () => {
-            const gameSnap = await db.ref(`damaGames/${gameId}`).once('value');
-            const game = gameSnap.val();
-            
-            if (game && !game.betDeducted) {
-                await updateUserBalance(userBalance - game.betAmount);
-                await db.ref(`damaGames/${gameId}`).update({ betDeducted: true });
-            }
-            
-            await db.ref(`damaGames/${gameId}`).update({ status: 'active' });
-            await joinGame(gameId);
-        });
-    };
-    
-    async function createGame() {
-        if (!currentUser) return;
-        
-        let bet = parseInt(document.getElementById('challengeBet').value);
-        if (bet < 10) {
-            showNotification("Minimum bet is 10 VEVO", 'error');
-            return;
-        }
-        if (bet > userBalance) {
-            showNotification(`Insufficient balance! You have ${userBalance} VEVO`, 'error');
-            return;
-        }
-        
-        const gid = Date.now().toString() + '_' + Math.random();
-        initBoard();
-        
-        const game = {
-            id: gid,
-            redPlayerId: currentUser.uid,
-            redPlayerName: currentUser.displayName || currentUser.email.split('@')[0],
-            blackPlayerId: null,
-            blackPlayerName: 'Waiting...',
-            betAmount: bet,
-            totalPot: bet * 2,
-            winnerPayout: Math.floor(bet * 2 * 0.8),
-            houseFee: Math.floor(bet * 2 * 0.2),
-            status: 'waiting',
-            boardState: board,
-            currentPlayer: 'red',
-            redPieces: 12,
-            blackPieces: 12,
-            createdAt: Date.now(),
-            betDeducted: false
-        };
-        
-        await db.ref(`damaGames/${gid}`).set(game);
-        showNotification("Game created! Waiting for opponent...", 'success');
-        
-        const gameRef = db.ref(`damaGames/${gid}`);
-        const joinListener = gameRef.on('value', async (snap) => {
-            const g = snap.val();
-            if (g && g.blackPlayerId && g.status === 'waiting') {
-                gameRef.off('value', joinListener);
-                startCountdown(gid, async () => {
-                    await updateUserBalance(userBalance - g.betAmount);
-                    await db.ref(`damaGames/${gid}`).update({ betDeducted: true, status: 'active' });
-                    await joinGame(gid);
-                });
-            }
-        });
-    }
-    
-    async function autoMatch() {
-        let bet = parseInt(document.getElementById('challengeBet').value);
-        if (bet < 10) {
-            showNotification("Min bet is 10 VEVO", 'error');
-            return;
-        }
-        
-        showNotification("Searching for players...", 'info');
-        
-        const snap = await db.ref('damaGames').orderByChild('status').equalTo('waiting').once('value');
-        let found = null;
-        
-        if (snap.val()) {
-            for (let [id, g] of Object.entries(snap.val())) {
-                if (g.redPlayerId !== currentUser.uid && !g.blackPlayerId && !g.isBot && g.betAmount === bet) {
-                    found = id;
-                    break;
+        if (gameActive && currentPlayer === myColor && isBotGame) {
+            let bestMove = null;
+            for (let r = 0; r < 8; r++) {
+                for (let c = 0; c < 8; c++) {
+                    if (board[r][c]?.color === currentPlayer) {
+                        const moves = getValidMoves(r, c);
+                        if (moves.length) {
+                            bestMove = { from: { row: r, col: c }, to: moves[0] };
+                            if (moves[0].capture) break;
+                        }
+                    }
                 }
+                if (bestMove?.to?.capture) break;
+            }
+            if (bestMove) {
+                const piece = board[bestMove.from.row][bestMove.from.col];
+                board[bestMove.to.row][bestMove.to.col] = { ...piece };
+                board[bestMove.from.row][bestMove.from.col] = null;
+                if (bestMove.to.capture) {
+                    board[bestMove.to.capture.row][bestMove.to.capture.col] = null;
+                }
+                if ((piece.color === 'black' && bestMove.to.row === 7) || (piece.color === 'red' && bestMove.to.row === 0)) {
+                    board[bestMove.to.row][bestMove.to.col].king = true;
+                }
+                renderBoard();
+                currentPlayer = currentPlayer === 'red' ? 'black' : 'red';
+                renderBoard();
+                updateGameStatusMsg();
             }
         }
-        
-        if (found) {
-            showNotification("Real player found! Joining...", 'success');
-            await window.joinSpecificGame(found, bet, "opponent");
-        } else {
-            showNotification("No real players available. Playing against HOUSE BOT (EXTREME DIFFICULTY - 50 VEVO)...", 'info');
-            await createBotGame();
-        }
+        isBotThinking = false;
+        waitingForBotResponse = false;
+        showBotThinking(false);
     }
-    
+
+    function updateGameStatusMsg() {
+        const div = document.getElementById('gameStatus');
+        if (!gameActive) { if(div) div.innerHTML = '🏁 Game Over. Click Auto Match to play against House Bot!'; return; }
+        if (currentPlayer === myColor) { if(div) div.innerHTML = '🎯 YOUR TURN — Click your piece then target'; }
+        else { if(div) div.innerHTML = '⏳ Waiting for opponent...'; }
+    }
+
     async function joinGame(gid) {
         const snap = await db.ref(`damaGames/${gid}`).once('value');
         const game = snap.val();
         if (!game) return;
-        
-        // Clean up previous listeners
-        if (currentGameId && gameListener) {
-            gameListener.off();
-        }
-        if (chatListener) {
-            chatListener.off();
-        }
+        if (currentGameId && gameListener) gameListener.off();
+        if (chatListener) chatListener.off();
         
         currentGameId = gid;
         isBotGame = !!game.isBot;
         myColor = game.redPlayerId === currentUser.uid ? 'red' : 'black';
-        
-        if (game.boardState) {
-            board = game.boardState;
-        } else {
-            initBoard();
-        }
-        
+        board = game.boardState ? JSON.parse(JSON.stringify(game.boardState)) : (()=>{ initBoard(); return board; })();
         currentPlayer = game.currentPlayer || 'red';
         redPieces = game.redPieces || 12;
         blackPieces = game.blackPieces || 12;
         gameActive = true;
         pendingChainMoves = false;
+        selectedRow = null;
+        selectedCol = null;
         
         renderBoard();
         updateGameStatusMsg();
         
-        // Setup game listener
         gameListener = db.ref(`damaGames/${gid}`).on('value', (snapshot) => {
             const upd = snapshot.val();
-            if (upd) {
-                // Handle draw proposal
-                if (upd.drawProposed && upd.drawProposer !== currentUser?.uid && !isBotGame) {
-                    document.getElementById('drawRequestDiv').style.display = 'block';
-                    document.getElementById('drawMessage').innerHTML = `🤝 Opponent proposes a draw! Both get 90% back.`;
-                } else if (!upd.drawProposed) {
-                    document.getElementById('drawRequestDiv').style.display = 'none';
-                }
-                
-                // Update game state
-                if (upd.status === 'active') {
-                    if (upd.boardState && JSON.stringify(upd.boardState) !== JSON.stringify(board)) {
-                        board = upd.boardState;
-                        currentPlayer = upd.currentPlayer;
-                        redPieces = upd.redPieces;
-                        blackPieces = upd.blackPieces;
-                        renderBoard();
-                        updateGameStatusMsg();
-                    }
-                } else if (upd.status === 'completed' || upd.status === 'draw') {
-                    gameActive = false;
+            if (upd && upd.status === 'active') {
+                if (upd.boardState && JSON.stringify(upd.boardState) !== JSON.stringify(board)) {
+                    board = JSON.parse(JSON.stringify(upd.boardState));
+                    currentPlayer = upd.currentPlayer;
+                    redPieces = upd.redPieces;
+                    blackPieces = upd.blackPieces;
+                    selectedRow = null;
+                    selectedCol = null;
+                    renderBoard();
                     updateGameStatusMsg();
-                    
-                    if (gameListener) {
-                        gameListener.off();
-                        gameListener = null;
-                    }
-                    
-                    currentGameId = null;
-                    myColor = null;
-                    isBotGame = false;
-                    loadAvailableGames();
-                    setUserOnline();
                 }
+            } else if (upd && (upd.status === 'completed' || upd.status === 'draw')) {
+                gameActive = false;
+                if(gameListener) gameListener.off();
+                currentGameId = null;
+                renderBoard();
+                updateGameStatusMsg();
             }
         });
-        
-        // Setup chat listener
-        if (!isBotGame) {
-            chatListener = db.ref(`damaGames/${gid}/chat`).on('child_added', (snap) => {
-                const msg = snap.val();
-                if (msg && msg.senderId !== currentUser?.uid) {
-                    addChatMessage(msg.senderName, msg.message, false);
-                }
-            });
-        }
         
         document.getElementById('redPlayerName').innerHTML = `👤 ${game.redPlayerName}`;
         document.getElementById('blackPlayerName').innerHTML = `👤 ${game.blackPlayerName || 'Waiting...'}`;
-        
-        addChatMessage('System', `⚔️ Game started! You are ${myColor === 'red' ? 'RED (bottom)' : 'BLACK (top)'}`, true);
-        
-        loadAvailableGames();
-        setUserOnline();
+        if(game.isBot) document.getElementById('blackPlayerName').innerHTML = `🤖 ${game.botName || 'HOUSE BOT'}`;
     }
-    
-    function startCountdown(gid, cb) {
-        let count = 5;
-        const ov = document.createElement('div');
-        ov.className = 'countdown-overlay';
-        ov.innerHTML = `<div class="countdown-number" id="cdNum">5</div><div>Game starting in...</div>`;
-        document.body.appendChild(ov);
-        
-        const iv = setInterval(() => {
-            count--;
-            const nd = document.getElementById('cdNum');
-            if (nd) nd.innerText = count;
-            if (count <= 0) {
-                clearInterval(iv);
-                ov.remove();
-                cb();
+
+    async function createBotGame() {
+        let bet = 50;
+        if (userBalance < bet) { showNotification(`Need ${bet} VEVO`, 'error'); return; }
+        const gid = 'bot_' + Date.now() + '_' + Math.random();
+        initBoard();
+        const winnerPayout = Math.floor(bet * 2 * 0.8);
+        const game = {
+            id: gid, isBot: true, botName: 'EXTREME HOUSE BOT',
+            redPlayerId: currentUser.uid, redPlayerName: currentUser.displayName || currentUser.email.split('@')[0],
+            blackPlayerId: 'bot', blackPlayerName: '🤖 HOUSE BOT',
+            betAmount: bet, totalPot: bet * 2, winnerPayout: winnerPayout, houseFee: Math.floor(bet * 2 * 0.2),
+            status: 'active', boardState: board, currentPlayer: 'red', redPieces: 12, blackPieces: 12,
+            createdAt: Date.now(), betDeducted: true
+        };
+        await updateUserBalance(userBalance - bet);
+        await db.ref(`damaGames/${gid}`).set(game);
+        currentGameId = gid; myColor = 'red'; isBotGame = true; gameActive = true;
+        currentBotName = 'EXTREME HOUSE BOT';
+        waitingForBotResponse = false;
+        await joinGame(gid);
+        addChatMessage('System', '⚔️ GAME STARTED vs HOUSE BOT!', true);
+    }
+
+    async function autoMatch() {
+        let bet = parseInt(document.getElementById('challengeBet').value);
+        if (bet < 10) { showNotification("Min bet 10", 'error'); return; }
+        showNotification("Searching for players...", 'info');
+        const snap = await db.ref('damaGames').orderByChild('status').equalTo('waiting').once('value');
+        let found = null;
+        if (snap.val()) {
+            for (let [id, g] of Object.entries(snap.val())) {
+                if (g.redPlayerId !== currentUser.uid && !g.blackPlayerId && !g.isBot && g.betAmount === bet) { found = id; break; }
             }
-        }, 1000);
+        }
+        if (found) {
+            showNotification("Real player found! Joining...", 'success');
+            await joinSpecificGame(found, bet, "opponent");
+        } else {
+            showNotification("No real players. Playing HOUSE BOT (50 VEVO)...", 'info');
+            await createBotGame();
+        }
     }
+
+    window.joinSpecificGame = async function(gameId, betAmount, creatorName) {
+        if (!currentUser) return;
+        if (userBalance < betAmount) { showNotification(`Insufficient balance! Need ${betAmount} VEVO`, "error"); return; }
+        await db.ref(`damaGames/${gameId}`).update({ blackPlayerId: currentUser.uid, blackPlayerName: currentUser.displayName || currentUser.email.split('@')[0] });
+        await updateUserBalance(userBalance - betAmount);
+        await db.ref(`damaGames/${gameId}`).update({ betDeducted: true, status: 'active' });
+        await joinGame(gameId);
+    };
+
+    async function updateUserBalance(newBalance) { if (newBalance < 0) newBalance = 0; await db.ref(`users/${currentUser.uid}`).update({ balance: newBalance }); userBalance = newBalance; updateBalanceDisplay(); }
+    function updateBalanceDisplay() { document.getElementById('gameBalance').innerText = userBalance; }
+    function showNotification(msg, type) { const n = document.createElement('div'); n.className = 'notification'; n.style.background = type === 'success' ? '#27ae60' : type === 'error' ? '#e74c3c' : '#e67e22'; n.style.color = 'white'; n.innerHTML = msg; document.body.appendChild(n); setTimeout(() => n.remove(), 2800); }
+    function addChatMessage(sender, msg, system) { const chatDiv = document.getElementById('chatMessages'); const d = document.createElement('div'); d.className = system ? 'message system' : (sender === currentUser?.uid ? 'message sent' : 'message received'); d.innerHTML = system ? `<div>${msg}</div>` : `<div>${msg}</div>`; chatDiv.appendChild(d); chatDiv.scrollTop = chatDiv.scrollHeight; }
+    function showBotThinking(show) { document.getElementById('botThinking').style.display = show ? 'block' : 'none'; }
     
-    function loadOnlinePlayers() {
-        if (onlineListener) onlineListener.off();
-        
-        onlineListener = db.ref('onlineUsers').on('value', (snap) => {
-            const users = snap.val() || {};
-            const listDiv = document.getElementById('onlinePlayersList');
-            const filtered = Object.values(users).filter(u => u.uid !== currentUser?.uid);
-            
-            if (!filtered.length) {
-                listDiv.innerHTML = '<div class="empty-state">✨ No one online</div>';
-            } else {
-                listDiv.innerHTML = filtered.map(u => `
-                    <div class="online-player-item">
-                        <div>
-                            <span style="background:#2ecc71; display:inline-block; width:8px; height:8px; border-radius:50%;"></span> 
-                            <strong>${u.name}</strong><br>
-                            <small>${u.email || ''}</small>
-                        </div>
-                        <button class="challenge-btn" onclick="window.challengePlayerDirect('${u.uid}','${u.name.replace(/'/g, "\\'")}')">Challenge</button>
-                    </div>
-                `).join('');
-            }
-            document.getElementById('onlineCount').innerText = Object.keys(users).length;
-        });
-    }
+    async function loadUserData() { if (!currentUser) return; const snap = await db.ref(`users/${currentUser.uid}`).once('value'); if (snap.exists()) userBalance = snap.val().balance || 100; else { await db.ref(`users/${currentUser.uid}`).set({ email: currentUser.email, name: currentUser.displayName || currentUser.email.split('@')[0], balance: 100, createdAt: Date.now() }); userBalance = 100; } updateBalanceDisplay(); }
+    function setUserOnline() { if (!currentUser) return; db.ref(`onlineUsers/${currentUser.uid}`).set({ uid: currentUser.uid, name: currentUser.displayName || currentUser.email.split('@')[0], email: currentUser.email, balance: userBalance, inGame: !!currentGameId, lastSeen: Date.now() }).onDisconnect().remove(); }
+    function loadAvailableGames() { if (gamesListener) gamesListener.off(); gamesListener = db.ref('damaGames').orderByChild('status').equalTo('waiting').on('value', (snapshot) => { const games = snapshot.val() || {}; const container = document.getElementById('availableGamesList'); const gameList = Object.entries(games).filter(([id, game]) => game.redPlayerId !== currentUser?.uid && !game.blackPlayerId && !game.isBot); if (gameList.length === 0) { container.innerHTML = '<div class="empty-state">✨ No real players available. Click AUTO MATCH to play House Bot!</div>'; return; } container.innerHTML = gameList.map(([id, game]) => `<div class="game-item" onclick="window.joinSpecificGame('${id}', ${game.betAmount}, '${game.redPlayerName.replace(/'/g, "\\'")}')"><div><div class="game-creator"><i class="fas fa-user"></i> ${game.redPlayerName}</div><div class="game-bet"><i class="fas fa-coins"></i> Bet: ${game.betAmount} VEVO | Win: ${game.winnerPayout}</div></div><div class="join-badge">JOIN →</div></div>`).join(''); }); }
+    async function cancelGame() { if (!gameActive || !currentGameId) return; if (confirm("Cancel game and lose your bet?")) { const winner = myColor === 'red' ? 'black' : 'red'; await endGame(winner); } }
+    async function proposeDraw() { if (!gameActive || !currentGameId || isBotGame) { showNotification("Cannot propose draw vs bot", "error"); return; } if (drawProposed) return; drawProposed = true; drawProposer = currentUser.uid; await db.ref(`damaGames/${currentGameId}`).update({ drawProposed: true, drawProposer: currentUser.uid }); addChatMessage('System', `${currentUser.displayName || 'Player'} proposed a draw!`, true); }
+    async function acceptDraw() { if (!gameActive || !currentGameId || !drawProposed) return; await endGame(null, true); drawProposed = false; document.getElementById('drawRequestDiv').style.display = 'none'; }
+    async function rejectDraw() { if (!gameActive || !currentGameId) return; drawProposed = false; drawProposer = null; await db.ref(`damaGames/${currentGameId}`).update({ drawProposed: false, drawProposer: null }); document.getElementById('drawRequestDiv').style.display = 'none'; }
+    async function endGame(winner, isDraw = false) { if (!gameActive) return; gameActive = false; if (currentGameId) { if (isDraw) { const refundAmount = Math.floor(50 * 0.9); await updateUserBalance(userBalance + refundAmount); showNotification(`Draw! Received ${refundAmount} VEVO`, 'success'); } else if (winner === myColor) { await updateUserBalance(userBalance + 80); showNotification(`You won 80 VEVO! Miracle!`, 'success'); } else { showNotification(`You lost!`, 'error'); } await db.ref(`damaGames/${currentGameId}`).update({ status: isDraw ? 'draw' : 'completed', completedAt: Date.now() }); currentGameId = null; myColor = null; isBotGame = false; } renderBoard(); updateGameStatusMsg(); loadAvailableGames(); setUserOnline(); }
     
-    // Event Listeners
     document.getElementById('cancelGameBtn').addEventListener('click', cancelGame);
     document.getElementById('proposeDrawBtn').addEventListener('click', proposeDraw);
     document.getElementById('acceptDrawBtn').addEventListener('click', acceptDraw);
     document.getElementById('rejectDrawBtn').addEventListener('click', rejectDraw);
-    document.getElementById('sendMsgBtn').addEventListener('click', sendMessage);
-    document.getElementById('voiceChatBtn').addEventListener('click', toggleVoiceChat);
-    document.getElementById('searchChallengeBtn').addEventListener('click', searchAndChallenge);
     document.getElementById('autoMatchBtn').addEventListener('click', autoMatch);
-    document.getElementById('createGameBtn').addEventListener('click', createGame);
-    document.getElementById('chatInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
+    document.getElementById('createGameBtn').addEventListener('click', async () => { let bet = parseInt(document.getElementById('challengeBet').value); if (bet < 10) return; if (userBalance < bet) { showNotification("Insufficient balance", 'error'); return; } const gid = Date.now().toString() + '_' + Math.random(); initBoard(); const game = { id: gid, redPlayerId: currentUser.uid, redPlayerName: currentUser.displayName || currentUser.email.split('@')[0], blackPlayerId: null, blackPlayerName: 'Waiting...', betAmount: bet, totalPot: bet * 2, winnerPayout: Math.floor(bet * 2 * 0.8), houseFee: Math.floor(bet * 2 * 0.2), status: 'waiting', boardState: board, currentPlayer: 'red', redPieces: 12, blackPieces: 12, createdAt: Date.now(), betDeducted: false }; await db.ref(`damaGames/${gid}`).set(game); showNotification("Game created! Waiting for opponent...", 'success'); const gameRef = db.ref(`damaGames/${gid}`); const joinListener = gameRef.on('value', async (snap) => { const g = snap.val(); if (g && g.blackPlayerId && g.status === 'waiting') { gameRef.off('value', joinListener); await updateUserBalance(userBalance - g.betAmount); await db.ref(`damaGames/${gid}`).update({ betDeducted: true, status: 'active' }); await joinGame(gid); } }); });
+    document.getElementById('searchChallengeBtn').addEventListener('click', async () => { const email = document.getElementById('searchEmail').value.trim(); if (!email) return; const usersSnap = await db.ref('onlineUsers').orderByChild('email').equalTo(email).once('value'); const users = usersSnap.val(); if (users) { const userId = Object.keys(users)[0]; const user = users[userId]; if (user.uid !== currentUser.uid) { let bet = parseInt(document.getElementById('challengeBet').value); if (bet < 10) return; if (bet > userBalance) { showNotification("Insufficient balance", 'error'); return; } const gid = Date.now().toString() + '_' + Math.random(); initBoard(); const game = { id: gid, redPlayerId: currentUser.uid, redPlayerName: currentUser.displayName || currentUser.email.split('@')[0], blackPlayerId: user.uid, blackPlayerName: user.name, betAmount: bet, totalPot: bet * 2, winnerPayout: Math.floor(bet * 2 * 0.8), houseFee: Math.floor(bet * 2 * 0.2), status: 'waiting', boardState: board, currentPlayer: 'red', redPieces: 12, blackPieces: 12, createdAt: Date.now(), betDeducted: false }; await db.ref(`damaGames/${gid}`).set(game); showNotification(`Challenge sent to ${user.name}!`, 'success'); const gameRef = db.ref(`damaGames/${gid}`); const joinListener = gameRef.on('value', async (snap) => { const g = snap.val(); if (g && g.blackPlayerId && g.status === 'waiting') { gameRef.off('value', joinListener); await updateUserBalance(userBalance - g.betAmount); await db.ref(`damaGames/${gid}`).update({ betDeducted: true, status: 'active' }); await joinGame(gid); } }); } } else { document.getElementById('searchResult').innerHTML = '❌ User not online'; setTimeout(() => document.getElementById('searchResult').innerHTML = '', 3000); } });
+    document.getElementById('sendMsgBtn').addEventListener('click', async () => { const txt = document.getElementById('chatInput').value.trim(); if (!txt || !currentGameId || isBotGame) return; await db.ref(`damaGames/${currentGameId}/chat`).push({ senderId: currentUser.uid, senderName: currentUser.displayName || currentUser.email.split('@')[0], message: txt, timestamp: Date.now() }); addChatMessage(currentUser.uid, txt, false); document.getElementById('chatInput').value = ''; });
+    document.getElementById('voiceChatBtn').addEventListener('click', () => { if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; document.getElementById('voiceChatBtn').classList.remove('active'); } else { navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => { localStream = stream; document.getElementById('voiceChatBtn').classList.add('active'); }).catch(e => showNotification("Mic error", "error")); } });
     
-    // Make functions globally available
-    window.challengePlayerDirect = challengePlayerDirect;
+    auth.onAuthStateChanged(async (user) => { if (user) { currentUser = user; await loadUserData(); setUserOnline(); loadAvailableGames(); initBoard(); renderBoard(); } else { window.location.href = 'index.html'; } });
+    setInterval(() => { if (currentUser) setUserOnline(); }, 10000);
     window.joinSpecificGame = joinSpecificGame;
-    
-    // Auth State Handler
-    auth.onAuthStateChanged(async (user) => {
-        if (user) {
-            currentUser = user;
-            await loadUserData();
-            setUserOnline();
-            loadOnlinePlayers();
-            loadAvailableGames();
-            initBoard();
-            renderBoard();
-        } else {
-            window.location.href = 'index.html';
-        }
-    });
-    
-    // Periodic cleanup and status updates
-    setInterval(() => {
-        if (currentUser) {
-            setUserOnline();
-            loadAvailableGames();
-        }
-        
-        // Clean up voice stream if page is hidden
-        if (document.hidden && localStream) {
-            if (localStream.getTracks) {
-                localStream.getTracks().forEach(t => t.stop());
-            }
-            localStream = null;
-            const btn = document.getElementById('voiceChatBtn');
-            if (btn) {
-                btn.classList.remove('active');
-                btn.innerHTML = '<i class="fas fa-microphone"></i>';
-            }
-        }
-    }, 10000);
 </script>
 </body>
 </html>
