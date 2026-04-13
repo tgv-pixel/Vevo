@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VEVOBet - Admin Panel</title>
+    <title>VEVOBet - Admin Panel (Optimized)</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         * {
@@ -134,7 +134,34 @@
         }
         .search-bar input::placeholder { color: #ccc; }
 
-        /* User Cards */
+        /* Filter Tabs */
+        .filter-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .filter-tab {
+            padding: 8px 20px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .filter-tab.active {
+            background: linear-gradient(135deg, #ffd700, #ff8c00);
+            color: #1a1a2e;
+        }
+
+        /* User Cards Grid - Optimized with fixed height and overflow */
+        .users-list-container {
+            max-height: 600px;
+            overflow-y: auto;
+            border-radius: 15px;
+            scroll-behavior: smooth;
+        }
         .users-list {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -156,6 +183,48 @@
         .badge-pending { background: #ffd700; color: #333; }
         .badge-approved { background: #48bb78; color: white; }
         .badge-rejected { background: #ff4757; color: white; }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        .pagination button {
+            padding: 8px 16px;
+            background: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .pagination button.active {
+            background: linear-gradient(135deg, #ffd700, #ff8c00);
+            color: #1a1a2e;
+        }
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Loading Spinner */
+        .loading-spinner {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+        }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top-color: #ffd700;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
         /* Detail Modal */
         .modal {
@@ -213,32 +282,11 @@
             padding-bottom: 10px;
         }
 
-        /* Tabs */
-        .admin-tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-        .admin-tab {
-            padding: 10px 25px;
-            background: rgba(255,255,255,0.2);
-            color: white;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        .admin-tab.active {
-            background: linear-gradient(135deg, #ffd700, #ff8c00);
-            color: #1a1a2e;
-        }
-
         /* Table */
-        .table-container { overflow-x: auto; }
+        .table-container { overflow-x: auto; max-height: 500px; overflow-y: auto; }
         table { width: 100%; border-collapse: collapse; }
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0; }
-        th { background: #f5f5f5; font-weight: bold; color: #333; }
+        th { background: #f5f5f5; font-weight: bold; color: #333; position: sticky; top: 0; }
         tr:hover { background: #f9f9f9; cursor: pointer; }
         .status-pending { background: #ffd700; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
         .status-approved { background: #48bb78; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; }
@@ -331,8 +379,16 @@
         
         const ADMIN_USERNAME = "abel";
         const ADMIN_PASSWORD = "9679";
+        const PAGE_SIZE = 20; // Items per page
+        
         let isLoggedIn = false;
         let currentTab = 'dashboard';
+        let cachedData = {
+            users: null,
+            deposits: null,
+            withdraws: null
+        };
+        let currentFilter = 'all';
         
         function toggleSidebar() { document.getElementById('adminSidebar').classList.toggle('open'); }
         
@@ -360,25 +416,40 @@
         
         function adminLogout() {
             isLoggedIn = false;
+            cachedData = { users: null, deposits: null, withdraws: null };
             document.getElementById('loginPage').style.display = 'flex';
             document.getElementById('adminDashboard').style.display = 'none';
         }
         
-        // Load Dashboard Stats
+        // ============================================
+        // OPTIMIZED: Load Dashboard with aggregated queries
+        // ============================================
         async function loadDashboard() {
-            const usersSnap = await db.ref('users').once('value');
+            // Use Promise.all for parallel loading
+            const [usersSnap, depositsSnap, withdrawsSnap] = await Promise.all([
+                db.ref('users').once('value'),
+                db.ref('deposits').once('value'),
+                db.ref('withdraws').once('value')
+            ]);
+            
             const users = usersSnap.val() || {};
+            const deposits = depositsSnap.val() || {};
+            const withdraws = withdrawsSnap.val() || {};
+            
+            // Cache data for later use
+            cachedData.users = users;
+            cachedData.deposits = deposits;
+            cachedData.withdraws = withdraws;
+            
             const userCount = Object.keys(users).length;
             
-            const depositsSnap = await db.ref('deposits').once('value');
-            const deposits = depositsSnap.val() || {};
-            const pendingDeposits = Object.values(deposits).filter(d => d.status === 'pending').length;
-            const totalDeposits = Object.values(deposits).filter(d => d.status === 'approved').reduce((s, d) => s + (d.vevoAmount || 0), 0);
+            const depositsArray = Object.values(deposits);
+            const withdrawsArray = Object.values(withdraws);
             
-            const withdrawsSnap = await db.ref('withdraws').once('value');
-            const withdraws = withdrawsSnap.val() || {};
-            const pendingWithdraws = Object.values(withdraws).filter(w => w.status === 'pending').length;
-            const totalWithdraws = Object.values(withdraws).filter(w => w.status === 'approved').reduce((s, w) => s + (w.amount || 0), 0);
+            const pendingDeposits = depositsArray.filter(d => d.status === 'pending').length;
+            const totalDeposits = depositsArray.filter(d => d.status === 'approved').reduce((s, d) => s + (d.vevoAmount || 0), 0);
+            const pendingWithdraws = withdrawsArray.filter(w => w.status === 'pending').length;
+            const totalWithdraws = withdrawsArray.filter(w => w.status === 'approved').reduce((s, w) => s + (w.amount || 0), 0);
             
             let totalBalance = 0;
             Object.values(users).forEach(u => totalBalance += u.balance || 0);
@@ -393,100 +464,192 @@
                     <div class="stat-card"><i class="fas fa-coins"></i><h3>Total VEVO Circulation</h3><div class="number">${totalBalance.toLocaleString()}</div></div>
                 </div>
                 <div class="section-card">
-                    <h2 class="section-title"><i class="fas fa-bell"></i> Pending Requests</h2>
-                    <div class="admin-tabs">
-                        <button class="admin-tab active" onclick="loadDeposits()">Deposits (${pendingDeposits})</button>
-                        <button class="admin-tab" onclick="loadWithdraws()">Withdrawals (${pendingWithdraws})</button>
+                    <h2 class="section-title"><i class="fas fa-bell"></i> Quick Actions</h2>
+                    <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                        <button class="filter-tab active" onclick="loadAdminContent('deposits')"><i class="fas fa-money-bill-wave"></i> View Deposits (${pendingDeposits} pending)</button>
+                        <button class="filter-tab" onclick="loadAdminContent('withdraws')"><i class="fas fa-hand-holding-usd"></i> View Withdrawals (${pendingWithdraws} pending)</button>
                     </div>
                 </div>
             `;
             document.getElementById('adminContent').innerHTML = html;
         }
         
-        // Load Deposit Requests (Pending first, newest first)
-        async function loadDeposits() {
+        // ============================================
+        // OPTIMIZED: Load Deposits with pagination
+        // ============================================
+        async function loadDeposits(page = 1) {
             const snapshot = await db.ref('deposits').once('value');
             const deposits = snapshot.val() || {};
-            const depositsArray = Object.values(deposits).sort((a, b) => b.createdAt - a.createdAt);
+            cachedData.deposits = deposits;
             
-            const pending = depositsArray.filter(d => d.status === 'pending');
-            const approved = depositsArray.filter(d => d.status === 'approved');
-            const rejected = depositsArray.filter(d => d.status === 'rejected');
+            let depositsArray = Object.values(deposits).sort((a, b) => b.createdAt - a.createdAt);
+            
+            // Filter based on currentFilter
+            if (currentFilter !== 'all') {
+                depositsArray = depositsArray.filter(d => d.status === currentFilter);
+            }
+            
+            // Calculate counts for each status
+            const allDeposits = Object.values(deposits);
+            const pendingCount = allDeposits.filter(d => d.status === 'pending').length;
+            const approvedCount = allDeposits.filter(d => d.status === 'approved').length;
+            const rejectedCount = allDeposits.filter(d => d.status === 'rejected').length;
+            
+            // Pagination
+            const totalPages = Math.ceil(depositsArray.length / PAGE_SIZE);
+            const startIndex = (page - 1) * PAGE_SIZE;
+            const pageItems = depositsArray.slice(startIndex, startIndex + PAGE_SIZE);
             
             let html = `
                 <div class="stats-grid">
-                    <div class="stat-card"><i class="fas fa-clock"></i><h3>Pending</h3><div class="number">${pending.length}</div></div>
-                    <div class="stat-card"><i class="fas fa-check-circle"></i><h3>Approved</h3><div class="number">${approved.length}</div></div>
-                    <div class="stat-card"><i class="fas fa-times-circle"></i><h3>Rejected</h3><div class="number">${rejected.length}</div></div>
+                    <div class="stat-card"><i class="fas fa-clock"></i><h3>Pending</h3><div class="number">${pendingCount}</div></div>
+                    <div class="stat-card"><i class="fas fa-check-circle"></i><h3>Approved</h3><div class="number">${approvedCount}</div></div>
+                    <div class="stat-card"><i class="fas fa-times-circle"></i><h3>Rejected</h3><div class="number">${rejectedCount}</div></div>
+                </div>
+                <div class="filter-tabs">
+                    <button class="filter-tab ${currentFilter === 'all' ? 'active' : ''}" onclick="setFilter('all')">All (${depositsArray.length})</button>
+                    <button class="filter-tab ${currentFilter === 'pending' ? 'active' : ''}" onclick="setFilter('pending')">Pending (${pendingCount})</button>
+                    <button class="filter-tab ${currentFilter === 'approved' ? 'active' : ''}" onclick="setFilter('approved')">Approved (${approvedCount})</button>
+                    <button class="filter-tab ${currentFilter === 'rejected' ? 'active' : ''}" onclick="setFilter('rejected')">Rejected (${rejectedCount})</button>
                 </div>
                 <div class="search-bar"><i class="fas fa-search"></i><input type="text" id="depositSearch" placeholder="Search by email or name..." onkeyup="filterDeposits()"></div>
-                <div class="users-list" id="depositsList">
+                <div class="users-list-container">
+                    <div class="users-list" id="depositsList">
             `;
             
-            depositsArray.forEach(deposit => {
-                const statusClass = deposit.status === 'pending' ? 'badge-pending' : (deposit.status === 'approved' ? 'badge-approved' : 'badge-rejected');
-                const statusText = deposit.status.toUpperCase();
-                html += `
-                    <div class="user-card" data-email="${(deposit.userEmail || '').toLowerCase()}" data-name="${(deposit.userName || '').toLowerCase()}" onclick="showDepositDetail('${deposit.id}')">
-                        <h4>${deposit.userName || deposit.userEmail}</h4>
-                        <p><i class="fas fa-envelope"></i> ${deposit.userEmail}</p>
-                        <p><i class="fas fa-money-bill-wave"></i> ${deposit.amount} ${deposit.currency || 'BIRR'} → ${deposit.vevoAmount} VEVO</p>
-                        <p><i class="fas fa-calendar"></i> ${new Date(deposit.createdAt).toLocaleString()}</p>
-                        <span class="badge ${statusClass}">${statusText}</span>
-                    </div>
-                `;
-            });
+            if (pageItems.length === 0) {
+                html += '<div class="section-card"><p style="text-align:center">No deposit requests found</p></div>';
+            } else {
+                pageItems.forEach(deposit => {
+                    const statusClass = deposit.status === 'pending' ? 'badge-pending' : (deposit.status === 'approved' ? 'badge-approved' : 'badge-rejected');
+                    const statusText = deposit.status.toUpperCase();
+                    html += `
+                        <div class="user-card" data-email="${(deposit.userEmail || '').toLowerCase()}" data-name="${(deposit.userName || '').toLowerCase()}" onclick="showDepositDetail('${deposit.id}')">
+                            <h4>${deposit.userName || deposit.userEmail}</h4>
+                            <p><i class="fas fa-envelope"></i> ${deposit.userEmail}</p>
+                            <p><i class="fas fa-money-bill-wave"></i> ${deposit.amount} ${deposit.currency || 'BIRR'} → ${deposit.vevoAmount} VEVO</p>
+                            <p><i class="fas fa-calendar"></i> ${new Date(deposit.createdAt).toLocaleString()}</p>
+                            <span class="badge ${statusClass}">${statusText}</span>
+                        </div>
+                    `;
+                });
+            }
             
-            if (depositsArray.length === 0) html += '<div class="section-card"><p style="text-align:center">No deposit requests found</p></div>';
-            html += '</div>';
+            html += `</div></div>`;
+            
+            // Add pagination controls
+            if (totalPages > 1) {
+                html += `<div class="pagination">`;
+                html += `<button onclick="loadDeposits(${page - 1})" ${page === 1 ? 'disabled' : ''}><i class="fas fa-chevron-left"></i> Prev</button>`;
+                for (let i = Math.max(1, page - 2); i <= Math.min(totalPages, page + 2); i++) {
+                    html += `<button class="${i === page ? 'active' : ''}" onclick="loadDeposits(${i})">${i}</button>`;
+                }
+                html += `<button onclick="loadDeposits(${page + 1})" ${page === totalPages ? 'disabled' : ''}>Next <i class="fas fa-chevron-right"></i></button>`;
+                html += `</div>`;
+            }
+            
             document.getElementById('adminContent').innerHTML = html;
         }
         
-        // Load Withdraw Requests (Pending first, newest first)
-        async function loadWithdraws() {
+        function setFilter(filter) {
+            currentFilter = filter;
+            loadDeposits(1);
+        }
+        
+        // ============================================
+        // OPTIMIZED: Load Withdraws with pagination
+        // ============================================
+        async function loadWithdraws(page = 1) {
             const snapshot = await db.ref('withdraws').once('value');
             const withdraws = snapshot.val() || {};
-            const withdrawsArray = Object.values(withdraws).sort((a, b) => b.createdAt - a.createdAt);
+            cachedData.withdraws = withdraws;
             
-            const pending = withdrawsArray.filter(w => w.status === 'pending');
-            const approved = withdrawsArray.filter(w => w.status === 'approved');
-            const rejected = withdrawsArray.filter(w => w.status === 'rejected');
+            let withdrawsArray = Object.values(withdraws).sort((a, b) => b.createdAt - a.createdAt);
+            
+            if (currentFilter !== 'all') {
+                withdrawsArray = withdrawsArray.filter(w => w.status === currentFilter);
+            }
+            
+            const allWithdraws = Object.values(withdraws);
+            const pendingCount = allWithdraws.filter(w => w.status === 'pending').length;
+            const approvedCount = allWithdraws.filter(w => w.status === 'approved').length;
+            const rejectedCount = allWithdraws.filter(w => w.status === 'rejected').length;
+            
+            const totalPages = Math.ceil(withdrawsArray.length / PAGE_SIZE);
+            const startIndex = (page - 1) * PAGE_SIZE;
+            const pageItems = withdrawsArray.slice(startIndex, startIndex + PAGE_SIZE);
             
             let html = `
                 <div class="stats-grid">
-                    <div class="stat-card"><i class="fas fa-clock"></i><h3>Pending</h3><div class="number">${pending.length}</div></div>
-                    <div class="stat-card"><i class="fas fa-check-circle"></i><h3>Approved</h3><div class="number">${approved.length}</div></div>
-                    <div class="stat-card"><i class="fas fa-times-circle"></i><h3>Rejected</h3><div class="number">${rejected.length}</div></div>
+                    <div class="stat-card"><i class="fas fa-clock"></i><h3>Pending</h3><div class="number">${pendingCount}</div></div>
+                    <div class="stat-card"><i class="fas fa-check-circle"></i><h3>Approved</h3><div class="number">${approvedCount}</div></div>
+                    <div class="stat-card"><i class="fas fa-times-circle"></i><h3>Rejected</h3><div class="number">${rejectedCount}</div></div>
+                </div>
+                <div class="filter-tabs">
+                    <button class="filter-tab ${currentFilter === 'all' ? 'active' : ''}" onclick="setWithdrawFilter('all')">All (${withdrawsArray.length})</button>
+                    <button class="filter-tab ${currentFilter === 'pending' ? 'active' : ''}" onclick="setWithdrawFilter('pending')">Pending (${pendingCount})</button>
+                    <button class="filter-tab ${currentFilter === 'approved' ? 'active' : ''}" onclick="setWithdrawFilter('approved')">Approved (${approvedCount})</button>
+                    <button class="filter-tab ${currentFilter === 'rejected' ? 'active' : ''}" onclick="setWithdrawFilter('rejected')">Rejected (${rejectedCount})</button>
                 </div>
                 <div class="search-bar"><i class="fas fa-search"></i><input type="text" id="withdrawSearch" placeholder="Search by email or name..." onkeyup="filterWithdraws()"></div>
-                <div class="users-list" id="withdrawsList">
+                <div class="users-list-container">
+                    <div class="users-list" id="withdrawsList">
             `;
             
-            withdrawsArray.forEach(withdraw => {
-                const statusClass = withdraw.status === 'pending' ? 'badge-pending' : (withdraw.status === 'approved' ? 'badge-approved' : 'badge-rejected');
-                const statusText = withdraw.status.toUpperCase();
-                html += `
-                    <div class="user-card" data-email="${(withdraw.userEmail || '').toLowerCase()}" data-name="${(withdraw.userName || '').toLowerCase()}" onclick="showWithdrawDetail('${withdraw.id}')">
-                        <h4>${withdraw.userName || withdraw.userEmail}</h4>
-                        <p><i class="fas fa-envelope"></i> ${withdraw.userEmail}</p>
-                        <p><i class="fas fa-hand-holding-usd"></i> ${withdraw.amount} VEVO</p>
-                        <p><i class="fas fa-university"></i> ${withdraw.methodName || withdraw.method} → ${withdraw.account}</p>
-                        <p><i class="fas fa-calendar"></i> ${new Date(withdraw.createdAt).toLocaleString()}</p>
-                        <span class="badge ${statusClass}">${statusText}</span>
-                    </div>
-                `;
-            });
+            if (pageItems.length === 0) {
+                html += '<div class="section-card"><p style="text-align:center">No withdrawal requests found</p></div>';
+            } else {
+                pageItems.forEach(withdraw => {
+                    const statusClass = withdraw.status === 'pending' ? 'badge-pending' : (withdraw.status === 'approved' ? 'badge-approved' : 'badge-rejected');
+                    const statusText = withdraw.status.toUpperCase();
+                    html += `
+                        <div class="user-card" data-email="${(withdraw.userEmail || '').toLowerCase()}" data-name="${(withdraw.userName || '').toLowerCase()}" onclick="showWithdrawDetail('${withdraw.id}')">
+                            <h4>${withdraw.userName || withdraw.userEmail}</h4>
+                            <p><i class="fas fa-envelope"></i> ${withdraw.userEmail}</p>
+                            <p><i class="fas fa-hand-holding-usd"></i> ${withdraw.amount} VEVO</p>
+                            <p><i class="fas fa-university"></i> ${withdraw.methodName || withdraw.method} → ${withdraw.account}</p>
+                            <p><i class="fas fa-calendar"></i> ${new Date(withdraw.createdAt).toLocaleString()}</p>
+                            <span class="badge ${statusClass}">${statusText}</span>
+                        </div>
+                    `;
+                });
+            }
             
-            if (withdrawsArray.length === 0) html += '<div class="section-card"><p style="text-align:center">No withdrawal requests found</p></div>';
-            html += '</div>';
+            html += `</div></div>`;
+            
+            if (totalPages > 1) {
+                html += `<div class="pagination">`;
+                html += `<button onclick="loadWithdraws(${page - 1})" ${page === 1 ? 'disabled' : ''}><i class="fas fa-chevron-left"></i> Prev</button>`;
+                for (let i = Math.max(1, page - 2); i <= Math.min(totalPages, page + 2); i++) {
+                    html += `<button class="${i === page ? 'active' : ''}" onclick="loadWithdraws(${i})">${i}</button>`;
+                }
+                html += `<button onclick="loadWithdraws(${page + 1})" ${page === totalPages ? 'disabled' : ''}>Next <i class="fas fa-chevron-right"></i></button>`;
+                html += `</div>`;
+            }
+            
             document.getElementById('adminContent').innerHTML = html;
         }
         
-        // Load All Users (newest first)
-        async function loadUsers() {
+        function setWithdrawFilter(filter) {
+            currentFilter = filter;
+            loadWithdraws(1);
+        }
+        
+        // ============================================
+        // OPTIMIZED: Load Users with pagination
+        // ============================================
+        async function loadUsers(page = 1) {
             const snapshot = await db.ref('users').once('value');
             const users = snapshot.val() || {};
-            const usersArray = Object.entries(users).map(([uid, user]) => ({ ...user, uid, createdAt: user.createdAt || 0 })).sort((a, b) => b.createdAt - a.createdAt);
+            cachedData.users = users;
+            
+            const usersArray = Object.entries(users)
+                .map(([uid, user]) => ({ ...user, uid, createdAt: user.createdAt || 0 }))
+                .sort((a, b) => b.createdAt - a.createdAt);
+            
+            const totalPages = Math.ceil(usersArray.length / PAGE_SIZE);
+            const startIndex = (page - 1) * PAGE_SIZE;
+            const pageItems = usersArray.slice(startIndex, startIndex + PAGE_SIZE);
             
             let html = `
                 <div class="stats-grid">
@@ -494,32 +657,56 @@
                     <div class="stat-card"><i class="fas fa-coins"></i><h3>Total Balance</h3><div class="number">${usersArray.reduce((s, u) => s + (u.balance || 0), 0).toLocaleString()} VEVO</div></div>
                 </div>
                 <div class="search-bar"><i class="fas fa-search"></i><input type="text" id="userSearch" placeholder="Search by email or name..." onkeyup="filterUsers()"></div>
-                <div class="users-list" id="usersList">
+                <div class="users-list-container">
+                    <div class="users-list" id="usersList">
             `;
             
-            usersArray.forEach(user => {
-                html += `
-                    <div class="user-card" data-email="${(user.email || '').toLowerCase()}" data-name="${(user.name || '').toLowerCase()}" onclick="showUserDetail('${user.uid}')">
-                        <h4>${user.name || user.email}</h4>
-                        <p><i class="fas fa-envelope"></i> ${user.email}</p>
-                        <p><i class="fas fa-coins"></i> ${user.balance || 0} VEVO</p>
-                        <p><i class="fas fa-user-friends"></i> Invited: ${user.inviteCount || 0} | Rewards: ${user.inviteRewards || 0}</p>
-                        <p><i class="fas fa-calendar"></i> Joined: ${user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}</p>
-                        <span class="badge ${user.withdrawCode ? 'badge-approved' : 'badge-pending'}">${user.withdrawCode ? '✓ Code Set' : '⚠ No Code'}</span>
-                    </div>
-                `;
-            });
+            if (pageItems.length === 0) {
+                html += '<div class="section-card"><p style="text-align:center">No users found</p></div>';
+            } else {
+                pageItems.forEach(user => {
+                    html += `
+                        <div class="user-card" data-email="${(user.email || '').toLowerCase()}" data-name="${(user.name || '').toLowerCase()}" onclick="showUserDetail('${user.uid}')">
+                            <h4>${user.name || user.email}</h4>
+                            <p><i class="fas fa-envelope"></i> ${user.email}</p>
+                            <p><i class="fas fa-coins"></i> ${user.balance || 0} VEVO</p>
+                            <p><i class="fas fa-user-friends"></i> Invited: ${user.inviteCount || 0} | Rewards: ${user.inviteRewards || 0}</p>
+                            <p><i class="fas fa-calendar"></i> Joined: ${user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}</p>
+                            <span class="badge ${user.withdrawCode ? 'badge-approved' : 'badge-pending'}">${user.withdrawCode ? '✓ Code Set' : '⚠ No Code'}</span>
+                        </div>
+                    `;
+                });
+            }
             
-            if (usersArray.length === 0) html += '<div class="section-card"><p style="text-align:center">No users found</p></div>';
-            html += '</div>';
+            html += `</div></div>`;
+            
+            if (totalPages > 1) {
+                html += `<div class="pagination">`;
+                html += `<button onclick="loadUsers(${page - 1})" ${page === 1 ? 'disabled' : ''}><i class="fas fa-chevron-left"></i> Prev</button>`;
+                for (let i = Math.max(1, page - 2); i <= Math.min(totalPages, page + 2); i++) {
+                    html += `<button class="${i === page ? 'active' : ''}" onclick="loadUsers(${i})">${i}</button>`;
+                }
+                html += `<button onclick="loadUsers(${page + 1})" ${page === totalPages ? 'disabled' : ''}>Next <i class="fas fa-chevron-right"></i></button>`;
+                html += `</div>`;
+            }
+            
             document.getElementById('adminContent').innerHTML = html;
         }
         
-        // Show Deposit Detail Modal
+        // ============================================
+        // Modal Functions (Optimized - single fetch)
+        // ============================================
         async function showDepositDetail(depositId) {
+            // Show loading
+            document.getElementById('modalContent').innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
+            document.getElementById('detailModal').style.display = 'block';
+            
             const snapshot = await db.ref(`deposits/${depositId}`).once('value');
             const deposit = snapshot.val();
-            if (!deposit) return;
+            if (!deposit) {
+                closeDetailModal();
+                return;
+            }
             
             const modalContent = document.getElementById('modalContent');
             modalContent.innerHTML = `
@@ -531,7 +718,7 @@
                 <div class="detail-row"><div class="detail-label">Payment Method:</div><div class="detail-value">${deposit.methodDetails || deposit.method || 'Bank Transfer'}</div></div>
                 <div class="detail-row"><div class="detail-label">Status:</div><div class="detail-value"><span class="${deposit.status === 'pending' ? 'status-pending' : (deposit.status === 'approved' ? 'status-approved' : 'status-rejected')}">${deposit.status.toUpperCase()}</span></div></div>
                 <div class="detail-row"><div class="detail-label">Date:</div><div class="detail-value">${new Date(deposit.createdAt).toLocaleString()}</div></div>
-                <div class="detail-row"><div class="detail-label">Screenshot:</div><div class="detail-value"><img src="${deposit.screenshot}" class="screenshot-img" onclick="window.open(this.src)"></div></div>
+                <div class="detail-row"><div class="detail-label">Screenshot:</div><div class="detail-value"><img src="${deposit.screenshot}" class="screenshot-img" onclick="window.open(this.src)" loading="lazy"></div></div>
                 ${deposit.status === 'pending' ? `
                     <div class="action-buttons">
                         <button class="btn-approve" onclick="approveDepositAction('${deposit.id}', ${deposit.vevoAmount}, '${deposit.userId}')"><i class="fas fa-check"></i> Approve</button>
@@ -539,14 +726,18 @@
                     </div>
                 ` : ''}
             `;
-            document.getElementById('detailModal').style.display = 'block';
         }
         
-        // Show Withdraw Detail Modal
         async function showWithdrawDetail(withdrawId) {
+            document.getElementById('modalContent').innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
+            document.getElementById('detailModal').style.display = 'block';
+            
             const snapshot = await db.ref(`withdraws/${withdrawId}`).once('value');
             const withdraw = snapshot.val();
-            if (!withdraw) return;
+            if (!withdraw) {
+                closeDetailModal();
+                return;
+            }
             
             const modalContent = document.getElementById('modalContent');
             modalContent.innerHTML = `
@@ -565,14 +756,18 @@
                     </div>
                 ` : ''}
             `;
-            document.getElementById('detailModal').style.display = 'block';
         }
         
-        // Show User Detail Modal
         async function showUserDetail(userId) {
+            document.getElementById('modalContent').innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
+            document.getElementById('detailModal').style.display = 'block';
+            
             const snapshot = await db.ref(`users/${userId}`).once('value');
             const user = snapshot.val();
-            if (!user) return;
+            if (!user) {
+                closeDetailModal();
+                return;
+            }
             
             const modalContent = document.getElementById('modalContent');
             modalContent.innerHTML = `
@@ -589,10 +784,11 @@
                     <button class="btn-approve" onclick="openAddBalanceModal('${userId}', '${user.name || user.email}', ${user.balance || 0})"><i class="fas fa-plus"></i> Add Balance</button>
                 </div>
             `;
-            document.getElementById('detailModal').style.display = 'block';
         }
         
-        // Approve Deposit Action
+        // ============================================
+        // Actions
+        // ============================================
         async function approveDepositAction(depositId, vevoAmount, userId) {
             if (confirm(`Approve deposit? User will receive ${vevoAmount} VEVO.`)) {
                 await db.ref(`deposits/${depositId}`).update({ status: 'approved', approvedAt: Date.now() });
@@ -602,21 +798,19 @@
                 await userRef.update({ balance: (user.balance || 0) + vevoAmount });
                 showNotification(`Deposit approved! +${vevoAmount} VEVO`, 'success');
                 closeDetailModal();
-                loadDeposits();
+                loadDeposits(1);
             }
         }
         
-        // Reject Deposit Action
         async function rejectDepositAction(depositId) {
             if (confirm('Reject this deposit?')) {
                 await db.ref(`deposits/${depositId}`).update({ status: 'rejected', rejectedAt: Date.now() });
                 showNotification('Deposit rejected', 'success');
                 closeDetailModal();
-                loadDeposits();
+                loadDeposits(1);
             }
         }
         
-        // Approve Withdraw Action
         async function approveWithdrawAction(withdrawId, amount, userId) {
             if (confirm(`Approve withdrawal? ${amount} VEVO will be deducted from user balance.`)) {
                 await db.ref(`withdraws/${withdrawId}`).update({ status: 'approved', approvedAt: Date.now() });
@@ -626,31 +820,28 @@
                 await userRef.update({ balance: (user.balance || 0) - amount });
                 showNotification(`Withdrawal approved! -${amount} VEVO`, 'success');
                 closeDetailModal();
-                loadWithdraws();
+                loadWithdraws(1);
             }
         }
         
-        // Reject Withdraw Action
         async function rejectWithdrawAction(withdrawId) {
             if (confirm('Reject this withdrawal?')) {
                 await db.ref(`withdraws/${withdrawId}`).update({ status: 'rejected', rejectedAt: Date.now() });
                 showNotification('Withdrawal rejected', 'success');
                 closeDetailModal();
-                loadWithdraws();
+                loadWithdraws(1);
             }
         }
         
-        // Reset User Code
         async function resetUserCode(userId) {
             if (confirm('Reset withdrawal code for this user?')) {
                 await db.ref(`users/${userId}`).update({ withdrawCode: null });
                 showNotification('Withdrawal code reset', 'success');
                 closeDetailModal();
-                loadUsers();
+                loadUsers(1);
             }
         }
         
-        // Add Balance Modal
         function openAddBalanceModal(userId, userName, currentBalance) {
             const modalContent = document.getElementById('modalContent');
             modalContent.innerHTML = `
@@ -674,14 +865,16 @@
             await db.ref(`users/${userId}`).update({ balance: currentBalance + amount });
             showNotification(`Added ${amount} VEVO!`, 'success');
             closeDetailModal();
-            loadUsers();
+            loadUsers(1);
         }
         
         function closeDetailModal() {
             document.getElementById('detailModal').style.display = 'none';
         }
         
-        // Filter functions
+        // ============================================
+        // Search Filters (Client-side for speed)
+        // ============================================
         function filterDeposits() {
             const search = document.getElementById('depositSearch')?.value.toLowerCase() || '';
             const cards = document.querySelectorAll('#depositsList .user-card');
@@ -736,17 +929,21 @@
         
         async function loadAdminContent(tab) {
             currentTab = tab;
+            currentFilter = 'all'; // Reset filter when switching tabs
+            
             document.querySelectorAll('.nav-item').forEach(item => {
                 if (item.dataset.tab === tab) item.classList.add('active');
                 else item.classList.remove('active');
             });
+            
             if (tab === 'dashboard') await loadDashboard();
-            else if (tab === 'deposits') await loadDeposits();
-            else if (tab === 'withdraws') await loadWithdraws();
-            else if (tab === 'users') await loadUsers();
+            else if (tab === 'deposits') await loadDeposits(1);
+            else if (tab === 'withdraws') await loadWithdraws(1);
+            else if (tab === 'users') await loadUsers(1);
             else if (tab === 'settings') loadSettings();
         }
         
+        // Event Listeners
         document.querySelectorAll('.nav-item').forEach(item => {
             item.addEventListener('click', () => loadAdminContent(item.dataset.tab));
         });
@@ -756,6 +953,16 @@
             if (e.target === modal) closeDetailModal();
         };
         
+        // Global function exports
+        window.toggleSidebar = toggleSidebar;
+        window.adminLogin = adminLogin;
+        window.adminLogout = adminLogout;
+        window.loadDeposits = loadDeposits;
+        window.loadWithdraws = loadWithdraws;
+        window.loadUsers = loadUsers;
+        window.loadAdminContent = loadAdminContent;
+        window.setFilter = setFilter;
+        window.setWithdrawFilter = setWithdrawFilter;
         window.showDepositDetail = showDepositDetail;
         window.showWithdrawDetail = showWithdrawDetail;
         window.showUserDetail = showUserDetail;
@@ -770,9 +977,6 @@
         window.filterWithdraws = filterWithdraws;
         window.filterUsers = filterUsers;
         window.closeDetailModal = closeDetailModal;
-        window.loadDeposits = loadDeposits;
-        window.loadWithdraws = loadWithdraws;
-        window.loadUsers = loadUsers;
     </script>
 </body>
 </html>
