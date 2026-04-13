@@ -3,308 +3,96 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VEVOBet - Admin Panel (Optimized)</title>
+    <title>VEVOBet - Fast Admin Panel</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            min-height: 100vh;
-        }
-
-        /* Login Container */
-        .login-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-
-        .login-box {
-            background: white;
-            padding: 40px;
-            border-radius: 20px;
-            width: 100%;
-            max-width: 400px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-            text-align: center;
-        }
-
-        .login-box h2 { margin-bottom: 10px; color: #333; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); min-height: 100vh; }
+        
+        .login-container { display: flex; justify-content: center; align-items: center; min-height: 100vh; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .login-box { background: white; padding: 40px; border-radius: 20px; width: 100%; max-width: 400px; box-shadow: 0 20px 40px rgba(0,0,0,0.3); text-align: center; }
         .login-box .logo { font-size: 48px; color: #667eea; margin-bottom: 20px; }
         .login-box input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; }
         .login-box button { width: 100%; padding: 12px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 10px; }
         .error-msg { color: #ff4757; margin-top: 10px; font-size: 14px; }
 
-        /* Admin Dashboard */
         .admin-container { display: none; min-height: 100vh; }
-
-        /* Sidebar */
-        .admin-sidebar {
-            width: 280px;
-            background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
-            color: white;
-            position: fixed;
-            height: 100vh;
-            overflow-y: auto;
-        }
-
-        .admin-logo { padding: 25px; text-align: center; border-bottom: 2px solid rgba(255, 215, 0, 0.3); }
+        .admin-sidebar { width: 280px; background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%); color: white; position: fixed; height: 100vh; overflow-y: auto; }
+        .admin-logo { padding: 25px; text-align: center; border-bottom: 2px solid rgba(255,215,0,0.3); }
         .admin-logo i { font-size: 40px; color: #ffd700; }
         .admin-logo h2 { margin-top: 10px; font-size: 20px; }
-        .admin-logo p { font-size: 12px; opacity: 0.7; margin-top: 5px; }
-
-        .admin-nav { padding: 20px; }
-        .nav-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 15px;
-            margin: 5px 0;
-            color: rgba(255, 255, 255, 0.8);
-            text-decoration: none;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        .nav-item:hover { background: rgba(255, 255, 255, 0.1); color: white; }
+        .nav-item { display: flex; align-items: center; gap: 12px; padding: 12px 20px; margin: 5px 10px; color: rgba(255,255,255,0.8); border-radius: 10px; cursor: pointer; transition: all 0.3s; }
+        .nav-item:hover { background: rgba(255,255,255,0.1); color: white; }
         .nav-item.active { background: linear-gradient(135deg, #ffd700, #ff8c00); color: #1a1a2e; font-weight: bold; }
-        .nav-item i { width: 24px; }
 
-        /* Main Content */
         .admin-main { margin-left: 280px; padding: 20px; }
-        .admin-header {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 25px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-        .admin-header h1 { color: white; font-size: 24px; }
-        .admin-user { display: flex; align-items: center; gap: 15px; background: rgba(0, 0, 0, 0.3); padding: 8px 20px; border-radius: 50px; }
-        .admin-user i { font-size: 24px; color: #ffd700; }
+        .admin-header { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border-radius: 15px; padding: 20px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; color: white; }
+        .admin-user { display: flex; align-items: center; gap: 15px; background: rgba(0,0,0,0.3); padding: 8px 20px; border-radius: 50px; }
         .logout-admin { background: #ff4757; color: white; border: none; padding: 8px 20px; border-radius: 8px; cursor: pointer; }
 
-        /* Stats Cards */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 15px;
-            margin-bottom: 25px;
-        }
-        .stat-card {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 15px;
-            padding: 15px;
-            text-align: center;
-        }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 25px; }
+        .stat-card { background: white; border-radius: 15px; padding: 15px; text-align: center; }
         .stat-card i { font-size: 32px; color: #667eea; margin-bottom: 8px; }
-        .stat-card h3 { font-size: 12px; color: #666; margin-bottom: 5px; }
         .stat-card .number { font-size: 28px; font-weight: bold; color: #333; }
 
-        /* Search Bar */
-        .search-bar {
-            background: white;
-            border-radius: 12px;
-            padding: 12px 20px;
-            margin-bottom: 20px;
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-        .search-bar i { color: #999; font-size: 18px; }
-        .search-bar input {
-            flex: 1;
-            border: none;
-            outline: none;
-            font-size: 16px;
-            padding: 8px 0;
-        }
-        .search-bar input::placeholder { color: #ccc; }
+        .section-card { background: white; border-radius: 15px; padding: 20px; margin-bottom: 25px; }
+        .section-title { margin-bottom: 15px; color: #333; border-bottom: 2px solid #667eea; padding-bottom: 10px; }
 
-        /* Filter Tabs */
-        .filter-tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-        .filter-tab {
-            padding: 8px 20px;
-            background: rgba(255,255,255,0.2);
-            color: white;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        .filter-tab.active {
-            background: linear-gradient(135deg, #ffd700, #ff8c00);
-            color: #1a1a2e;
-        }
+        .filter-tabs { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+        .filter-tab { padding: 8px 20px; background: #e0e0e0; border: none; border-radius: 25px; cursor: pointer; font-weight: bold; }
+        .filter-tab.active { background: linear-gradient(135deg, #ffd700, #ff8c00); color: #1a1a2e; }
 
-        /* User Cards Grid - Optimized with fixed height and overflow */
-        .users-list-container {
-            max-height: 600px;
-            overflow-y: auto;
-            border-radius: 15px;
-            scroll-behavior: smooth;
-        }
-        .users-list {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 15px;
-            margin-bottom: 25px;
-        }
-        .user-card {
-            background: white;
-            border-radius: 15px;
-            padding: 15px;
-            cursor: pointer;
-            transition: all 0.3s;
-            border-left: 4px solid #667eea;
-        }
-        .user-card:hover { transform: translateY(-3px); box-shadow: 0 5px 20px rgba(0,0,0,0.1); }
-        .user-card h4 { color: #333; margin-bottom: 5px; }
-        .user-card p { color: #666; font-size: 13px; margin: 3px 0; }
-        .user-card .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; margin-top: 8px; }
+        .search-bar { background: #f5f5f5; border-radius: 10px; padding: 10px 15px; margin-bottom: 15px; display: flex; align-items: center; }
+        .search-bar i { color: #999; margin-right: 10px; }
+        .search-bar input { flex: 1; border: none; background: transparent; outline: none; font-size: 16px; }
+
+        .table-wrapper { max-height: 500px; overflow-y: auto; border-radius: 10px; border: 1px solid #e0e0e0; }
+        table { width: 100%; border-collapse: collapse; background: white; }
+        th { background: #f5f5f5; padding: 12px; text-align: left; position: sticky; top: 0; font-weight: bold; z-index: 10; }
+        td { padding: 10px 12px; border-bottom: 1px solid #e0e0e0; }
+        tr:hover { background: #f9f9f9; cursor: pointer; }
+
+        .badge { padding: 4px 10px; border-radius: 15px; font-size: 11px; font-weight: bold; display: inline-block; }
         .badge-pending { background: #ffd700; color: #333; }
         .badge-approved { background: #48bb78; color: white; }
         .badge-rejected { background: #ff4757; color: white; }
 
-        /* Pagination */
-        .pagination {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 20px;
-            flex-wrap: wrap;
-        }
-        .pagination button {
-            padding: 8px 16px;
-            background: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        .pagination button.active {
-            background: linear-gradient(135deg, #ffd700, #ff8c00);
-            color: #1a1a2e;
-        }
-        .pagination button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
+        .pagination { display: flex; justify-content: center; gap: 8px; margin-top: 20px; }
+        .pagination button { padding: 8px 16px; background: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .pagination button.active { background: #ffd700; }
+        .pagination button:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        /* Loading Spinner */
-        .loading-spinner {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 40px;
-        }
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid rgba(255,255,255,0.3);
-            border-top-color: #ffd700;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
+        .loading { text-align: center; padding: 40px; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #e0e0e0; border-top-color: #667eea; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* Detail Modal */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            overflow-y: auto;
-        }
-        .modal-content {
-            background: white;
-            margin: 3% auto;
-            padding: 25px;
-            border-radius: 20px;
-            width: 90%;
-            max-width: 550px;
-            position: relative;
-        }
-        .close-modal {
-            position: absolute;
-            right: 20px;
-            top: 15px;
-            font-size: 28px;
-            cursor: pointer;
-            color: #999;
-        }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); overflow-y: auto; }
+        .modal-content { background: white; margin: 5% auto; padding: 25px; border-radius: 20px; width: 90%; max-width: 550px; position: relative; }
+        .close-modal { position: absolute; right: 20px; top: 15px; font-size: 28px; cursor: pointer; color: #999; }
         .close-modal:hover { color: #333; }
         .modal-header { margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid #667eea; }
-        .modal-header h3 { color: #333; }
-        .detail-row { margin: 15px 0; display: flex; justify-content: space-between; flex-wrap: wrap; }
+        .detail-row { margin: 12px 0; display: flex; }
         .detail-label { font-weight: bold; color: #666; width: 40%; }
-        .detail-value { color: #333; width: 55%; word-break: break-all; }
-        .screenshot-img { max-width: 100%; border-radius: 10px; margin: 10px 0; border: 1px solid #ddd; }
+        .detail-value { color: #333; width: 60%; word-break: break-all; }
+        .screenshot-img { max-width: 100%; border-radius: 10px; margin-top: 10px; border: 1px solid #ddd; cursor: zoom-in; }
         .action-buttons { display: flex; gap: 10px; margin-top: 20px; }
         .btn-approve { flex: 1; background: #48bb78; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; }
         .btn-reject { flex: 1; background: #ff4757; color: white; border: none; padding: 12px; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        .btn-reset { background: #ffd700; color: #333; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; }
+        .btn-reset { background: #ffd700; color: #333; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; }
 
-        /* Sections */
-        .section-card {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 25px;
-        }
-        .section-title {
-            font-size: 18px;
-            margin-bottom: 15px;
-            color: #333;
-            border-bottom: 2px solid #667eea;
-            padding-bottom: 10px;
-        }
-
-        /* Table */
-        .table-container { overflow-x: auto; max-height: 500px; overflow-y: auto; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0; }
-        th { background: #f5f5f5; font-weight: bold; color: #333; position: sticky; top: 0; }
-        tr:hover { background: #f9f9f9; cursor: pointer; }
-        .status-pending { background: #ffd700; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
-        .status-approved { background: #48bb78; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; }
-        .status-rejected { background: #ff4757; color: white; padding: 4px 8px; border-radius: 4px; font-size: 12px; }
-
-        /* Menu Toggle */
+        .notification-badge { background: #ff4757; color: white; border-radius: 50%; padding: 2px 8px; font-size: 12px; margin-left: 8px; }
+        
         .menu-toggle { display: none; position: fixed; top: 20px; left: 20px; z-index: 101; background: #ffd700; border: none; padding: 10px; border-radius: 8px; cursor: pointer; }
+        
         @media (max-width: 768px) {
             .menu-toggle { display: block; }
-            .admin-sidebar { width: 80px; transform: translateX(-100%); position: fixed; z-index: 100; transition: transform 0.3s; }
+            .admin-sidebar { transform: translateX(-100%); position: fixed; z-index: 100; transition: transform 0.3s; }
             .admin-sidebar.open { transform: translateX(0); }
             .admin-main { margin-left: 0; padding-top: 60px; }
-            .admin-logo h2, .admin-logo p, .nav-item span { display: none; }
-            .nav-item { justify-content: center; }
-            .nav-item i { font-size: 22px; margin: 0; }
         }
-        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        
         .notification { position: fixed; top: 20px; right: 20px; padding: 12px 20px; border-radius: 10px; color: white; z-index: 2000; animation: slideIn 0.3s ease; }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
     </style>
 </head>
 <body>
@@ -315,9 +103,9 @@
         <div class="login-box">
             <div class="logo"><i class="fas fa-dice-d6"></i></div>
             <h2>Admin Login</h2>
-            <p>VEVOBet Administration Panel</p>
-            <input type="text" id="adminUsername" placeholder="Username">
-            <input type="password" id="adminPassword" placeholder="Password">
+            <p>VEVOBet Administration</p>
+            <input type="text" id="adminUsername" placeholder="Username" value="abel">
+            <input type="password" id="adminPassword" placeholder="Password" value="9679">
             <button onclick="adminLogin()">Login</button>
             <div id="loginError" class="error-msg"></div>
         </div>
@@ -328,13 +116,13 @@
         <div class="admin-sidebar" id="adminSidebar">
             <div class="admin-logo">
                 <i class="fas fa-dice-d6"></i>
-                <h2>VEVOBet</h2>
-                <p>Admin Panel</p>
+                <h2>VEVOBet Admin</h2>
+                <p style="font-size:12px; opacity:0.7;">Telegram Notifications Active</p>
             </div>
             <div class="admin-nav">
                 <div class="nav-item active" data-tab="dashboard"><i class="fas fa-tachometer-alt"></i> <span>Dashboard</span></div>
-                <div class="nav-item" data-tab="deposits"><i class="fas fa-money-bill-wave"></i> <span>Deposit Requests</span></div>
-                <div class="nav-item" data-tab="withdraws"><i class="fas fa-hand-holding-usd"></i> <span>Withdraw Requests</span></div>
+                <div class="nav-item" data-tab="deposits"><i class="fas fa-money-bill-wave"></i> <span>Deposits</span> <span class="notification-badge" id="pendingDepositBadge">0</span></div>
+                <div class="nav-item" data-tab="withdraws"><i class="fas fa-hand-holding-usd"></i> <span>Withdrawals</span> <span class="notification-badge" id="pendingWithdrawBadge">0</span></div>
                 <div class="nav-item" data-tab="users"><i class="fas fa-users"></i> <span>All Users</span></div>
                 <div class="nav-item" data-tab="settings"><i class="fas fa-cog"></i> <span>Settings</span></div>
             </div>
@@ -342,14 +130,16 @@
 
         <div class="admin-main">
             <div class="admin-header">
-                <h1><i class="fas fa-chart-line"></i> Admin Dashboard</h1>
+                <h1><i class="fas fa-chart-line"></i> <span id="pageTitle">Dashboard</span></h1>
                 <div class="admin-user">
                     <i class="fas fa-user-shield"></i>
-                    <span id="adminName">Abel</span>
+                    <span>Abel</span>
                     <button class="logout-admin" onclick="adminLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
                 </div>
             </div>
-            <div id="adminContent"></div>
+            <div id="adminContent">
+                <div class="loading"><div class="spinner"></div><p style="margin-top:15px;color:white;">Loading...</p></div>
+            </div>
         </div>
     </div>
 
@@ -364,6 +154,9 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script>
+        // ============================================
+        // CONFIGURATION
+        // ============================================
         const firebaseConfig = {
             apiKey: "AIzaSyCAfsKcVP7OUo870TKkBnk4BfDEq9LnAK8",
             authDomain: "newporoject-c6f66.firebaseapp.com",
@@ -374,29 +167,135 @@
             appId: "1:733557611631:web:02c9377f56d614ff3b019a"
         };
         
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
+        // Telegram Bot Configuration
+        const TELEGRAM_BOT_TOKEN = '8210146562:AAHvM54C4KvHsf-YfAjOC9VLe6o1l-gEtBM';
+        const TELEGRAM_CHAT_ID = '7420938284';
         
         const ADMIN_USERNAME = "abel";
         const ADMIN_PASSWORD = "9679";
-        const PAGE_SIZE = 20; // Items per page
+        const PAGE_SIZE = 25;
         
         let isLoggedIn = false;
         let currentTab = 'dashboard';
-        let cachedData = {
-            users: null,
-            deposits: null,
-            withdraws: null
-        };
-        let currentFilter = 'all';
+        let currentFilter = 'pending';
+        let pendingDepositCount = 0;
+        let pendingWithdrawCount = 0;
+        let realtimeListeners = [];
         
+        // ============================================
+        // TELEGRAM NOTIFICATION FUNCTION
+        // ============================================
+        async function sendTelegramNotification(message) {
+            try {
+                const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        chat_id: TELEGRAM_CHAT_ID,
+                        text: message,
+                        parse_mode: 'HTML'
+                    })
+                });
+                const data = await response.json();
+                if (!data.ok) console.error('Telegram error:', data.description);
+                return data.ok;
+            } catch (error) {
+                console.error('Failed to send Telegram notification:', error);
+                return false;
+            }
+        }
+        
+        // Test Telegram connection on load
+        (async function testTelegram() {
+            const ok = await sendTelegramNotification('✅ <b>Admin Panel Started</b>\nAdmin has logged into the VEVOBet admin panel.');
+            console.log('Telegram test:', ok ? 'Success' : 'Failed');
+        })();
+        
+        // ============================================
+        // REAL-TIME LISTENERS FOR NEW REQUESTS
+        // ============================================
+        function setupRealtimeListeners() {
+            // Clear existing listeners
+            realtimeListeners.forEach(unsub => unsub());
+            realtimeListeners = [];
+            
+            // Listen for new pending deposits
+            const depositsRef = firebase.database().ref('deposits');
+            const depositsQuery = depositsRef.orderByChild('status').equalTo('pending');
+            
+            depositsQuery.on('child_added', (snapshot) => {
+                const deposit = snapshot.val();
+                // Only notify for recent deposits (last 10 seconds to avoid spam on page load)
+                if (deposit.createdAt && Date.now() - deposit.createdAt < 10000) {
+                    const message = `💰 <b>NEW DEPOSIT REQUEST</b>\n\n` +
+                        `👤 <b>User:</b> ${deposit.userName || 'N/A'}\n` +
+                        `📧 <b>Email:</b> ${deposit.userEmail}\n` +
+                        `💵 <b>Amount:</b> ${deposit.amount} ${deposit.currency || 'BIRR'}\n` +
+                        `🪙 <b>VEVO Value:</b> ${deposit.vevoAmount} VEVO\n` +
+                        `🏦 <b>Method:</b> ${deposit.methodDetails || deposit.method || 'N/A'}\n` +
+                        `⏰ <b>Time:</b> ${new Date(deposit.createdAt).toLocaleString()}\n\n` +
+                        `🔔 <i>Login to admin panel to approve/reject</i>`;
+                    
+                    sendTelegramNotification(message);
+                    showNotification('New deposit request!', 'info');
+                    updatePendingCounts();
+                }
+            });
+            
+            // Listen for new pending withdrawals
+            const withdrawsRef = firebase.database().ref('withdraws');
+            const withdrawsQuery = withdrawsRef.orderByChild('status').equalTo('pending');
+            
+            withdrawsQuery.on('child_added', (snapshot) => {
+                const withdraw = snapshot.val();
+                if (withdraw.createdAt && Date.now() - withdraw.createdAt < 10000) {
+                    const message = `💸 <b>NEW WITHDRAWAL REQUEST</b>\n\n` +
+                        `👤 <b>User:</b> ${withdraw.userName || 'N/A'}\n` +
+                        `📧 <b>Email:</b> ${withdraw.userEmail}\n` +
+                        `💰 <b>Amount:</b> ${withdraw.amount} VEVO\n` +
+                        `📱 <b>Method:</b> ${withdraw.methodName || withdraw.method}\n` +
+                        `🔢 <b>Account:</b> ${withdraw.account}\n` +
+                        `⏰ <b>Time:</b> ${new Date(withdraw.createdAt).toLocaleString()}\n\n` +
+                        `🔔 <i>Login to admin panel to approve/reject</i>`;
+                    
+                    sendTelegramNotification(message);
+                    showNotification('New withdrawal request!', 'info');
+                    updatePendingCounts();
+                }
+            });
+            
+            realtimeListeners = [() => depositsQuery.off(), () => withdrawsQuery.off()];
+        }
+        
+        // Update pending counts
+        async function updatePendingCounts() {
+            try {
+                const [depositsSnap, withdrawsSnap] = await Promise.all([
+                    firebase.database().ref('deposits').orderByChild('status').equalTo('pending').once('value'),
+                    firebase.database().ref('withdraws').orderByChild('status').equalTo('pending').once('value')
+                ]);
+                
+                pendingDepositCount = depositsSnap.size;
+                pendingWithdrawCount = withdrawsSnap.size;
+                
+                document.getElementById('pendingDepositBadge').textContent = pendingDepositCount;
+                document.getElementById('pendingWithdrawBadge').textContent = pendingWithdrawCount;
+            } catch (e) {
+                console.error('Error updating counts:', e);
+            }
+        }
+        
+        // ============================================
+        // HELPER FUNCTIONS
+        // ============================================
         function toggleSidebar() { document.getElementById('adminSidebar').classList.toggle('open'); }
         
-        function showNotification(msg, type) {
+        function showNotification(msg, type = 'info') {
             const n = document.createElement('div');
             n.className = 'notification';
-            n.style.background = type === 'success' ? '#48bb78' : '#ff4757';
-            n.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i> ${msg}`;
+            n.style.background = type === 'success' ? '#48bb78' : type === 'error' ? '#ff4757' : '#667eea';
+            n.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-info-circle'}"></i> ${msg}`;
             document.body.appendChild(n);
             setTimeout(() => n.remove(), 3000);
         }
@@ -408,38 +307,38 @@
                 isLoggedIn = true;
                 document.getElementById('loginPage').style.display = 'none';
                 document.getElementById('adminDashboard').style.display = 'block';
-                loadAdminContent('dashboard');
+                setupRealtimeListeners();
+                updatePendingCounts();
+                loadDashboard();
+                sendTelegramNotification('🔐 <b>Admin Logged In</b>\nAbel has accessed the admin panel.');
             } else {
-                document.getElementById('loginError').textContent = 'Invalid username or password';
+                document.getElementById('loginError').textContent = 'Invalid credentials';
             }
         }
         
         function adminLogout() {
+            realtimeListeners.forEach(unsub => unsub());
+            realtimeListeners = [];
             isLoggedIn = false;
-            cachedData = { users: null, deposits: null, withdraws: null };
             document.getElementById('loginPage').style.display = 'flex';
             document.getElementById('adminDashboard').style.display = 'none';
         }
         
         // ============================================
-        // OPTIMIZED: Load Dashboard with aggregated queries
+        // LOAD DASHBOARD (Fast - only counts)
         // ============================================
         async function loadDashboard() {
-            // Use Promise.all for parallel loading
+            document.getElementById('pageTitle').textContent = 'Dashboard';
+            
             const [usersSnap, depositsSnap, withdrawsSnap] = await Promise.all([
-                db.ref('users').once('value'),
-                db.ref('deposits').once('value'),
-                db.ref('withdraws').once('value')
+                firebase.database().ref('users').once('value'),
+                firebase.database().ref('deposits').once('value'),
+                firebase.database().ref('withdraws').once('value')
             ]);
             
             const users = usersSnap.val() || {};
             const deposits = depositsSnap.val() || {};
             const withdraws = withdrawsSnap.val() || {};
-            
-            // Cache data for later use
-            cachedData.users = users;
-            cachedData.deposits = deposits;
-            cachedData.withdraws = withdraws;
             
             const userCount = Object.keys(users).length;
             
@@ -447,475 +346,609 @@
             const withdrawsArray = Object.values(withdraws);
             
             const pendingDeposits = depositsArray.filter(d => d.status === 'pending').length;
-            const totalDeposits = depositsArray.filter(d => d.status === 'approved').reduce((s, d) => s + (d.vevoAmount || 0), 0);
+            const approvedDeposits = depositsArray.filter(d => d.status === 'approved').reduce((s, d) => s + (d.vevoAmount || 0), 0);
             const pendingWithdraws = withdrawsArray.filter(w => w.status === 'pending').length;
-            const totalWithdraws = withdrawsArray.filter(w => w.status === 'approved').reduce((s, w) => s + (w.amount || 0), 0);
+            const approvedWithdraws = withdrawsArray.filter(w => w.status === 'approved').reduce((s, w) => s + (w.amount || 0), 0);
             
             let totalBalance = 0;
             Object.values(users).forEach(u => totalBalance += u.balance || 0);
             
+            pendingDepositCount = pendingDeposits;
+            pendingWithdrawCount = pendingWithdraws;
+            document.getElementById('pendingDepositBadge').textContent = pendingDeposits;
+            document.getElementById('pendingWithdrawBadge').textContent = pendingWithdraws;
+            
             const html = `
                 <div class="stats-grid">
                     <div class="stat-card"><i class="fas fa-users"></i><h3>Total Users</h3><div class="number">${userCount}</div></div>
-                    <div class="stat-card"><i class="fas fa-clock"></i><h3>Pending Deposits</h3><div class="number">${pendingDeposits}</div></div>
-                    <div class="stat-card"><i class="fas fa-clock"></i><h3>Pending Withdraws</h3><div class="number">${pendingWithdraws}</div></div>
-                    <div class="stat-card"><i class="fas fa-check-circle"></i><h3>Approved Deposits</h3><div class="number">${totalDeposits.toLocaleString()} VEVO</div></div>
-                    <div class="stat-card"><i class="fas fa-hand-holding-usd"></i><h3>Approved Withdraws</h3><div class="number">${totalWithdraws.toLocaleString()} VEVO</div></div>
-                    <div class="stat-card"><i class="fas fa-coins"></i><h3>Total VEVO Circulation</h3><div class="number">${totalBalance.toLocaleString()}</div></div>
+                    <div class="stat-card"><i class="fas fa-clock"></i><h3>Pending Deposits</h3><div class="number" style="color:#ff8c00;">${pendingDeposits}</div></div>
+                    <div class="stat-card"><i class="fas fa-clock"></i><h3>Pending Withdrawals</h3><div class="number" style="color:#ff8c00;">${pendingWithdraws}</div></div>
+                    <div class="stat-card"><i class="fas fa-check-circle"></i><h3>Total Deposits</h3><div class="number">${approvedDeposits.toLocaleString()} VEVO</div></div>
+                    <div class="stat-card"><i class="fas fa-hand-holding-usd"></i><h3>Total Withdrawals</h3><div class="number">${approvedWithdraws.toLocaleString()} VEVO</div></div>
+                    <div class="stat-card"><i class="fas fa-coins"></i><h3>Circulation</h3><div class="number">${totalBalance.toLocaleString()} VEVO</div></div>
                 </div>
-                <div class="section-card">
-                    <h2 class="section-title"><i class="fas fa-bell"></i> Quick Actions</h2>
-                    <div style="display: flex; gap: 15px; flex-wrap: wrap;">
-                        <button class="filter-tab active" onclick="loadAdminContent('deposits')"><i class="fas fa-money-bill-wave"></i> View Deposits (${pendingDeposits} pending)</button>
-                        <button class="filter-tab" onclick="loadAdminContent('withdraws')"><i class="fas fa-hand-holding-usd"></i> View Withdrawals (${pendingWithdraws} pending)</button>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div class="section-card">
+                        <h3 class="section-title"><i class="fab fa-telegram"></i> Telegram Bot Status</h3>
+                        <div style="padding: 15px; background: #e8f5e9; border-radius: 10px;">
+                            <p><i class="fas fa-check-circle" style="color:#48bb78;"></i> <strong>Bot Connected</strong></p>
+                            <p style="margin-top: 10px; font-size: 14px;">Token: ${TELEGRAM_BOT_TOKEN.substring(0, 15)}...</p>
+                            <p style="font-size: 14px;">Chat ID: ${TELEGRAM_CHAT_ID}</p>
+                            <button onclick="testTelegramNow()" style="margin-top: 15px; padding: 8px 20px; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer;">
+                                <i class="fab fa-telegram"></i> Send Test Message
+                            </button>
+                        </div>
+                    </div>
+                    <div class="section-card">
+                        <h3 class="section-title"><i class="fas fa-bell"></i> Quick Actions</h3>
+                        <div style="display: flex; flex-direction: column; gap: 10px;">
+                            <button onclick="loadDeposits()" style="padding: 15px; background: #fff3e0; border: none; border-radius: 10px; cursor: pointer; text-align: left;">
+                                <i class="fas fa-money-bill-wave" style="color:#ff8c00;"></i> 
+                                <strong>View Pending Deposits (${pendingDeposits})</strong>
+                            </button>
+                            <button onclick="loadWithdraws()" style="padding: 15px; background: #e3f2fd; border: none; border-radius: 10px; cursor: pointer; text-align: left;">
+                                <i class="fas fa-hand-holding-usd" style="color:#2196f3;"></i> 
+                                <strong>View Pending Withdrawals (${pendingWithdraws})</strong>
+                            </button>
+                        </div>
                     </div>
                 </div>
             `;
             document.getElementById('adminContent').innerHTML = html;
         }
         
-        // ============================================
-        // OPTIMIZED: Load Deposits with pagination
-        // ============================================
-        async function loadDeposits(page = 1) {
-            const snapshot = await db.ref('deposits').once('value');
-            const deposits = snapshot.val() || {};
-            cachedData.deposits = deposits;
-            
-            let depositsArray = Object.values(deposits).sort((a, b) => b.createdAt - a.createdAt);
-            
-            // Filter based on currentFilter
-            if (currentFilter !== 'all') {
-                depositsArray = depositsArray.filter(d => d.status === currentFilter);
-            }
-            
-            // Calculate counts for each status
-            const allDeposits = Object.values(deposits);
-            const pendingCount = allDeposits.filter(d => d.status === 'pending').length;
-            const approvedCount = allDeposits.filter(d => d.status === 'approved').length;
-            const rejectedCount = allDeposits.filter(d => d.status === 'rejected').length;
-            
-            // Pagination
-            const totalPages = Math.ceil(depositsArray.length / PAGE_SIZE);
-            const startIndex = (page - 1) * PAGE_SIZE;
-            const pageItems = depositsArray.slice(startIndex, startIndex + PAGE_SIZE);
-            
-            let html = `
-                <div class="stats-grid">
-                    <div class="stat-card"><i class="fas fa-clock"></i><h3>Pending</h3><div class="number">${pendingCount}</div></div>
-                    <div class="stat-card"><i class="fas fa-check-circle"></i><h3>Approved</h3><div class="number">${approvedCount}</div></div>
-                    <div class="stat-card"><i class="fas fa-times-circle"></i><h3>Rejected</h3><div class="number">${rejectedCount}</div></div>
-                </div>
-                <div class="filter-tabs">
-                    <button class="filter-tab ${currentFilter === 'all' ? 'active' : ''}" onclick="setFilter('all')">All (${depositsArray.length})</button>
-                    <button class="filter-tab ${currentFilter === 'pending' ? 'active' : ''}" onclick="setFilter('pending')">Pending (${pendingCount})</button>
-                    <button class="filter-tab ${currentFilter === 'approved' ? 'active' : ''}" onclick="setFilter('approved')">Approved (${approvedCount})</button>
-                    <button class="filter-tab ${currentFilter === 'rejected' ? 'active' : ''}" onclick="setFilter('rejected')">Rejected (${rejectedCount})</button>
-                </div>
-                <div class="search-bar"><i class="fas fa-search"></i><input type="text" id="depositSearch" placeholder="Search by email or name..." onkeyup="filterDeposits()"></div>
-                <div class="users-list-container">
-                    <div class="users-list" id="depositsList">
-            `;
-            
-            if (pageItems.length === 0) {
-                html += '<div class="section-card"><p style="text-align:center">No deposit requests found</p></div>';
-            } else {
-                pageItems.forEach(deposit => {
-                    const statusClass = deposit.status === 'pending' ? 'badge-pending' : (deposit.status === 'approved' ? 'badge-approved' : 'badge-rejected');
-                    const statusText = deposit.status.toUpperCase();
-                    html += `
-                        <div class="user-card" data-email="${(deposit.userEmail || '').toLowerCase()}" data-name="${(deposit.userName || '').toLowerCase()}" onclick="showDepositDetail('${deposit.id}')">
-                            <h4>${deposit.userName || deposit.userEmail}</h4>
-                            <p><i class="fas fa-envelope"></i> ${deposit.userEmail}</p>
-                            <p><i class="fas fa-money-bill-wave"></i> ${deposit.amount} ${deposit.currency || 'BIRR'} → ${deposit.vevoAmount} VEVO</p>
-                            <p><i class="fas fa-calendar"></i> ${new Date(deposit.createdAt).toLocaleString()}</p>
-                            <span class="badge ${statusClass}">${statusText}</span>
-                        </div>
-                    `;
-                });
-            }
-            
-            html += `</div></div>`;
-            
-            // Add pagination controls
-            if (totalPages > 1) {
-                html += `<div class="pagination">`;
-                html += `<button onclick="loadDeposits(${page - 1})" ${page === 1 ? 'disabled' : ''}><i class="fas fa-chevron-left"></i> Prev</button>`;
-                for (let i = Math.max(1, page - 2); i <= Math.min(totalPages, page + 2); i++) {
-                    html += `<button class="${i === page ? 'active' : ''}" onclick="loadDeposits(${i})">${i}</button>`;
-                }
-                html += `<button onclick="loadDeposits(${page + 1})" ${page === totalPages ? 'disabled' : ''}>Next <i class="fas fa-chevron-right"></i></button>`;
-                html += `</div>`;
-            }
-            
-            document.getElementById('adminContent').innerHTML = html;
+        async function testTelegramNow() {
+            const ok = await sendTelegramNotification('🧪 <b>Test Message</b>\nThis is a test notification from VEVOBet Admin Panel.\n✅ Bot is working correctly!');
+            showNotification(ok ? 'Test message sent!' : 'Failed to send test message', ok ? 'success' : 'error');
         }
         
-        function setFilter(filter) {
+        // ============================================
+        // LOAD DEPOSITS (Paginated at database level)
+        // ============================================
+        async function loadDeposits(page = 1, filter = 'pending') {
             currentFilter = filter;
-            loadDeposits(1);
-        }
-        
-        // ============================================
-        // OPTIMIZED: Load Withdraws with pagination
-        // ============================================
-        async function loadWithdraws(page = 1) {
-            const snapshot = await db.ref('withdraws').once('value');
-            const withdraws = snapshot.val() || {};
-            cachedData.withdraws = withdraws;
+            document.getElementById('pageTitle').textContent = 'Deposit Requests';
             
-            let withdrawsArray = Object.values(withdraws).sort((a, b) => b.createdAt - a.createdAt);
+            // Show loading
+            document.getElementById('adminContent').innerHTML = '<div class="loading"><div class="spinner"></div><p>Loading deposits...</p></div>';
             
-            if (currentFilter !== 'all') {
-                withdrawsArray = withdrawsArray.filter(w => w.status === currentFilter);
-            }
-            
-            const allWithdraws = Object.values(withdraws);
-            const pendingCount = allWithdraws.filter(w => w.status === 'pending').length;
-            const approvedCount = allWithdraws.filter(w => w.status === 'approved').length;
-            const rejectedCount = allWithdraws.filter(w => w.status === 'rejected').length;
-            
-            const totalPages = Math.ceil(withdrawsArray.length / PAGE_SIZE);
-            const startIndex = (page - 1) * PAGE_SIZE;
-            const pageItems = withdrawsArray.slice(startIndex, startIndex + PAGE_SIZE);
-            
-            let html = `
-                <div class="stats-grid">
-                    <div class="stat-card"><i class="fas fa-clock"></i><h3>Pending</h3><div class="number">${pendingCount}</div></div>
-                    <div class="stat-card"><i class="fas fa-check-circle"></i><h3>Approved</h3><div class="number">${approvedCount}</div></div>
-                    <div class="stat-card"><i class="fas fa-times-circle"></i><h3>Rejected</h3><div class="number">${rejectedCount}</div></div>
-                </div>
-                <div class="filter-tabs">
-                    <button class="filter-tab ${currentFilter === 'all' ? 'active' : ''}" onclick="setWithdrawFilter('all')">All (${withdrawsArray.length})</button>
-                    <button class="filter-tab ${currentFilter === 'pending' ? 'active' : ''}" onclick="setWithdrawFilter('pending')">Pending (${pendingCount})</button>
-                    <button class="filter-tab ${currentFilter === 'approved' ? 'active' : ''}" onclick="setWithdrawFilter('approved')">Approved (${approvedCount})</button>
-                    <button class="filter-tab ${currentFilter === 'rejected' ? 'active' : ''}" onclick="setWithdrawFilter('rejected')">Rejected (${rejectedCount})</button>
-                </div>
-                <div class="search-bar"><i class="fas fa-search"></i><input type="text" id="withdrawSearch" placeholder="Search by email or name..." onkeyup="filterWithdraws()"></div>
-                <div class="users-list-container">
-                    <div class="users-list" id="withdrawsList">
-            `;
-            
-            if (pageItems.length === 0) {
-                html += '<div class="section-card"><p style="text-align:center">No withdrawal requests found</p></div>';
-            } else {
-                pageItems.forEach(withdraw => {
-                    const statusClass = withdraw.status === 'pending' ? 'badge-pending' : (withdraw.status === 'approved' ? 'badge-approved' : 'badge-rejected');
-                    const statusText = withdraw.status.toUpperCase();
-                    html += `
-                        <div class="user-card" data-email="${(withdraw.userEmail || '').toLowerCase()}" data-name="${(withdraw.userName || '').toLowerCase()}" onclick="showWithdrawDetail('${withdraw.id}')">
-                            <h4>${withdraw.userName || withdraw.userEmail}</h4>
-                            <p><i class="fas fa-envelope"></i> ${withdraw.userEmail}</p>
-                            <p><i class="fas fa-hand-holding-usd"></i> ${withdraw.amount} VEVO</p>
-                            <p><i class="fas fa-university"></i> ${withdraw.methodName || withdraw.method} → ${withdraw.account}</p>
-                            <p><i class="fas fa-calendar"></i> ${new Date(withdraw.createdAt).toLocaleString()}</p>
-                            <span class="badge ${statusClass}">${statusText}</span>
-                        </div>
-                    `;
-                });
-            }
-            
-            html += `</div></div>`;
-            
-            if (totalPages > 1) {
-                html += `<div class="pagination">`;
-                html += `<button onclick="loadWithdraws(${page - 1})" ${page === 1 ? 'disabled' : ''}><i class="fas fa-chevron-left"></i> Prev</button>`;
-                for (let i = Math.max(1, page - 2); i <= Math.min(totalPages, page + 2); i++) {
-                    html += `<button class="${i === page ? 'active' : ''}" onclick="loadWithdraws(${i})">${i}</button>`;
+            try {
+                // Get counts first (fast)
+                const [allSnap, pendingSnap, approvedSnap, rejectedSnap] = await Promise.all([
+                    firebase.database().ref('deposits').once('value'),
+                    firebase.database().ref('deposits').orderByChild('status').equalTo('pending').once('value'),
+                    firebase.database().ref('deposits').orderByChild('status').equalTo('approved').once('value'),
+                    firebase.database().ref('deposits').orderByChild('status').equalTo('rejected').once('value')
+                ]);
+                
+                const totalCount = allSnap.size;
+                const pendingCount = pendingSnap.size;
+                const approvedCount = approvedSnap.size;
+                const rejectedCount = rejectedSnap.size;
+                
+                // Get paginated data based on filter
+                let query;
+                if (filter === 'all') {
+                    query = firebase.database().ref('deposits').orderByChild('createdAt').limitToLast(PAGE_SIZE);
+                } else {
+                    query = firebase.database().ref('deposits').orderByChild('status').equalTo(filter);
                 }
-                html += `<button onclick="loadWithdraws(${page + 1})" ${page === totalPages ? 'disabled' : ''}>Next <i class="fas fa-chevron-right"></i></button>`;
+                
+                const snapshot = await query.once('value');
+                let deposits = [];
+                snapshot.forEach(child => deposits.push({ id: child.key, ...child.val() }));
+                
+                // Sort by createdAt descending
+                deposits.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+                
+                // Manual pagination for filtered results
+                const totalFiltered = filter === 'pending' ? pendingCount : (filter === 'approved' ? approvedCount : (filter === 'rejected' ? rejectedCount : totalCount));
+                const totalPages = Math.ceil(totalFiltered / PAGE_SIZE);
+                
+                let html = `
+                    <div class="stats-grid">
+                        <div class="stat-card"><i class="fas fa-list"></i><h3>Total</h3><div class="number">${totalCount}</div></div>
+                        <div class="stat-card"><i class="fas fa-clock"></i><h3>Pending</h3><div class="number" style="color:#ff8c00;">${pendingCount}</div></div>
+                        <div class="stat-card"><i class="fas fa-check-circle"></i><h3>Approved</h3><div class="number" style="color:#48bb78;">${approvedCount}</div></div>
+                        <div class="stat-card"><i class="fas fa-times-circle"></i><h3>Rejected</h3><div class="number" style="color:#ff4757;">${rejectedCount}</div></div>
+                    </div>
+                    
+                    <div class="section-card">
+                        <div class="filter-tabs">
+                            <button class="filter-tab ${filter === 'pending' ? 'active' : ''}" onclick="loadDeposits(1, 'pending')">⏳ Pending (${pendingCount})</button>
+                            <button class="filter-tab ${filter === 'approved' ? 'active' : ''}" onclick="loadDeposits(1, 'approved')">✅ Approved (${approvedCount})</button>
+                            <button class="filter-tab ${filter === 'rejected' ? 'active' : ''}" onclick="loadDeposits(1, 'rejected')">❌ Rejected (${rejectedCount})</button>
+                            <button class="filter-tab ${filter === 'all' ? 'active' : ''}" onclick="loadDeposits(1, 'all')">📋 All (${totalCount})</button>
+                        </div>
+                        
+                        <div class="search-bar">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="depositSearch" placeholder="Search by email or name..." onkeyup="filterTable('depositTable', this.value)">
+                        </div>
+                        
+                        <div class="table-wrapper">
+                            <table id="depositTable">
+                                <thead>
+                                    <tr>
+                                        <th>User</th>
+                                        <th>Amount</th>
+                                        <th>VEVO</th>
+                                        <th>Method</th>
+                                        <th>Date</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="depositTableBody">
+                `;
+                
+                if (deposits.length === 0) {
+                    html += `<tr><td colspan="6" style="text-align:center; padding:40px;">No ${filter} deposit requests found</td></tr>`;
+                } else {
+                    deposits.slice(0, PAGE_SIZE).forEach(deposit => {
+                        const statusClass = deposit.status === 'pending' ? 'badge-pending' : (deposit.status === 'approved' ? 'badge-approved' : 'badge-rejected');
+                        html += `
+                            <tr onclick="showDepositDetail('${deposit.id}')">
+                                <td>
+                                    <strong>${deposit.userName || 'N/A'}</strong><br>
+                                    <small>${deposit.userEmail}</small>
+                                </td>
+                                <td>${deposit.amount} ${deposit.currency || 'BIRR'}</td>
+                                <td><strong>${deposit.vevoAmount} VEVO</strong></td>
+                                <td><small>${(deposit.methodDetails || deposit.method || 'N/A').substring(0, 20)}...</small></td>
+                                <td><small>${deposit.createdAt ? new Date(deposit.createdAt).toLocaleDateString() : 'N/A'}</small></td>
+                                <td><span class="badge ${statusClass}">${deposit.status.toUpperCase()}</span></td>
+                            </tr>
+                        `;
+                    });
+                }
+                
+                html += `</tbody></table></div>`;
+                
+                // Pagination
+                if (totalPages > 1) {
+                    html += `<div class="pagination">`;
+                    html += `<button onclick="loadDeposits(${page - 1}, '${filter}')" ${page === 1 ? 'disabled' : ''}>← Prev</button>`;
+                    for (let i = Math.max(1, page - 2); i <= Math.min(totalPages, page + 2); i++) {
+                        html += `<button class="${i === page ? 'active' : ''}" onclick="loadDeposits(${i}, '${filter}')">${i}</button>`;
+                    }
+                    html += `<button onclick="loadDeposits(${page + 1}, '${filter}')" ${page === totalPages ? 'disabled' : ''}>Next →</button>`;
+                    html += `</div>`;
+                }
+                
                 html += `</div>`;
+                document.getElementById('adminContent').innerHTML = html;
+                
+            } catch (error) {
+                console.error('Error loading deposits:', error);
+                document.getElementById('adminContent').innerHTML = '<div class="section-card"><p style="color:red;">Error loading deposits. Please try again.</p></div>';
             }
-            
-            document.getElementById('adminContent').innerHTML = html;
-        }
-        
-        function setWithdrawFilter(filter) {
-            currentFilter = filter;
-            loadWithdraws(1);
         }
         
         // ============================================
-        // OPTIMIZED: Load Users with pagination
+        // LOAD WITHDRAWALS
+        // ============================================
+        async function loadWithdraws(page = 1, filter = 'pending') {
+            currentFilter = filter;
+            document.getElementById('pageTitle').textContent = 'Withdrawal Requests';
+            
+            document.getElementById('adminContent').innerHTML = '<div class="loading"><div class="spinner"></div><p>Loading withdrawals...</p></div>';
+            
+            try {
+                const [allSnap, pendingSnap, approvedSnap, rejectedSnap] = await Promise.all([
+                    firebase.database().ref('withdraws').once('value'),
+                    firebase.database().ref('withdraws').orderByChild('status').equalTo('pending').once('value'),
+                    firebase.database().ref('withdraws').orderByChild('status').equalTo('approved').once('value'),
+                    firebase.database().ref('withdraws').orderByChild('status').equalTo('rejected').once('value')
+                ]);
+                
+                const totalCount = allSnap.size;
+                const pendingCount = pendingSnap.size;
+                const approvedCount = approvedSnap.size;
+                const rejectedCount = rejectedSnap.size;
+                
+                let query;
+                if (filter === 'all') {
+                    query = firebase.database().ref('withdraws').orderByChild('createdAt').limitToLast(PAGE_SIZE);
+                } else {
+                    query = firebase.database().ref('withdraws').orderByChild('status').equalTo(filter);
+                }
+                
+                const snapshot = await query.once('value');
+                let withdraws = [];
+                snapshot.forEach(child => withdraws.push({ id: child.key, ...child.val() }));
+                
+                withdraws.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+                
+                const totalFiltered = filter === 'pending' ? pendingCount : (filter === 'approved' ? approvedCount : (filter === 'rejected' ? rejectedCount : totalCount));
+                const totalPages = Math.ceil(totalFiltered / PAGE_SIZE);
+                
+                let html = `
+                    <div class="stats-grid">
+                        <div class="stat-card"><i class="fas fa-list"></i><h3>Total</h3><div class="number">${totalCount}</div></div>
+                        <div class="stat-card"><i class="fas fa-clock"></i><h3>Pending</h3><div class="number" style="color:#ff8c00;">${pendingCount}</div></div>
+                        <div class="stat-card"><i class="fas fa-check-circle"></i><h3>Approved</h3><div class="number" style="color:#48bb78;">${approvedCount}</div></div>
+                        <div class="stat-card"><i class="fas fa-times-circle"></i><h3>Rejected</h3><div class="number" style="color:#ff4757;">${rejectedCount}</div></div>
+                    </div>
+                    
+                    <div class="section-card">
+                        <div class="filter-tabs">
+                            <button class="filter-tab ${filter === 'pending' ? 'active' : ''}" onclick="loadWithdraws(1, 'pending')">⏳ Pending (${pendingCount})</button>
+                            <button class="filter-tab ${filter === 'approved' ? 'active' : ''}" onclick="loadWithdraws(1, 'approved')">✅ Approved (${approvedCount})</button>
+                            <button class="filter-tab ${filter === 'rejected' ? 'active' : ''}" onclick="loadWithdraws(1, 'rejected')">❌ Rejected (${rejectedCount})</button>
+                            <button class="filter-tab ${filter === 'all' ? 'active' : ''}" onclick="loadWithdraws(1, 'all')">📋 All (${totalCount})</button>
+                        </div>
+                        
+                        <div class="search-bar">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="withdrawSearch" placeholder="Search by email or name..." onkeyup="filterTable('withdrawTable', this.value)">
+                        </div>
+                        
+                        <div class="table-wrapper">
+                            <table id="withdrawTable">
+                                <thead>
+                                    <tr>
+                                        <th>User</th>
+                                        <th>Amount</th>
+                                        <th>Method</th>
+                                        <th>Account</th>
+                                        <th>Date</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="withdrawTableBody">
+                `;
+                
+                if (withdraws.length === 0) {
+                    html += `<tr><td colspan="6" style="text-align:center; padding:40px;">No ${filter} withdrawal requests found</td></tr>`;
+                } else {
+                    withdraws.slice(0, PAGE_SIZE).forEach(withdraw => {
+                        const statusClass = withdraw.status === 'pending' ? 'badge-pending' : (withdraw.status === 'approved' ? 'badge-approved' : 'badge-rejected');
+                        html += `
+                            <tr onclick="showWithdrawDetail('${withdraw.id}')">
+                                <td>
+                                    <strong>${withdraw.userName || 'N/A'}</strong><br>
+                                    <small>${withdraw.userEmail}</small>
+                                </td>
+                                <td><strong>${withdraw.amount} VEVO</strong></td>
+                                <td>${withdraw.methodName || withdraw.method}</td>
+                                <td>${withdraw.account}</td>
+                                <td><small>${withdraw.createdAt ? new Date(withdraw.createdAt).toLocaleDateString() : 'N/A'}</small></td>
+                                <td><span class="badge ${statusClass}">${withdraw.status.toUpperCase()}</span></td>
+                            </tr>
+                        `;
+                    });
+                }
+                
+                html += `</tbody></table></div>`;
+                
+                if (totalPages > 1) {
+                    html += `<div class="pagination">`;
+                    html += `<button onclick="loadWithdraws(${page - 1}, '${filter}')" ${page === 1 ? 'disabled' : ''}>← Prev</button>`;
+                    for (let i = Math.max(1, page - 2); i <= Math.min(totalPages, page + 2); i++) {
+                        html += `<button class="${i === page ? 'active' : ''}" onclick="loadWithdraws(${i}, '${filter}')">${i}</button>`;
+                    }
+                    html += `<button onclick="loadWithdraws(${page + 1}, '${filter}')" ${page === totalPages ? 'disabled' : ''}>Next →</button>`;
+                    html += `</div>`;
+                }
+                
+                html += `</div>`;
+                document.getElementById('adminContent').innerHTML = html;
+                
+            } catch (error) {
+                console.error('Error loading withdrawals:', error);
+                document.getElementById('adminContent').innerHTML = '<div class="section-card"><p style="color:red;">Error loading withdrawals.</p></div>';
+            }
+        }
+        
+        // ============================================
+        // LOAD USERS
         // ============================================
         async function loadUsers(page = 1) {
-            const snapshot = await db.ref('users').once('value');
-            const users = snapshot.val() || {};
-            cachedData.users = users;
+            document.getElementById('pageTitle').textContent = 'All Users';
+            document.getElementById('adminContent').innerHTML = '<div class="loading"><div class="spinner"></div><p>Loading users...</p></div>';
             
-            const usersArray = Object.entries(users)
-                .map(([uid, user]) => ({ ...user, uid, createdAt: user.createdAt || 0 }))
-                .sort((a, b) => b.createdAt - a.createdAt);
-            
-            const totalPages = Math.ceil(usersArray.length / PAGE_SIZE);
-            const startIndex = (page - 1) * PAGE_SIZE;
-            const pageItems = usersArray.slice(startIndex, startIndex + PAGE_SIZE);
-            
-            let html = `
-                <div class="stats-grid">
-                    <div class="stat-card"><i class="fas fa-users"></i><h3>Total Users</h3><div class="number">${usersArray.length}</div></div>
-                    <div class="stat-card"><i class="fas fa-coins"></i><h3>Total Balance</h3><div class="number">${usersArray.reduce((s, u) => s + (u.balance || 0), 0).toLocaleString()} VEVO</div></div>
-                </div>
-                <div class="search-bar"><i class="fas fa-search"></i><input type="text" id="userSearch" placeholder="Search by email or name..." onkeyup="filterUsers()"></div>
-                <div class="users-list-container">
-                    <div class="users-list" id="usersList">
-            `;
-            
-            if (pageItems.length === 0) {
-                html += '<div class="section-card"><p style="text-align:center">No users found</p></div>';
-            } else {
+            try {
+                const snapshot = await firebase.database().ref('users').once('value');
+                const users = snapshot.val() || {};
+                const usersArray = Object.entries(users)
+                    .map(([uid, user]) => ({ uid, ...user }))
+                    .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+                
+                const totalCount = usersArray.length;
+                const totalPages = Math.ceil(totalCount / PAGE_SIZE);
+                const startIndex = (page - 1) * PAGE_SIZE;
+                const pageItems = usersArray.slice(startIndex, startIndex + PAGE_SIZE);
+                
+                let totalBalance = usersArray.reduce((s, u) => s + (u.balance || 0), 0);
+                
+                let html = `
+                    <div class="stats-grid">
+                        <div class="stat-card"><i class="fas fa-users"></i><h3>Total Users</h3><div class="number">${totalCount}</div></div>
+                        <div class="stat-card"><i class="fas fa-coins"></i><h3>Total Balance</h3><div class="number">${totalBalance.toLocaleString()} VEVO</div></div>
+                    </div>
+                    
+                    <div class="section-card">
+                        <div class="search-bar">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="userSearch" placeholder="Search by email or name..." onkeyup="filterTable('userTable', this.value)">
+                        </div>
+                        
+                        <div class="table-wrapper">
+                            <table id="userTable">
+                                <thead>
+                                    <tr>
+                                        <th>User</th>
+                                        <th>Balance</th>
+                                        <th>Invited</th>
+                                        <th>Joined</th>
+                                        <th>Code</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="userTableBody">
+                `;
+                
                 pageItems.forEach(user => {
                     html += `
-                        <div class="user-card" data-email="${(user.email || '').toLowerCase()}" data-name="${(user.name || '').toLowerCase()}" onclick="showUserDetail('${user.uid}')">
-                            <h4>${user.name || user.email}</h4>
-                            <p><i class="fas fa-envelope"></i> ${user.email}</p>
-                            <p><i class="fas fa-coins"></i> ${user.balance || 0} VEVO</p>
-                            <p><i class="fas fa-user-friends"></i> Invited: ${user.inviteCount || 0} | Rewards: ${user.inviteRewards || 0}</p>
-                            <p><i class="fas fa-calendar"></i> Joined: ${user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}</p>
-                            <span class="badge ${user.withdrawCode ? 'badge-approved' : 'badge-pending'}">${user.withdrawCode ? '✓ Code Set' : '⚠ No Code'}</span>
-                        </div>
+                        <tr onclick="showUserDetail('${user.uid}')">
+                            <td>
+                                <strong>${user.name || 'N/A'}</strong><br>
+                                <small>${user.email}</small>
+                            </td>
+                            <td><strong>${user.balance || 0} VEVO</strong></td>
+                            <td>${user.inviteCount || 0} (Rewards: ${user.inviteRewards || 0})</td>
+                            <td><small>${user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}</small></td>
+                            <td><span class="badge ${user.withdrawCode ? 'badge-approved' : 'badge-pending'}">${user.withdrawCode ? 'Set' : 'Not Set'}</span></td>
+                        </tr>
                     `;
                 });
-            }
-            
-            html += `</div></div>`;
-            
-            if (totalPages > 1) {
-                html += `<div class="pagination">`;
-                html += `<button onclick="loadUsers(${page - 1})" ${page === 1 ? 'disabled' : ''}><i class="fas fa-chevron-left"></i> Prev</button>`;
-                for (let i = Math.max(1, page - 2); i <= Math.min(totalPages, page + 2); i++) {
-                    html += `<button class="${i === page ? 'active' : ''}" onclick="loadUsers(${i})">${i}</button>`;
+                
+                html += `</tbody></table></div>`;
+                
+                if (totalPages > 1) {
+                    html += `<div class="pagination">`;
+                    html += `<button onclick="loadUsers(${page - 1})" ${page === 1 ? 'disabled' : ''}>← Prev</button>`;
+                    for (let i = Math.max(1, page - 2); i <= Math.min(totalPages, page + 2); i++) {
+                        html += `<button class="${i === page ? 'active' : ''}" onclick="loadUsers(${i})">${i}</button>`;
+                    }
+                    html += `<button onclick="loadUsers(${page + 1})" ${page === totalPages ? 'disabled' : ''}>Next →</button>`;
+                    html += `</div>`;
                 }
-                html += `<button onclick="loadUsers(${page + 1})" ${page === totalPages ? 'disabled' : ''}>Next <i class="fas fa-chevron-right"></i></button>`;
+                
                 html += `</div>`;
+                document.getElementById('adminContent').innerHTML = html;
+                
+            } catch (error) {
+                console.error('Error loading users:', error);
+                document.getElementById('adminContent').innerHTML = '<div class="section-card"><p style="color:red;">Error loading users.</p></div>';
             }
-            
-            document.getElementById('adminContent').innerHTML = html;
         }
         
         // ============================================
-        // Modal Functions (Optimized - single fetch)
+        // DETAIL MODALS
         // ============================================
         async function showDepositDetail(depositId) {
-            // Show loading
-            document.getElementById('modalContent').innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
+            document.getElementById('modalContent').innerHTML = '<div class="loading"><div class="spinner"></div></div>';
             document.getElementById('detailModal').style.display = 'block';
             
-            const snapshot = await db.ref(`deposits/${depositId}`).once('value');
+            const snapshot = await firebase.database().ref(`deposits/${depositId}`).once('value');
             const deposit = snapshot.val();
-            if (!deposit) {
-                closeDetailModal();
-                return;
-            }
+            if (!deposit) { closeDetailModal(); return; }
             
-            const modalContent = document.getElementById('modalContent');
-            modalContent.innerHTML = `
-                <div class="modal-header"><h3><i class="fas fa-money-bill-wave"></i> Deposit Request Details</h3></div>
-                <div class="detail-row"><div class="detail-label">User Name:</div><div class="detail-value">${deposit.userName || '-'}</div></div>
+            document.getElementById('modalContent').innerHTML = `
+                <div class="modal-header"><h3><i class="fas fa-money-bill-wave"></i> Deposit Details</h3></div>
+                <div class="detail-row"><div class="detail-label">User:</div><div class="detail-value">${deposit.userName || 'N/A'}</div></div>
                 <div class="detail-row"><div class="detail-label">Email:</div><div class="detail-value">${deposit.userEmail}</div></div>
                 <div class="detail-row"><div class="detail-label">Amount:</div><div class="detail-value">${deposit.amount} ${deposit.currency || 'BIRR'}</div></div>
-                <div class="detail-row"><div class="detail-label">VEVO Amount:</div><div class="detail-value">${deposit.vevoAmount} VEVO</div></div>
-                <div class="detail-row"><div class="detail-label">Payment Method:</div><div class="detail-value">${deposit.methodDetails || deposit.method || 'Bank Transfer'}</div></div>
-                <div class="detail-row"><div class="detail-label">Status:</div><div class="detail-value"><span class="${deposit.status === 'pending' ? 'status-pending' : (deposit.status === 'approved' ? 'status-approved' : 'status-rejected')}">${deposit.status.toUpperCase()}</span></div></div>
+                <div class="detail-row"><div class="detail-label">VEVO Value:</div><div class="detail-value"><strong>${deposit.vevoAmount} VEVO</strong></div></div>
+                <div class="detail-row"><div class="detail-label">Method:</div><div class="detail-value">${deposit.methodDetails || deposit.method}</div></div>
+                <div class="detail-row"><div class="detail-label">Status:</div><div class="detail-value"><span class="badge ${deposit.status === 'pending' ? 'badge-pending' : (deposit.status === 'approved' ? 'badge-approved' : 'badge-rejected')}">${deposit.status.toUpperCase()}</span></div></div>
                 <div class="detail-row"><div class="detail-label">Date:</div><div class="detail-value">${new Date(deposit.createdAt).toLocaleString()}</div></div>
-                <div class="detail-row"><div class="detail-label">Screenshot:</div><div class="detail-value"><img src="${deposit.screenshot}" class="screenshot-img" onclick="window.open(this.src)" loading="lazy"></div></div>
+                <div class="detail-row"><div class="detail-label">Screenshot:</div><div class="detail-value"><img src="${deposit.screenshot}" class="screenshot-img" onclick="window.open(this.src)"></div></div>
                 ${deposit.status === 'pending' ? `
                     <div class="action-buttons">
-                        <button class="btn-approve" onclick="approveDepositAction('${deposit.id}', ${deposit.vevoAmount}, '${deposit.userId}')"><i class="fas fa-check"></i> Approve</button>
-                        <button class="btn-reject" onclick="rejectDepositAction('${deposit.id}')"><i class="fas fa-times"></i> Reject</button>
+                        <button class="btn-approve" onclick="approveDeposit('${deposit.id}', ${deposit.vevoAmount}, '${deposit.userId}', '${deposit.userEmail}', ${deposit.amount}, '${deposit.currency || 'BIRR'}')">✅ Approve</button>
+                        <button class="btn-reject" onclick="rejectDeposit('${deposit.id}', '${deposit.userEmail}')">❌ Reject</button>
                     </div>
                 ` : ''}
             `;
         }
         
         async function showWithdrawDetail(withdrawId) {
-            document.getElementById('modalContent').innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
+            document.getElementById('modalContent').innerHTML = '<div class="loading"><div class="spinner"></div></div>';
             document.getElementById('detailModal').style.display = 'block';
             
-            const snapshot = await db.ref(`withdraws/${withdrawId}`).once('value');
+            const snapshot = await firebase.database().ref(`withdraws/${withdrawId}`).once('value');
             const withdraw = snapshot.val();
-            if (!withdraw) {
-                closeDetailModal();
-                return;
-            }
+            if (!withdraw) { closeDetailModal(); return; }
             
-            const modalContent = document.getElementById('modalContent');
-            modalContent.innerHTML = `
-                <div class="modal-header"><h3><i class="fas fa-hand-holding-usd"></i> Withdrawal Request Details</h3></div>
-                <div class="detail-row"><div class="detail-label">User Name:</div><div class="detail-value">${withdraw.userName || '-'}</div></div>
+            document.getElementById('modalContent').innerHTML = `
+                <div class="modal-header"><h3><i class="fas fa-hand-holding-usd"></i> Withdrawal Details</h3></div>
+                <div class="detail-row"><div class="detail-label">User:</div><div class="detail-value">${withdraw.userName || 'N/A'}</div></div>
                 <div class="detail-row"><div class="detail-label">Email:</div><div class="detail-value">${withdraw.userEmail}</div></div>
-                <div class="detail-row"><div class="detail-label">Amount:</div><div class="detail-value">${withdraw.amount} VEVO</div></div>
-                <div class="detail-row"><div class="detail-label">Withdrawal Method:</div><div class="detail-value">${withdraw.methodName || withdraw.method}</div></div>
-                <div class="detail-row"><div class="detail-label">Account Number:</div><div class="detail-value">${withdraw.account}</div></div>
-                <div class="detail-row"><div class="detail-label">Status:</div><div class="detail-value"><span class="${withdraw.status === 'pending' ? 'status-pending' : (withdraw.status === 'approved' ? 'status-approved' : 'status-rejected')}">${withdraw.status.toUpperCase()}</span></div></div>
+                <div class="detail-row"><div class="detail-label">Amount:</div><div class="detail-value"><strong>${withdraw.amount} VEVO</strong></div></div>
+                <div class="detail-row"><div class="detail-label">Method:</div><div class="detail-value">${withdraw.methodName || withdraw.method}</div></div>
+                <div class="detail-row"><div class="detail-label">Account:</div><div class="detail-value">${withdraw.account}</div></div>
+                <div class="detail-row"><div class="detail-label">Status:</div><div class="detail-value"><span class="badge ${withdraw.status === 'pending' ? 'badge-pending' : (withdraw.status === 'approved' ? 'badge-approved' : 'badge-rejected')}">${withdraw.status.toUpperCase()}</span></div></div>
                 <div class="detail-row"><div class="detail-label">Date:</div><div class="detail-value">${new Date(withdraw.createdAt).toLocaleString()}</div></div>
                 ${withdraw.status === 'pending' ? `
                     <div class="action-buttons">
-                        <button class="btn-approve" onclick="approveWithdrawAction('${withdraw.id}', ${withdraw.amount}, '${withdraw.userId}')"><i class="fas fa-check"></i> Approve</button>
-                        <button class="btn-reject" onclick="rejectWithdrawAction('${withdraw.id}')"><i class="fas fa-times"></i> Reject</button>
+                        <button class="btn-approve" onclick="approveWithdraw('${withdraw.id}', ${withdraw.amount}, '${withdraw.userId}', '${withdraw.userEmail}')">✅ Approve</button>
+                        <button class="btn-reject" onclick="rejectWithdraw('${withdraw.id}', '${withdraw.userEmail}')">❌ Reject</button>
                     </div>
                 ` : ''}
             `;
         }
         
         async function showUserDetail(userId) {
-            document.getElementById('modalContent').innerHTML = '<div class="loading-spinner"><div class="spinner"></div></div>';
+            document.getElementById('modalContent').innerHTML = '<div class="loading"><div class="spinner"></div></div>';
             document.getElementById('detailModal').style.display = 'block';
             
-            const snapshot = await db.ref(`users/${userId}`).once('value');
+            const snapshot = await firebase.database().ref(`users/${userId}`).once('value');
             const user = snapshot.val();
-            if (!user) {
-                closeDetailModal();
-                return;
-            }
+            if (!user) { closeDetailModal(); return; }
             
-            const modalContent = document.getElementById('modalContent');
-            modalContent.innerHTML = `
+            document.getElementById('modalContent').innerHTML = `
                 <div class="modal-header"><h3><i class="fas fa-user"></i> User Details</h3></div>
-                <div class="detail-row"><div class="detail-label">Name:</div><div class="detail-value">${user.name || '-'}</div></div>
+                <div class="detail-row"><div class="detail-label">Name:</div><div class="detail-value">${user.name || 'N/A'}</div></div>
                 <div class="detail-row"><div class="detail-label">Email:</div><div class="detail-value">${user.email}</div></div>
                 <div class="detail-row"><div class="detail-label">Balance:</div><div class="detail-value"><strong>${user.balance || 0} VEVO</strong></div></div>
-                <div class="detail-row"><div class="detail-label">Withdrawal Code:</div><div class="detail-value">${user.withdrawCode ? '✓ Set' : '❌ Not set'}</div></div>
-                <div class="detail-row"><div class="detail-label">Invited Friends:</div><div class="detail-value">${user.inviteCount || 0}</div></div>
-                <div class="detail-row"><div class="detail-label">Rewards Earned:</div><div class="detail-value">${user.inviteRewards || 0} VEVO</div></div>
+                <div class="detail-row"><div class="detail-label">Withdraw Code:</div><div class="detail-value">${user.withdrawCode || 'Not Set'}</div></div>
+                <div class="detail-row"><div class="detail-label">Invited:</div><div class="detail-value">${user.inviteCount || 0} friends</div></div>
+                <div class="detail-row"><div class="detail-label">Rewards:</div><div class="detail-value">${user.inviteRewards || 0} VEVO</div></div>
                 <div class="detail-row"><div class="detail-label">Joined:</div><div class="detail-value">${user.createdAt ? new Date(user.createdAt).toLocaleString() : 'N/A'}</div></div>
                 <div class="action-buttons">
-                    <button class="btn-reset" onclick="resetUserCode('${userId}')"><i class="fas fa-key"></i> Reset Withdraw Code</button>
-                    <button class="btn-approve" onclick="openAddBalanceModal('${userId}', '${user.name || user.email}', ${user.balance || 0})"><i class="fas fa-plus"></i> Add Balance</button>
+                    <button class="btn-reset" onclick="resetUserCode('${userId}')">🔑 Reset Code</button>
+                    <button class="btn-approve" onclick="openAddBalance('${userId}', '${user.name || user.email}', ${user.balance || 0})">💰 Add Balance</button>
                 </div>
             `;
         }
         
         // ============================================
-        // Actions
+        // ACTIONS WITH TELEGRAM NOTIFICATIONS
         // ============================================
-        async function approveDepositAction(depositId, vevoAmount, userId) {
-            if (confirm(`Approve deposit? User will receive ${vevoAmount} VEVO.`)) {
-                await db.ref(`deposits/${depositId}`).update({ status: 'approved', approvedAt: Date.now() });
-                const userRef = db.ref(`users/${userId}`);
-                const userSnap = await userRef.once('value');
-                const user = userSnap.val();
-                await userRef.update({ balance: (user.balance || 0) + vevoAmount });
-                showNotification(`Deposit approved! +${vevoAmount} VEVO`, 'success');
-                closeDetailModal();
-                loadDeposits(1);
-            }
+        async function approveDeposit(id, vevoAmount, userId, userEmail, amount, currency) {
+            if (!confirm(`Approve deposit? User will receive ${vevoAmount} VEVO.`)) return;
+            
+            await firebase.database().ref(`deposits/${id}`).update({ status: 'approved', approvedAt: Date.now() });
+            const userRef = firebase.database().ref(`users/${userId}`);
+            const userSnap = await userRef.once('value');
+            const user = userSnap.val();
+            await userRef.update({ balance: (user.balance || 0) + vevoAmount });
+            
+            // Send Telegram notification
+            await sendTelegramNotification(
+                `✅ <b>DEPOSIT APPROVED</b>\n\n` +
+                `👤 <b>User:</b> ${userEmail}\n` +
+                `💰 <b>Amount:</b> ${amount} ${currency}\n` +
+                `🪙 <b>Credited:</b> ${vevoAmount} VEVO\n` +
+                `⏰ <b>Time:</b> ${new Date().toLocaleString()}`
+            );
+            
+            showNotification('Deposit approved!', 'success');
+            closeDetailModal();
+            loadDeposits(1, currentFilter);
+            updatePendingCounts();
         }
         
-        async function rejectDepositAction(depositId) {
-            if (confirm('Reject this deposit?')) {
-                await db.ref(`deposits/${depositId}`).update({ status: 'rejected', rejectedAt: Date.now() });
-                showNotification('Deposit rejected', 'success');
-                closeDetailModal();
-                loadDeposits(1);
-            }
+        async function rejectDeposit(id, userEmail) {
+            if (!confirm('Reject this deposit?')) return;
+            
+            await firebase.database().ref(`deposits/${id}`).update({ status: 'rejected', rejectedAt: Date.now() });
+            
+            await sendTelegramNotification(
+                `❌ <b>DEPOSIT REJECTED</b>\n\n` +
+                `👤 <b>User:</b> ${userEmail}\n` +
+                `⏰ <b>Time:</b> ${new Date().toLocaleString()}`
+            );
+            
+            showNotification('Deposit rejected', 'success');
+            closeDetailModal();
+            loadDeposits(1, currentFilter);
+            updatePendingCounts();
         }
         
-        async function approveWithdrawAction(withdrawId, amount, userId) {
-            if (confirm(`Approve withdrawal? ${amount} VEVO will be deducted from user balance.`)) {
-                await db.ref(`withdraws/${withdrawId}`).update({ status: 'approved', approvedAt: Date.now() });
-                const userRef = db.ref(`users/${userId}`);
-                const userSnap = await userRef.once('value');
-                const user = userSnap.val();
-                await userRef.update({ balance: (user.balance || 0) - amount });
-                showNotification(`Withdrawal approved! -${amount} VEVO`, 'success');
-                closeDetailModal();
-                loadWithdraws(1);
-            }
+        async function approveWithdraw(id, amount, userId, userEmail) {
+            if (!confirm(`Approve withdrawal? ${amount} VEVO will be deducted.`)) return;
+            
+            await firebase.database().ref(`withdraws/${id}`).update({ status: 'approved', approvedAt: Date.now() });
+            const userRef = firebase.database().ref(`users/${userId}`);
+            const userSnap = await userRef.once('value');
+            const user = userSnap.val();
+            await userRef.update({ balance: (user.balance || 0) - amount });
+            
+            await sendTelegramNotification(
+                `✅ <b>WITHDRAWAL APPROVED</b>\n\n` +
+                `👤 <b>User:</b> ${userEmail}\n` +
+                `💸 <b>Amount:</b> ${amount} VEVO\n` +
+                `⏰ <b>Time:</b> ${new Date().toLocaleString()}`
+            );
+            
+            showNotification('Withdrawal approved!', 'success');
+            closeDetailModal();
+            loadWithdraws(1, currentFilter);
+            updatePendingCounts();
         }
         
-        async function rejectWithdrawAction(withdrawId) {
-            if (confirm('Reject this withdrawal?')) {
-                await db.ref(`withdraws/${withdrawId}`).update({ status: 'rejected', rejectedAt: Date.now() });
-                showNotification('Withdrawal rejected', 'success');
-                closeDetailModal();
-                loadWithdraws(1);
-            }
+        async function rejectWithdraw(id, userEmail) {
+            if (!confirm('Reject this withdrawal?')) return;
+            
+            await firebase.database().ref(`withdraws/${id}`).update({ status: 'rejected', rejectedAt: Date.now() });
+            
+            await sendTelegramNotification(
+                `❌ <b>WITHDRAWAL REJECTED</b>\n\n` +
+                `👤 <b>User:</b> ${userEmail}\n` +
+                `⏰ <b>Time:</b> ${new Date().toLocaleString()}`
+            );
+            
+            showNotification('Withdrawal rejected', 'success');
+            closeDetailModal();
+            loadWithdraws(1, currentFilter);
+            updatePendingCounts();
         }
         
         async function resetUserCode(userId) {
-            if (confirm('Reset withdrawal code for this user?')) {
-                await db.ref(`users/${userId}`).update({ withdrawCode: null });
-                showNotification('Withdrawal code reset', 'success');
-                closeDetailModal();
-                loadUsers(1);
-            }
+            if (!confirm('Reset withdrawal code?')) return;
+            await firebase.database().ref(`users/${userId}`).update({ withdrawCode: null });
+            showNotification('Code reset!', 'success');
+            closeDetailModal();
         }
         
-        function openAddBalanceModal(userId, userName, currentBalance) {
-            const modalContent = document.getElementById('modalContent');
-            modalContent.innerHTML = `
-                <div class="modal-header"><h3><i class="fas fa-plus-circle"></i> Add Balance</h3></div>
+        function openAddBalance(userId, userName, currentBalance) {
+            document.getElementById('modalContent').innerHTML = `
+                <div class="modal-header"><h3>Add Balance</h3></div>
                 <div class="detail-row"><div class="detail-label">User:</div><div class="detail-value">${userName}</div></div>
-                <div class="detail-row"><div class="detail-label">Current Balance:</div><div class="detail-value">${currentBalance} VEVO</div></div>
-                <div class="detail-row"><div class="detail-label">Amount to Add:</div><div class="detail-value"><input type="number" id="addAmount" style="padding:8px; width:100%; border:1px solid #ddd; border-radius:5px;" placeholder="Enter amount"></div></div>
+                <div class="detail-row"><div class="detail-label">Current:</div><div class="detail-value">${currentBalance} VEVO</div></div>
+                <div class="detail-row"><div class="detail-label">Amount:</div><div class="detail-value"><input type="number" id="addAmount" style="padding:8px; width:100%; border:1px solid #ddd; border-radius:5px;" placeholder="Enter amount"></div></div>
                 <div class="action-buttons">
-                    <button class="btn-approve" onclick="confirmAddBalance('${userId}', ${currentBalance})"><i class="fas fa-check"></i> Add Balance</button>
-                    <button class="btn-reject" onclick="closeDetailModal()"><i class="fas fa-times"></i> Cancel</button>
+                    <button class="btn-approve" onclick="confirmAddBalance('${userId}', ${currentBalance})">Add</button>
+                    <button class="btn-reject" onclick="closeDetailModal()">Cancel</button>
                 </div>
             `;
         }
         
         async function confirmAddBalance(userId, currentBalance) {
             const amount = parseInt(document.getElementById('addAmount').value);
-            if (!amount || amount <= 0) {
-                showNotification('Enter valid amount', 'error');
-                return;
-            }
-            await db.ref(`users/${userId}`).update({ balance: currentBalance + amount });
+            if (!amount || amount <= 0) { showNotification('Enter valid amount', 'error'); return; }
+            await firebase.database().ref(`users/${userId}`).update({ balance: currentBalance + amount });
             showNotification(`Added ${amount} VEVO!`, 'success');
             closeDetailModal();
-            loadUsers(1);
         }
         
-        function closeDetailModal() {
-            document.getElementById('detailModal').style.display = 'none';
-        }
+        function closeDetailModal() { document.getElementById('detailModal').style.display = 'none'; }
         
-        // ============================================
-        // Search Filters (Client-side for speed)
-        // ============================================
-        function filterDeposits() {
-            const search = document.getElementById('depositSearch')?.value.toLowerCase() || '';
-            const cards = document.querySelectorAll('#depositsList .user-card');
-            cards.forEach(card => {
-                const email = card.dataset.email || '';
-                const name = card.dataset.name || '';
-                card.style.display = (email.includes(search) || name.includes(search)) ? 'block' : 'none';
-            });
-        }
-        
-        function filterWithdraws() {
-            const search = document.getElementById('withdrawSearch')?.value.toLowerCase() || '';
-            const cards = document.querySelectorAll('#withdrawsList .user-card');
-            cards.forEach(card => {
-                const email = card.dataset.email || '';
-                const name = card.dataset.name || '';
-                card.style.display = (email.includes(search) || name.includes(search)) ? 'block' : 'none';
-            });
-        }
-        
-        function filterUsers() {
-            const search = document.getElementById('userSearch')?.value.toLowerCase() || '';
-            const cards = document.querySelectorAll('#usersList .user-card');
-            cards.forEach(card => {
-                const email = card.dataset.email || '';
-                const name = card.dataset.name || '';
-                card.style.display = (email.includes(search) || name.includes(search)) ? 'block' : 'none';
+        function filterTable(tableId, searchText) {
+            const rows = document.querySelectorAll(`#${tableId} tbody tr`);
+            const search = searchText.toLowerCase();
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(search) ? '' : 'none';
             });
         }
         
         function loadSettings() {
-            const html = `
+            document.getElementById('pageTitle').textContent = 'Settings';
+            document.getElementById('adminContent').innerHTML = `
                 <div class="section-card">
-                    <h2 class="section-title"><i class="fas fa-cog"></i> Admin Settings</h2>
+                    <h3 class="section-title"><i class="fab fa-telegram"></i> Telegram Bot Settings</h3>
                     <div style="padding: 20px;">
-                        <h3>System Information</h3>
-                        <p><strong>Admin:</strong> Abel</p>
-                        <p><strong>Exchange Rate:</strong> 1 Birr = 1 VEVO | 1 USDT = 157 VEVO</p>
-                        <p><strong>Referral Reward:</strong> 10 VEVO for every 5 invites</p>
-                        <hr style="margin: 20px 0;">
-                        <h3>Payment Details</h3>
+                        <p><strong>Bot Token:</strong> ${TELEGRAM_BOT_TOKEN}</p>
+                        <p><strong>Chat ID:</strong> ${TELEGRAM_CHAT_ID}</p>
+                        <button onclick="testTelegramNow()" style="margin-top: 15px; padding: 10px 25px; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer;">
+                            <i class="fab fa-telegram"></i> Send Test Notification
+                        </button>
+                    </div>
+                </div>
+                <div class="section-card">
+                    <h3 class="section-title"><i class="fas fa-dollar-sign"></i> Exchange Rates</h3>
+                    <div style="padding: 20px;">
+                        <p>1 Birr = 1 VEVO</p>
+                        <p>1 USDT = 157 VEVO</p>
+                    </div>
+                </div>
+                <div class="section-card">
+                    <h3 class="section-title"><i class="fas fa-credit-card"></i> Payment Accounts</h3>
+                    <div style="padding: 20px;">
                         <p><strong>M-Pesa:</strong> 0725032395 (Abenezer Shigute)</p>
                         <p><strong>TeleBirr:</strong> 0940980555 (Tenaye Hutalo)</p>
                         <p><strong>CBE Birr:</strong> 0940980555</p>
@@ -924,59 +957,46 @@
                     </div>
                 </div>
             `;
-            document.getElementById('adminContent').innerHTML = html;
         }
         
-        async function loadAdminContent(tab) {
-            currentTab = tab;
-            currentFilter = 'all'; // Reset filter when switching tabs
-            
-            document.querySelectorAll('.nav-item').forEach(item => {
-                if (item.dataset.tab === tab) item.classList.add('active');
-                else item.classList.remove('active');
-            });
-            
-            if (tab === 'dashboard') await loadDashboard();
-            else if (tab === 'deposits') await loadDeposits(1);
-            else if (tab === 'withdraws') await loadWithdraws(1);
-            else if (tab === 'users') await loadUsers(1);
-            else if (tab === 'settings') loadSettings();
-        }
-        
-        // Event Listeners
+        // Navigation
         document.querySelectorAll('.nav-item').forEach(item => {
-            item.addEventListener('click', () => loadAdminContent(item.dataset.tab));
+            item.addEventListener('click', () => {
+                document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                item.classList.add('active');
+                const tab = item.dataset.tab;
+                if (tab === 'dashboard') loadDashboard();
+                else if (tab === 'deposits') loadDeposits(1, 'pending');
+                else if (tab === 'withdraws') loadWithdraws(1, 'pending');
+                else if (tab === 'users') loadUsers();
+                else if (tab === 'settings') loadSettings();
+            });
         });
         
-        window.onclick = (e) => {
-            const modal = document.getElementById('detailModal');
-            if (e.target === modal) closeDetailModal();
-        };
+        window.onclick = (e) => { if (e.target.classList.contains('modal')) closeDetailModal(); };
         
-        // Global function exports
+        // Global exports
         window.toggleSidebar = toggleSidebar;
         window.adminLogin = adminLogin;
         window.adminLogout = adminLogout;
+        window.loadDashboard = loadDashboard;
         window.loadDeposits = loadDeposits;
         window.loadWithdraws = loadWithdraws;
         window.loadUsers = loadUsers;
-        window.loadAdminContent = loadAdminContent;
-        window.setFilter = setFilter;
-        window.setWithdrawFilter = setWithdrawFilter;
+        window.loadSettings = loadSettings;
         window.showDepositDetail = showDepositDetail;
         window.showWithdrawDetail = showWithdrawDetail;
         window.showUserDetail = showUserDetail;
-        window.approveDepositAction = approveDepositAction;
-        window.rejectDepositAction = rejectDepositAction;
-        window.approveWithdrawAction = approveWithdrawAction;
-        window.rejectWithdrawAction = rejectWithdrawAction;
+        window.approveDeposit = approveDeposit;
+        window.rejectDeposit = rejectDeposit;
+        window.approveWithdraw = approveWithdraw;
+        window.rejectWithdraw = rejectWithdraw;
         window.resetUserCode = resetUserCode;
-        window.openAddBalanceModal = openAddBalanceModal;
+        window.openAddBalance = openAddBalance;
         window.confirmAddBalance = confirmAddBalance;
-        window.filterDeposits = filterDeposits;
-        window.filterWithdraws = filterWithdraws;
-        window.filterUsers = filterUsers;
         window.closeDetailModal = closeDetailModal;
+        window.filterTable = filterTable;
+        window.testTelegramNow = testTelegramNow;
     </script>
 </body>
 </html>
