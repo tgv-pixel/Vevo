@@ -49,12 +49,19 @@
         table { width: 100%; border-collapse: collapse; background: white; }
         th { background: #f5f5f5; padding: 12px; text-align: left; position: sticky; top: 0; font-weight: bold; }
         td { padding: 10px 12px; border-bottom: 1px solid #e0e0e0; }
-        tr:hover { background: #f9f9f9; cursor: pointer; }
+        tr:hover { background: #f9f9f9; }
 
         .badge { padding: 4px 10px; border-radius: 15px; font-size: 11px; font-weight: bold; }
         .badge-pending { background: #ffd700; color: #333; }
         .badge-approved { background: #48bb78; color: white; }
         .badge-rejected { background: #ff4757; color: white; }
+
+        .action-btn { padding: 6px 12px; border: none; border-radius: 5px; cursor: pointer; font-size: 12px; font-weight: bold; margin: 2px; }
+        .btn-approve-sm { background: #48bb78; color: white; }
+        .btn-reject-sm { background: #ff4757; color: white; }
+        .btn-view-sm { background: #667eea; color: white; }
+        .btn-add-sm { background: #48bb78; color: white; }
+        .btn-decrease-sm { background: #ff4757; color: white; }
 
         .pagination { display: flex; justify-content: center; gap: 8px; margin-top: 20px; }
         .pagination button { padding: 8px 16px; background: white; border: none; border-radius: 8px; cursor: pointer; }
@@ -151,7 +158,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script>
         // ============================================
-        // FIREBASE INITIALIZATION (Fixed)
+        // FIREBASE INITIALIZATION
         // ============================================
         const firebaseConfig = {
             apiKey: "AIzaSyCAfsKcVP7OUo870TKkBnk4BfDEq9LnAK8",
@@ -163,7 +170,6 @@
             appId: "1:733557611631:web:02c9377f56d614ff3b019a"
         };
         
-        // Check if Firebase is already initialized
         if (!firebase.apps.length) {
             firebase.initializeApp(firebaseConfig);
         }
@@ -222,22 +228,17 @@
                     db.ref('users').once('value')
                 ]);
                 
-                // Cache deposits
                 cachedDeposits = [];
                 depositsSnap.forEach(child => cachedDeposits.push({ id: child.key, ...child.val() }));
                 
-                // Cache withdrawals
                 cachedWithdraws = [];
                 withdrawsSnap.forEach(child => cachedWithdraws.push({ id: child.key, ...child.val() }));
                 
-                // Cache users
                 cachedUsers = [];
                 usersSnap.forEach(child => cachedUsers.push({ uid: child.key, ...child.val() }));
                 
                 updatePendingBadges();
                 loadDashboard();
-                
-                // Setup real-time listeners
                 setupRealtimeListeners();
                 
             } catch (error) {
@@ -254,11 +255,9 @@
         }
         
         function setupRealtimeListeners() {
-            // Listen for new deposits
             db.ref('deposits').on('child_added', (snap) => {
                 const deposit = { id: snap.key, ...snap.val() };
-                const exists = cachedDeposits.find(d => d.id === deposit.id);
-                if (!exists) {
+                if (!cachedDeposits.find(d => d.id === deposit.id)) {
                     cachedDeposits.push(deposit);
                     updatePendingBadges();
                 }
@@ -271,11 +270,9 @@
                 updatePendingBadges();
             });
             
-            // Listen for new withdrawals
             db.ref('withdraws').on('child_added', (snap) => {
                 const withdraw = { id: snap.key, ...snap.val() };
-                const exists = cachedWithdraws.find(w => w.id === withdraw.id);
-                if (!exists) {
+                if (!cachedWithdraws.find(w => w.id === withdraw.id)) {
                     cachedWithdraws.push(withdraw);
                     updatePendingBadges();
                 }
@@ -347,7 +344,7 @@
         }
         
         // ============================================
-        // DEPOSITS
+        // DEPOSITS WITH ACTION BUTTONS
         // ============================================
         function loadDeposits(filter = 'pending', page = 1) {
             currentFilter = filter;
@@ -391,24 +388,31 @@
                     <div class="table-wrapper">
                         <table id="depositTable">
                             <thead>
-                                <tr><th>User</th><th>Amount</th><th>VEVO</th><th>Method</th><th>Date</th><th>Status</th></tr>
+                                <tr><th>User</th><th>Amount</th><th>VEVO</th><th>Method</th><th>Date</th><th>Status</th><th>Actions</th></tr>
                             </thead>
                             <tbody>
             `;
             
             if (pageItems.length === 0) {
-                html += `<tr><td colspan="6" style="text-align:center; padding:40px;">No ${filter} deposits found</td></tr>`;
+                html += `<tr><td colspan="7" style="text-align:center; padding:40px;">No ${filter} deposits found</td></tr>`;
             } else {
                 pageItems.forEach(d => {
                     const statusClass = d.status === 'pending' ? 'badge-pending' : (d.status === 'approved' ? 'badge-approved' : 'badge-rejected');
                     html += `
-                        <tr onclick="showDepositDetail('${d.id}')">
+                        <tr>
                             <td><strong>${d.userName || 'N/A'}</strong><br><small>${d.userEmail || ''}</small></td>
                             <td>${d.amount || 0} ${d.currency || 'BIRR'}</td>
                             <td><strong>${d.vevoAmount || 0} VEVO</strong></td>
                             <td><small>${(d.methodDetails || d.method || 'N/A').substring(0, 20)}</small></td>
                             <td><small>${d.createdAt ? new Date(d.createdAt).toLocaleDateString() : 'N/A'}</small></td>
                             <td><span class="badge ${statusClass}">${(d.status || 'pending').toUpperCase()}</span></td>
+                            <td>
+                                <button class="action-btn btn-view-sm" onclick="event.stopPropagation(); showDepositDetail('${d.id}')" title="View Details"><i class="fas fa-eye"></i></button>
+                                ${d.status === 'pending' ? `
+                                    <button class="action-btn btn-approve-sm" onclick="event.stopPropagation(); approveDeposit('${d.id}', ${d.vevoAmount || 0}, '${d.userId}')" title="Approve"><i class="fas fa-check"></i></button>
+                                    <button class="action-btn btn-reject-sm" onclick="event.stopPropagation(); rejectDeposit('${d.id}')" title="Reject"><i class="fas fa-times"></i></button>
+                                ` : ''}
+                            </td>
                         </tr>
                     `;
                 });
@@ -431,7 +435,7 @@
         }
         
         // ============================================
-        // WITHDRAWALS
+        // WITHDRAWALS WITH ACTION BUTTONS
         // ============================================
         function loadWithdraws(filter = 'pending', page = 1) {
             currentFilter = filter;
@@ -475,24 +479,31 @@
                     <div class="table-wrapper">
                         <table id="withdrawTable">
                             <thead>
-                                <tr><th>User</th><th>Amount</th><th>Method</th><th>Account</th><th>Date</th><th>Status</th></tr>
+                                <tr><th>User</th><th>Amount</th><th>Method</th><th>Account</th><th>Date</th><th>Status</th><th>Actions</th></tr>
                             </thead>
                             <tbody>
             `;
             
             if (pageItems.length === 0) {
-                html += `<tr><td colspan="6" style="text-align:center; padding:40px;">No ${filter} withdrawals found</td></tr>`;
+                html += `<tr><td colspan="7" style="text-align:center; padding:40px;">No ${filter} withdrawals found</td></tr>`;
             } else {
                 pageItems.forEach(w => {
                     const statusClass = w.status === 'pending' ? 'badge-pending' : (w.status === 'approved' ? 'badge-approved' : 'badge-rejected');
                     html += `
-                        <tr onclick="showWithdrawDetail('${w.id}')">
+                        <tr>
                             <td><strong>${w.userName || 'N/A'}</strong><br><small>${w.userEmail || ''}</small></td>
                             <td><strong>${w.amount || 0} VEVO</strong></td>
                             <td>${w.methodName || w.method || 'N/A'}</td>
                             <td>${w.account || 'N/A'}</td>
                             <td><small>${w.createdAt ? new Date(w.createdAt).toLocaleDateString() : 'N/A'}</small></td>
                             <td><span class="badge ${statusClass}">${(w.status || 'pending').toUpperCase()}</span></td>
+                            <td>
+                                <button class="action-btn btn-view-sm" onclick="event.stopPropagation(); showWithdrawDetail('${w.id}')" title="View Details"><i class="fas fa-eye"></i></button>
+                                ${w.status === 'pending' ? `
+                                    <button class="action-btn btn-approve-sm" onclick="event.stopPropagation(); approveWithdraw('${w.id}', ${w.amount || 0}, '${w.userId}')" title="Approve"><i class="fas fa-check"></i></button>
+                                    <button class="action-btn btn-reject-sm" onclick="event.stopPropagation(); rejectWithdraw('${w.id}')" title="Reject"><i class="fas fa-times"></i></button>
+                                ` : ''}
+                            </td>
                         </tr>
                     `;
                 });
@@ -515,7 +526,7 @@
         }
         
         // ============================================
-        // USERS (With Add/Decrease Balance)
+        // USERS
         // ============================================
         function loadUsers(page = 1) {
             document.getElementById('pageTitle').textContent = 'All Users';
@@ -559,15 +570,9 @@
                         <td><small>${user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}</small></td>
                         <td><span class="badge ${user.withdrawCode ? 'badge-approved' : 'badge-pending'}">${user.withdrawCode ? 'Set' : 'Not Set'}</span></td>
                         <td>
-                            <button onclick="event.stopPropagation(); showUserDetail('${user.uid}')" style="background:#667eea; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer; margin-right:5px;">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                            <button onclick="event.stopPropagation(); openAddBalance('${user.uid}', '${user.name || user.email}', ${user.balance || 0})" style="background:#48bb78; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer; margin-right:5px;">
-                                <i class="fas fa-plus"></i>
-                            </button>
-                            <button onclick="event.stopPropagation(); openDecreaseBalance('${user.uid}', '${user.name || user.email}', ${user.balance || 0})" style="background:#ff4757; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">
-                                <i class="fas fa-minus"></i>
-                            </button>
+                            <button class="action-btn btn-view-sm" onclick="event.stopPropagation(); showUserDetail('${user.uid}')" title="View Details"><i class="fas fa-eye"></i></button>
+                            <button class="action-btn btn-add-sm" onclick="event.stopPropagation(); openAddBalance('${user.uid}', '${user.name || user.email}', ${user.balance || 0})" title="Add Balance"><i class="fas fa-plus"></i></button>
+                            <button class="action-btn btn-decrease-sm" onclick="event.stopPropagation(); openDecreaseBalance('${user.uid}', '${user.name || user.email}', ${user.balance || 0})" title="Decrease Balance"><i class="fas fa-minus"></i></button>
                         </td>
                     </tr>
                 `;
@@ -697,8 +702,6 @@
             if (!amount || amount <= 0) { showNotification('Enter valid amount', 'error'); return; }
             
             await db.ref(`users/${userId}`).update({ balance: currentBalance + amount });
-            
-            // Update cache
             const userIndex = cachedUsers.findIndex(u => u.uid === userId);
             if (userIndex !== -1) cachedUsers[userIndex].balance = currentBalance + amount;
             
@@ -713,8 +716,6 @@
             if (amount > currentBalance) { showNotification('Amount exceeds balance', 'error'); return; }
             
             await db.ref(`users/${userId}`).update({ balance: currentBalance - amount });
-            
-            // Update cache
             const userIndex = cachedUsers.findIndex(u => u.uid === userId);
             if (userIndex !== -1) cachedUsers[userIndex].balance = currentBalance - amount;
             
@@ -737,16 +738,16 @@
                 await userRef.update({ balance: (user.balance || 0) + vevoAmount });
             }
             showNotification('Deposit approved!', 'success');
-            closeDetailModal();
-            loadInitialData();
+            loadDeposits(currentFilter);
+            updatePendingBadges();
         }
         
         async function rejectDeposit(id) {
             if (!confirm('Reject this deposit?')) return;
             await db.ref(`deposits/${id}`).update({ status: 'rejected', rejectedAt: Date.now() });
             showNotification('Deposit rejected', 'success');
-            closeDetailModal();
-            loadInitialData();
+            loadDeposits(currentFilter);
+            updatePendingBadges();
         }
         
         async function approveWithdraw(id, amount, userId) {
@@ -760,16 +761,16 @@
                 await userRef.update({ balance: Math.max(0, (user.balance || 0) - amount) });
             }
             showNotification('Withdrawal approved!', 'success');
-            closeDetailModal();
-            loadInitialData();
+            loadWithdraws(currentFilter);
+            updatePendingBadges();
         }
         
         async function rejectWithdraw(id) {
             if (!confirm('Reject this withdrawal?')) return;
             await db.ref(`withdraws/${id}`).update({ status: 'rejected', rejectedAt: Date.now() });
             showNotification('Withdrawal rejected', 'success');
-            closeDetailModal();
-            loadInitialData();
+            loadWithdraws(currentFilter);
+            updatePendingBadges();
         }
         
         async function resetUserCode(userId) {
@@ -777,7 +778,7 @@
             await db.ref(`users/${userId}`).update({ withdrawCode: null });
             showNotification('Code reset!', 'success');
             closeDetailModal();
-            loadInitialData();
+            loadUsers();
         }
         
         function closeDetailModal() { document.getElementById('detailModal').style.display = 'none'; }
