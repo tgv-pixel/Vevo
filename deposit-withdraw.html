@@ -151,12 +151,6 @@
             font-size: 40px;
         }
 
-        .payment-logo img {
-            width: 60px;
-            height: 60px;
-            object-fit: contain;
-        }
-
         .payment-name {
             font-size: 20px;
             font-weight: bold;
@@ -232,7 +226,7 @@
             transition: all 0.3s;
         }
 
-        .submit-btn:hover {
+        .submit-btn:hover:not(:disabled) {
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(72,187,120,0.4);
         }
@@ -240,6 +234,7 @@
         .submit-btn:disabled {
             opacity: 0.6;
             cursor: not-allowed;
+            background: #95a5a6;
         }
 
         .info-box {
@@ -258,6 +253,21 @@
             margin-top: 10px;
             padding-top: 10px;
             border-top: 1px solid #e0e0e0;
+        }
+
+        /* Pending Request Warning */
+        .pending-warning {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            color: #856404;
+            display: none;
+        }
+
+        .pending-warning i {
+            margin-right: 10px;
         }
 
         /* Notification */
@@ -353,6 +363,12 @@
 
         <!-- Deposit Section -->
         <div id="depositSection">
+            <!-- Pending Request Warning -->
+            <div class="pending-warning" id="depositPendingWarning">
+                <i class="fas fa-hourglass-half"></i>
+                <span>You have a pending deposit request. Please wait for admin approval before submitting another.</span>
+            </div>
+
             <div class="payment-methods" id="depositMethods">
                 <!-- M-Pesa -->
                 <div class="payment-card" data-method="mpesa" data-type="deposit" onclick="selectPaymentMethod('mpesa', 'deposit')">
@@ -453,6 +469,12 @@
 
         <!-- Withdraw Section -->
         <div id="withdrawSection" style="display: none;">
+            <!-- Pending Request Warning -->
+            <div class="pending-warning" id="withdrawPendingWarning">
+                <i class="fas fa-hourglass-half"></i>
+                <span>You have a pending withdrawal request. Please wait for admin approval before submitting another.</span>
+            </div>
+
             <div class="payment-methods" id="withdrawMethods">
                 <!-- TeleBirr Withdraw -->
                 <div class="payment-card" data-method="telebirr" data-type="withdraw" onclick="selectPaymentMethod('telebirr', 'withdraw')">
@@ -519,7 +541,9 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script>
-        // Firebase Config
+        // ============================================
+        // CONFIGURATION
+        // ============================================
         const firebaseConfig = {
             apiKey: "AIzaSyCAfsKcVP7OUo870TKkBnk4BfDEq9LnAK8",
             authDomain: "newporoject-c6f66.firebaseapp.com",
@@ -530,6 +554,10 @@
             appId: "1:733557611631:web:02c9377f56d614ff3b019a"
         };
         
+        // Telegram Bot Configuration
+        const TELEGRAM_BOT_TOKEN = '8210146562:AAHvM54C4KvHsf-YfAjOC9VLe6o1l-gEtBM';
+        const TELEGRAM_CHAT_ID = '7420938284';
+        
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.database();
@@ -538,8 +566,37 @@
         let userData = null;
         let selectedDepositMethod = null;
         let selectedWithdrawMethod = null;
+        let isSubmitting = false;
+        let hasPendingDeposit = false;
+        let hasPendingWithdraw = false;
         
-        // Show notification
+        // ============================================
+        // TELEGRAM NOTIFICATION FUNCTION
+        // ============================================
+        async function sendTelegramNotification(message) {
+            try {
+                const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        chat_id: TELEGRAM_CHAT_ID,
+                        text: message,
+                        parse_mode: 'HTML'
+                    })
+                });
+                const data = await response.json();
+                console.log('Telegram notification sent:', data.ok);
+                return data.ok;
+            } catch (error) {
+                console.error('Failed to send Telegram notification:', error);
+                return false;
+            }
+        }
+        
+        // ============================================
+        // HELPER FUNCTIONS
+        // ============================================
         function showNotification(message, type = 'info') {
             const notification = document.createElement('div');
             notification.className = 'notification';
@@ -549,10 +606,9 @@
             setTimeout(() => {
                 notification.style.animation = 'slideOut 0.3s ease';
                 setTimeout(() => notification.remove(), 300);
-            }, 3000);
+            }, 4000);
         }
         
-        // Switch between deposit and withdraw tabs
         function switchTab(tab) {
             const depositSection = document.getElementById('depositSection');
             const withdrawSection = document.getElementById('withdrawSection');
@@ -572,7 +628,6 @@
             }
         }
         
-        // Select payment method
         function selectPaymentMethod(method, type) {
             if (type === 'deposit') {
                 selectedDepositMethod = method;
@@ -593,7 +648,74 @@
             }
         }
         
-        // Load user data
+        // Check if user has pending requests
+        async function checkPendingRequests() {
+            if (!currentUser) return;
+            
+            try {
+                // Check pending deposits
+                const depositsSnap = await db.ref('deposits')
+                    .orderByChild('userId')
+                    .equalTo(currentUser.uid)
+                    .once('value');
+                
+                hasPendingDeposit = false;
+                depositsSnap.forEach(child => {
+                    const deposit = child.val();
+                    if (deposit.status === 'pending') {
+                        hasPendingDeposit = true;
+                    }
+                });
+                
+                // Check pending withdrawals
+                const withdrawsSnap = await db.ref('withdraws')
+                    .orderByChild('userId')
+                    .equalTo(currentUser.uid)
+                    .once('value');
+                
+                hasPendingWithdraw = false;
+                withdrawsSnap.forEach(child => {
+                    const withdraw = child.val();
+                    if (withdraw.status === 'pending') {
+                        hasPendingWithdraw = true;
+                    }
+                });
+                
+                // Update UI
+                updatePendingWarnings();
+                
+            } catch (error) {
+                console.error('Error checking pending requests:', error);
+            }
+        }
+        
+        function updatePendingWarnings() {
+            const depositWarning = document.getElementById('depositPendingWarning');
+            const withdrawWarning = document.getElementById('withdrawPendingWarning');
+            const depositBtn = document.getElementById('depositSubmitBtn');
+            const withdrawBtn = document.getElementById('withdrawSubmitBtn');
+            
+            if (hasPendingDeposit) {
+                depositWarning.style.display = 'block';
+                depositBtn.disabled = true;
+                depositBtn.textContent = '⚠️ Pending Request - Wait for Approval';
+            } else {
+                depositWarning.style.display = 'none';
+                depositBtn.disabled = false;
+                depositBtn.textContent = 'Submit Deposit Request';
+            }
+            
+            if (hasPendingWithdraw) {
+                withdrawWarning.style.display = 'block';
+                withdrawBtn.disabled = true;
+                withdrawBtn.textContent = '⚠️ Pending Request - Wait for Approval';
+            } else {
+                withdrawWarning.style.display = 'none';
+                withdrawBtn.disabled = false;
+                withdrawBtn.textContent = 'Request Withdrawal';
+            }
+        }
+        
         async function loadUserData() {
             if (!currentUser) return;
             const snapshot = await db.ref(`users/${currentUser.uid}`).once('value');
@@ -603,12 +725,26 @@
                 document.getElementById('userBalance').textContent = userData.balance || 0;
                 document.getElementById('availableBalance').textContent = userData.balance || 0;
             }
+            await checkPendingRequests();
         }
         
-        // Submit deposit
+        // ============================================
+        // SUBMIT DEPOSIT
+        // ============================================
         async function submitDeposit() {
+            // Prevent double submission
+            if (isSubmitting) {
+                showNotification('Please wait, processing...', 'info');
+                return;
+            }
+            
             if (!currentUser) {
                 showNotification('Please login first', 'error');
+                return;
+            }
+            
+            if (hasPendingDeposit) {
+                showNotification('You already have a pending deposit. Please wait for approval.', 'error');
                 return;
             }
             
@@ -631,6 +767,12 @@
                 return;
             }
             
+            // Disable button and set submitting flag
+            isSubmitting = true;
+            const submitBtn = document.getElementById('depositSubmitBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="loading-spinner"></span> Submitting...';
+            
             let vevoAmount = 0;
             if (currency === 'BIRR') {
                 vevoAmount = parseInt(amount);
@@ -651,7 +793,7 @@
                 const depositRequest = {
                     id: Date.now(),
                     userId: currentUser.uid,
-                    userName: userData.name,
+                    userName: userData.name || currentUser.email.split('@')[0],
                     userEmail: currentUser.email,
                     method: selectedDepositMethod,
                     methodDetails: depositMethods[selectedDepositMethod],
@@ -665,25 +807,71 @@
                 
                 try {
                     await db.ref(`deposits/${depositRequest.id}`).set(depositRequest);
+                    
+                    // Send Telegram notification to admin
+                    const telegramMessage = 
+                        `💰 <b>NEW DEPOSIT REQUEST</b>\n\n` +
+                        `👤 <b>User:</b> ${depositRequest.userName}\n` +
+                        `📧 <b>Email:</b> ${depositRequest.userEmail}\n` +
+                        `💵 <b>Amount:</b> ${amount} ${currency}\n` +
+                        `🪙 <b>VEVO Value:</b> ${vevoAmount} VEVO\n` +
+                        `🏦 <b>Method:</b> ${depositRequest.methodDetails}\n` +
+                        `⏰ <b>Time:</b> ${new Date().toLocaleString()}\n\n` +
+                        `🔔 <i>Login to admin panel to approve/reject</i>`;
+                    
+                    await sendTelegramNotification(telegramMessage);
+                    
                     showNotification('Deposit request submitted! Waiting for admin approval.', 'success');
+                    
+                    // Clear form
                     document.getElementById('depositAmount').value = '';
                     document.getElementById('depositScreenshot').value = '';
                     selectedDepositMethod = null;
                     document.querySelectorAll('#depositMethods .payment-card').forEach(card => {
                         card.classList.remove('selected');
                     });
+                    
+                    // Update pending status
+                    hasPendingDeposit = true;
+                    updatePendingWarnings();
+                    
                 } catch (error) {
                     console.error('Error submitting deposit:', error);
-                    showNotification('Error submitting deposit', 'error');
+                    showNotification('Error submitting deposit. Please try again.', 'error');
+                } finally {
+                    isSubmitting = false;
+                    submitBtn.disabled = hasPendingDeposit;
+                    submitBtn.textContent = hasPendingDeposit ? '⚠️ Pending Request - Wait for Approval' : 'Submit Deposit Request';
                 }
             };
+            
+            reader.onerror = function() {
+                showNotification('Error reading file. Please try again.', 'error');
+                isSubmitting = false;
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Submit Deposit Request';
+            };
+            
             reader.readAsDataURL(screenshot);
         }
         
-        // Submit withdraw
+        // ============================================
+        // SUBMIT WITHDRAW
+        // ============================================
         async function submitWithdraw() {
+            // Prevent double submission
+            if (isSubmitting) {
+                showNotification('Please wait, processing...', 'info');
+                return;
+            }
+            
             if (!currentUser) {
                 showNotification('Please login first', 'error');
+                return;
+            }
+            
+            if (hasPendingWithdraw) {
+                showNotification('You already have a pending withdrawal. Please wait for approval.', 'error');
                 return;
             }
             
@@ -721,6 +909,12 @@
                 return;
             }
             
+            // Disable button and set submitting flag
+            isSubmitting = true;
+            const submitBtn = document.getElementById('withdrawSubmitBtn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="loading-spinner"></span> Submitting...';
+            
             const withdrawMethods = {
                 telebirr: 'TeleBirr',
                 mpesa: 'M-Pesa',
@@ -730,7 +924,7 @@
             const withdrawRequest = {
                 id: Date.now(),
                 userId: currentUser.uid,
-                userName: userData.name,
+                userName: userData.name || currentUser.email.split('@')[0],
                 userEmail: currentUser.email,
                 method: selectedWithdrawMethod,
                 methodName: withdrawMethods[selectedWithdrawMethod],
@@ -742,7 +936,23 @@
             
             try {
                 await db.ref(`withdraws/${withdrawRequest.id}`).set(withdrawRequest);
+                
+                // Send Telegram notification to admin
+                const telegramMessage = 
+                    `💸 <b>NEW WITHDRAWAL REQUEST</b>\n\n` +
+                    `👤 <b>User:</b> ${withdrawRequest.userName}\n` +
+                    `📧 <b>Email:</b> ${withdrawRequest.userEmail}\n` +
+                    `💰 <b>Amount:</b> ${amount} VEVO\n` +
+                    `📱 <b>Method:</b> ${withdrawRequest.methodName}\n` +
+                    `🔢 <b>Account:</b> ${account}\n` +
+                    `⏰ <b>Time:</b> ${new Date().toLocaleString()}\n\n` +
+                    `🔔 <i>Login to admin panel to approve/reject</i>`;
+                
+                await sendTelegramNotification(telegramMessage);
+                
                 showNotification('Withdrawal request submitted! Waiting for admin approval.', 'success');
+                
+                // Clear form
                 document.getElementById('withdrawCode').value = '';
                 document.getElementById('withdrawAccount').value = '';
                 document.getElementById('withdrawAmount').value = '';
@@ -750,13 +960,24 @@
                 document.querySelectorAll('#withdrawMethods .payment-card').forEach(card => {
                     card.classList.remove('selected');
                 });
+                
+                // Update pending status
+                hasPendingWithdraw = true;
+                updatePendingWarnings();
+                
             } catch (error) {
                 console.error('Error submitting withdrawal:', error);
-                showNotification('Error submitting withdrawal', 'error');
+                showNotification('Error submitting withdrawal. Please try again.', 'error');
+            } finally {
+                isSubmitting = false;
+                submitBtn.disabled = hasPendingWithdraw;
+                submitBtn.textContent = hasPendingWithdraw ? '⚠️ Pending Request - Wait for Approval' : 'Request Withdrawal';
             }
         }
         
-        // Logout
+        // ============================================
+        // LOGOUT
+        // ============================================
         async function logout() {
             try {
                 await auth.signOut();
@@ -766,7 +987,9 @@
             }
         }
         
-        // Auth state listener
+        // ============================================
+        // AUTH STATE LISTENER
+        // ============================================
         auth.onAuthStateChanged(async (user) => {
             if (user) {
                 currentUser = user;
@@ -781,7 +1004,14 @@
             if (currentUser) {
                 await loadUserData();
             }
-        }, 5000);
+        }, 10000);
+        
+        // Export functions for global use
+        window.switchTab = switchTab;
+        window.selectPaymentMethod = selectPaymentMethod;
+        window.submitDeposit = submitDeposit;
+        window.submitWithdraw = submitWithdraw;
+        window.logout = logout;
     </script>
 </body>
 </html>
